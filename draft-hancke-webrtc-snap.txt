@@ -3,13 +3,13 @@
 
 
 Network Working Group                                          P. Hancke
-Internet-Draft                                        Meta Platforms Inc
-Intended status: Informational                              25 July 2025
-Expires: 26 January 2026
+Internet-Draft                                       Meta Platforms Inc.
+Intended status: Informational                            11 August 2025
+Expires: 12 February 2026
 
 
                  SCTP Negotiation Acceleration Protocol
-                         draft-todo-tsvwg-snap
+                        draft-hancke-tsvwg-snap
 
 Abstract
 
@@ -27,13 +27,13 @@ About This Document
    This note is to be removed before publishing as an RFC.
 
    The latest revision of this draft can be found at
-   https://fippo.github.io/warp-snap-sped/draft-todo-webrtc-snap-
+   https://fippo.github.io/warp-snap-sped/draft-hancke-webrtc-snap-
    latest.html.  Status information for this document may be found at
-   https://datatracker.ietf.org/doc/draft-todo-tsvwg/.
+   https://datatracker.ietf.org/doc/draft-hancke-tsvwg/.
 
    Discussion of this document takes place on the WG Working Group
    mailing list (mailto:tsvwg@ietf.org), which is archived at
-   https://example.com/WG.  Subscribe at
+   https://datatracker.ietf.org/wg/tsvwg/.  Subscribe at
    https://www.ietf.org/mailman/listinfo/tsvwg/.
 
    Source for this draft and an issue tracker can be found at
@@ -54,7 +54,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 26 January 2026.
+   This Internet-Draft will expire on 12 February 2026.
 
 Copyright Notice
 
@@ -489,5 +489,5 @@ Acknowledgments
 Author's Address
 
    Philipp Hancke
-   Meta Platforms Inc
+   Meta Platforms Inc.
    Email: philipp.hancke@googlemail.com
