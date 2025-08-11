@@ -28,6 +28,14 @@ author:
     fullname: Philipp Hancke
     organization: Meta Platforms Inc.
     email: philipp.hancke@googlemail.com
+ -
+    fullname: Justin Uberti
+    organization: OpenAI
+    email: justin@uberti.name
+ -
+    fullname: Victor Boivie
+    organization: Google
+    email: boivie@google.com
 
 normative:
 
@@ -36,7 +44,7 @@ informative:
 --- abstract
 
 {{?RFC8831}} defines WebRTC Data Channels that allow the transport of arbitrary non-media data over a WebRTC PeerConnection.
-This uses SCTP {{!RFC9260}} and a DTLS encapsulation of SCTP packets {{RFC8261}}.
+This uses SCTP {{!RFC9260}} and a DTLS encapsulation of SCTP packets {{?RFC8261}}.
 
 Using the SDP negotiation procedure described in this document allows skipping the exchange of the SCTP INIT, INIT ACK,
 COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by up to two round trip times.
@@ -46,7 +54,7 @@ COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by 
 # Introduction
 
 SCTP {{RFC9260}} establishes its associations using a four-way handshake, which primarily serves to protect against
-half-open (SYN-flood) attacks. For WebRTC, SCTP runs encapsulated within DTLS {{?RFC8261}} which establishes a secure,
+half-open (SYN-flood) attacks. For WebRTC, SCTP runs encapsulated within DTLS {{RFC8261}} which establishes a secure,
 encrypted channel between the peers, which prevents half-open attacks.
 
 The full connection setup between two entities using WebRTC, consisting of the exchange of SDP over the signaling channel,
@@ -127,10 +135,10 @@ Further reductions of the startup sequence are described in WARP-TODO
 ## General
 
 This section defines a new SDP media-level attribute, "sctp-init". The attribute can be associated with
-an SDP media description ("m=" line) with a "UDP/DTLS/SCTP" protocol identifier (defined in RFC 8841)
-and the &lt;fmt&gt; parameter value of 'webrtc-datachannel' (defined in RFC 8832).
+an SDP media description ("m=" line) with a "UDP/DTLS/SCTP" protocol identifier (defined in {{RFC8841}})
+and the &lt;fmt&gt; parameter value of 'webrtc-datachannel' (defined in {{?RFC8832}}).
 
-An example follows, see section X.X for the full SDP exchange:
+An example follows, see {{example}} for the full SDP exchange:
 
 ~~~
 a=sctp-init:AQAAHols3R0AUAAA/////+B5ZR3AAAAEgAgABoLA
@@ -230,12 +238,12 @@ Remote offers MAY negotiate a new "a=sctp-init" line in conjunction with either
 # SCTP considerations
 
 The creation of the "sctp-init" attribute SHOULD NOT change the state of the SCTP association to ASSOCIATE as described
-in {Section 4 of RFC9260} and SHOULD NOT start the T1-init timer.
+in {{Section 4 of RFC9260}} and SHOULD NOT start the T1-init timer.
 
 Processing of the "sctp-init" attribute from the remote side SHOULD NOT change the state of the SCTP association and should not start any timer.
 
 When the "sctp-init" attribute has been negotiated, both endpoints SHOULD consider the SCTP association to be in the ESTABLISHED state,
-as described in {Section 4 of RFC9260}, once the DTLS handshake finishes. The steps A-E described in {Section 5.1 of RFC9260} can be skipped.
+as described in {{Section 4 of RFC9260}}, once the DTLS handshake finishes. The steps A-E described in {{Section 5.1 of RFC9260}} can be skipped.
 
 # Example negotiation {#example}
 
@@ -334,11 +342,11 @@ a=sctp-init:AQAAHl+zdHQAUAAA/////6Gq3HTAAAAEgAgABoLA
 # Security Considerations
 
 SNAP removes SCTP's anti-amplification mechanism in order to accelerate connection startup.
-However, when SCTP runs atop DTLS as specified in {RFC8261}, any attempt to send junk traffic over SCTP will fail
+However, when SCTP runs atop DTLS as specified in {{RFC8261}}, any attempt to send junk traffic over SCTP will fail
 as it will not be properly encrypted. Therefore SNAP does not add any new amplification risk.
 
 Exposing the content of the SCTP INIT, in particular the “Initiate Tag”, in the SDP does not introduce new security
-concerns since running SCTP atop DTLS protects against the off-path attacks described in {Section 5.3.1 of RFC9260}.
+concerns since running SCTP atop DTLS protects against the off-path attacks described in {{Section 5.3.1 of RFC9260}}.
 
 Exposing the content of the SCTP init tag to the application layer, e.g. Javascript applications or the signaling
 channel in the case of WebRTC does allow these to add or remove variable length parameters. Since these parameters
@@ -356,4 +364,4 @@ This document has no IANA actions.
 # Acknowledgments
 {:numbered="false"}
 
-Lennart Grahl
+The authors wish to thank Harald Alvestrand, Lennart Grahl and Jonas Oreland for their invaluable comments.
