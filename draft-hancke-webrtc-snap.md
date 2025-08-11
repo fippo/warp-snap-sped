@@ -3,7 +3,7 @@ title: "SCTP Negotiation Acceleration Protocol"
 abbrev: "SNAP"
 category: info
 
-docname: draft-todo-tsvwg-snap
+docname: draft-hancke-tsvwg-snap
 submissiontype: IETF
 number:
 date:
@@ -19,14 +19,14 @@ venue:
   group: WG
   type: Working Group
   mail: tsvwg@ietf.org
-  arch: https://example.com/WG
+  arch: https://datatracker.ietf.org/wg/tsvwg/
   github: fippo/warp-snap-sped
-  latest: https://fippo.github.io/warp-snap-sped/draft-todo-webrtc-snap-latest.html
+  latest: https://fippo.github.io/warp-snap-sped/draft-hancke-webrtc-snap-latest.html
 
 author:
  -
     fullname: Philipp Hancke
-    organization: Meta Platforms Inc
+    organization: Meta Platforms Inc.
     email: philipp.hancke@googlemail.com
 
 normative:
