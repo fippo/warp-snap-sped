@@ -21,7 +21,7 @@ venue:
   mail: tsvwg@ietf.org
   arch: https://datatracker.ietf.org/wg/tsvwg/
   github: fippo/warp-snap-sped
-  latest: https://fippo.github.io/warp-snap-sped/draft-hancke-webrtc-snap-latest.html
+  latest: https://fippo.github.io/warp-snap-sped/draft-hancke-tsvwg-snap-latest.html
 
 author:
  -
