@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-08-10T02:05:07.847594+00:00",
+  "timestamp": "2025-08-12T01:49:45.058464+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -50,5 +50,32 @@
     }
   ],
   "issues": [],
-  "pulls": []
+  "pulls": [
+    {
+      "number": 1,
+      "id": "PR_kwDOPBQjh86jGMKY",
+      "title": "+coauthors and acknowledgments",
+      "url": "https://github.com/fippo/warp-snap-sped/pull/1",
+      "state": "OPEN",
+      "author": "fippo",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "and fix lots of references and update the draft name\r\n\r\n@boivie @juberti PTAL",
+      "createdAt": "2025-08-11T17:28:11Z",
+      "updatedAt": "2025-08-11T18:26:14Z",
+      "baseRepository": "fippo/warp-snap-sped",
+      "baseRefName": "main",
+      "baseRefOid": "9700ec4efb11df13f9bf4e0b48ec35da58cbb931",
+      "headRepository": "fippo/warp-snap-sped",
+      "headRefName": "coauthors-and-acks",
+      "headRefOid": "09a3c15798c202cbe72dfeda30b89252778e6b4a",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    }
+  ]
 }
