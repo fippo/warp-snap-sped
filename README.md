@@ -1,14 +1,10 @@
-<!-- regenerate: on (set to off if you edit this file) -->
+<!-- regenerate: off (set to off if you edit this file) -->
 
-# TODO - Your title
+# WARP, SPED and SNAP
 
-This is the working area for the individual Internet-Draft, "TODO - Your title".
-
-* [Editor's Copy](https://fippo.github.io/warp-snap-sped/#go.draft-todo-webrtc-snap.html)
-* [Datatracker Page](https://datatracker.ietf.org/doc/draft-todo-webrtc-snap)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-todo-webrtc-snap)
-* [Compare Editor's Copy to Individual Draft](https://fippo.github.io/warp-snap-sped/#go.draft-todo-webrtc-snap.diff)
-
+Implementation tracking bugs:
+* [SNAP](https://issues.webrtc.org/issues/426480601)
+* [SPED](https://issues.webrtc.org/issues/367395350)
 
 ## Contributing
 
