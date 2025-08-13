@@ -5,10 +5,10 @@
 Network Working Group                                          P. Hancke
 Internet-Draft                                       Meta Platforms Inc.
 Intended status: Informational                                 J. Uberti
-Expires: 12 February 2026                                         OpenAI
+Expires: 14 February 2026                                         OpenAI
                                                                V. Boivie
                                                                   Google
-                                                          11 August 2025
+                                                          13 August 2025
 
 
                  SCTP Negotiation Acceleration Protocol
@@ -57,7 +57,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 February 2026.
+   This Internet-Draft will expire on 14 February 2026.
 
 Copyright Notice
 
@@ -161,8 +161,6 @@ Table of Contents
       |------------- "hello world"---------------->|
       |<------------ DCEP ACK ---------------------|
       |                                            |
-
-   Further reductions of the startup sequence are described in WARP-TODO
 
 2.  Conventions and Definitions
 
