@@ -112,8 +112,6 @@ Client                                       Server
    |                                            |
 ~~~
 
-Further reductions of the startup sequence are described in WARP-TODO
-
 # Conventions and Definitions
 
 {::boilerplate bcp14-tagged}
