@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-08-12T01:49:45.058464+00:00",
+  "timestamp": "2025-08-14T01:52:30.119592+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -63,13 +63,13 @@
       "labels": [],
       "body": "and fix lots of references and update the draft name\r\n\r\n@boivie @juberti PTAL",
       "createdAt": "2025-08-11T17:28:11Z",
-      "updatedAt": "2025-08-11T18:26:14Z",
+      "updatedAt": "2025-08-13T17:47:25Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "9700ec4efb11df13f9bf4e0b48ec35da58cbb931",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "coauthors-and-acks",
-      "headRefOid": "09a3c15798c202cbe72dfeda30b89252778e6b4a",
+      "headRefOid": "e6da028f7b8cd461a6f6a5dfaab18056433b8cf2",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
