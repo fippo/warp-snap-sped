@@ -165,7 +165,7 @@ This is equivalent to the following SCTP INIT CHUNK:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~
 
-## Syntax
+## Syntax {#syntax}
 
 **Attribute name**: sctp-init
 
@@ -355,7 +355,9 @@ not introduce a new security concern.
 
 # IANA Considerations
 
-This document has no IANA actions.
+## New SDP attributes
+
+This document defines a new SDP media-level attribute, "sctp-init". The details of the attribute are defined in {{syntax}}.
 
 --- back
 
