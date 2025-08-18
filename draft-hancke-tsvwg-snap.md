@@ -21,13 +21,21 @@ venue:
   mail: tsvwg@ietf.org
   arch: https://datatracker.ietf.org/wg/tsvwg/
   github: fippo/warp-snap-sped
-  latest: https://fippo.github.io/warp-snap-sped/draft-hancke-webrtc-snap-latest.html
+  latest: https://fippo.github.io/warp-snap-sped/draft-hancke-tsvwg-snap-latest.html
 
 author:
  -
     fullname: Philipp Hancke
     organization: Meta Platforms Inc.
     email: philipp.hancke@googlemail.com
+ -
+    fullname: Justin Uberti
+    organization: OpenAI
+    email: justin@uberti.name
+ -
+    fullname: Victor Boivie
+    organization: Google
+    email: boivie@google.com
 
 normative:
 
@@ -36,7 +44,7 @@ informative:
 --- abstract
 
 {{?RFC8831}} defines WebRTC Data Channels that allow the transport of arbitrary non-media data over a WebRTC PeerConnection.
-This uses SCTP {{!RFC9260}} and a DTLS encapsulation of SCTP packets {{RFC8261}}.
+This uses SCTP {{!RFC9260}} and a DTLS encapsulation of SCTP packets {{?RFC8261}}.
 
 Using the SDP negotiation procedure described in this document allows skipping the exchange of the SCTP INIT, INIT ACK,
 COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by up to two round trip times.
@@ -46,7 +54,7 @@ COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by 
 # Introduction
 
 SCTP {{RFC9260}} establishes its associations using a four-way handshake, which primarily serves to protect against
-half-open (SYN-flood) attacks. For WebRTC, SCTP runs encapsulated within DTLS {{?RFC8261}} which establishes a secure,
+half-open (SYN-flood) attacks. For WebRTC, SCTP runs encapsulated within DTLS {{RFC8261}} which establishes a secure,
 encrypted channel between the peers, which prevents half-open attacks.
 
 The full connection setup between two entities using WebRTC, consisting of the exchange of SDP over the signaling channel,
@@ -104,8 +112,6 @@ Client                                       Server
    |                                            |
 ~~~
 
-Further reductions of the startup sequence are described in WARP-TODO
-
 # Conventions and Definitions
 
 {::boilerplate bcp14-tagged}
@@ -127,10 +133,10 @@ Further reductions of the startup sequence are described in WARP-TODO
 ## General
 
 This section defines a new SDP media-level attribute, "sctp-init". The attribute can be associated with
-an SDP media description ("m=" line) with a "UDP/DTLS/SCTP" protocol identifier (defined in RFC 8841)
-and the &lt;fmt&gt; parameter value of 'webrtc-datachannel' (defined in RFC 8832).
+an SDP media description ("m=" line) with a "UDP/DTLS/SCTP" protocol identifier (defined in {{RFC8841}})
+and the &lt;fmt&gt; parameter value of 'webrtc-datachannel' (defined in {{?RFC8832}}).
 
-An example follows, see section X.X for the full SDP exchange:
+An example follows, see {{example}} for the full SDP exchange:
 
 ~~~
 a=sctp-init:AQAAHols3R0AUAAA/////+B5ZR3AAAAEgAgABoLA
@@ -159,7 +165,7 @@ This is equivalent to the following SCTP INIT CHUNK:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~
 
-## Syntax
+## Syntax {#syntax}
 
 **Attribute name**: sctp-init
 
@@ -191,12 +197,12 @@ This message is then base64-encoded and added to the data "m=" section as an "a=
 
 If the answering endpoint negotiates a data "m=" section, it will parse the "a=sctp-init" line from the data "m=" section, if present.
 
-If the data is not properly base64 encoded the answerer MUST silently ignore the "a=sctp-init" line and not generate one in response.
+If the data is not properly base64 encoded this results in an error.
 
 The answering endpoint then informs its SCTP implementation of the series of bytes. The SCTP implementation is responsible for
 validating the format of the SCTP init chunk.
 
-If the series of bytes is not a valid SCTP init chunk, the answering endpoint MUST silently ignore the "a=sctp-init" line and not generate one in response.
+If the series of bytes is not a valid SCTP init chunk this results in an error.
 
 ## Generating the SDP Answer
 
@@ -211,11 +217,11 @@ This message is base64-encoded and added to the data "m=" section as a "a=sctp-i
 
 If the answer negotiated a data "m=" section, the offering endpoint parses the "a=sctp-init" line, if present, from the data "m=" section.
 
-If the data is not properly base64 encoded the offer MUST silently ignore the "a=sctp-init" line.
+If the data is not properly base64 encoded this results in an error.
 
 The offering endpoint then informs its SCTP implementation of the series of bytes.
 The SCTP implementation is responsible for validating the format of the SCTP init chunk.
-If the series of bytes is not a valid SCTP init chunk, the offering endpoint MUST silently ignore the "a=sctp-init" line.
+If the series of bytes is not a valid SCTP init chunk this results in an error.
 
 ## Modifying the Session
 
@@ -227,15 +233,17 @@ Remote offers MAY negotiate a new "a=sctp-init" line in conjunction with either
 * a new SCTP association as described in {{Section 9.3 of ?RFC8841}}
 * or a new DTLS association as described in {{Section 5.5 of ?RFC8842}}.
 
+Attempting to add an sctp-init on an existing SCTP association results in an error.
+
 # SCTP considerations
 
 The creation of the "sctp-init" attribute SHOULD NOT change the state of the SCTP association to ASSOCIATE as described
-in {Section 4 of RFC9260} and SHOULD NOT start the T1-init timer.
+in {{Section 4 of RFC9260}} and SHOULD NOT start the T1-init timer.
 
 Processing of the "sctp-init" attribute from the remote side SHOULD NOT change the state of the SCTP association and should not start any timer.
 
 When the "sctp-init" attribute has been negotiated, both endpoints SHOULD consider the SCTP association to be in the ESTABLISHED state,
-as described in {Section 4 of RFC9260}, once the DTLS handshake finishes. The steps A-E described in {Section 5.1 of RFC9260} can be skipped.
+as described in {{Section 4 of RFC9260}}, once the DTLS handshake finishes. The steps A-E described in {{Section 5.1 of RFC9260}} can be skipped.
 
 # Example negotiation {#example}
 
@@ -334,11 +342,11 @@ a=sctp-init:AQAAHl+zdHQAUAAA/////6Gq3HTAAAAEgAgABoLA
 # Security Considerations
 
 SNAP removes SCTP's anti-amplification mechanism in order to accelerate connection startup.
-However, when SCTP runs atop DTLS as specified in {RFC8261}, any attempt to send junk traffic over SCTP will fail
+However, when SCTP runs atop DTLS as specified in {{RFC8261}}, any attempt to send junk traffic over SCTP will fail
 as it will not be properly encrypted. Therefore SNAP does not add any new amplification risk.
 
 Exposing the content of the SCTP INIT, in particular the “Initiate Tag”, in the SDP does not introduce new security
-concerns since running SCTP atop DTLS protects against the off-path attacks described in {Section 5.3.1 of RFC9260}.
+concerns since running SCTP atop DTLS protects against the off-path attacks described in {{Section 5.3.1 of RFC9260}}.
 
 Exposing the content of the SCTP init tag to the application layer, e.g. Javascript applications or the signaling
 channel in the case of WebRTC does allow these to add or remove variable length parameters. Since these parameters
@@ -349,11 +357,13 @@ not introduce a new security concern.
 
 # IANA Considerations
 
-This document has no IANA actions.
+## New SDP attributes
+
+This document defines a new SDP media-level attribute, "sctp-init". The details of the attribute are defined in {{syntax}}.
 
 --- back
 
 # Acknowledgments
 {:numbered="false"}
 
-Lennart Grahl
+The authors wish to thank Harald Alvestrand, Lennart Grahl and Jonas Oreland for their invaluable comments.
