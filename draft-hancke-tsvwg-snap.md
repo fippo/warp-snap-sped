@@ -197,12 +197,12 @@ This message is then base64-encoded and added to the data "m=" section as an "a=
 
 If the answering endpoint negotiates a data "m=" section, it will parse the "a=sctp-init" line from the data "m=" section, if present.
 
-If the data is not properly base64 encoded the answerer MUST silently ignore the "a=sctp-init" line and not generate one in response.
+If the data is not properly base64 encoded this results in an error.
 
 The answering endpoint then informs its SCTP implementation of the series of bytes. The SCTP implementation is responsible for
 validating the format of the SCTP init chunk.
 
-If the series of bytes is not a valid SCTP init chunk, the answering endpoint MUST silently ignore the "a=sctp-init" line and not generate one in response.
+If the series of bytes is not a valid SCTP init chunk this results in an error.
 
 ## Generating the SDP Answer
 
@@ -217,11 +217,11 @@ This message is base64-encoded and added to the data "m=" section as a "a=sctp-i
 
 If the answer negotiated a data "m=" section, the offering endpoint parses the "a=sctp-init" line, if present, from the data "m=" section.
 
-If the data is not properly base64 encoded the offer MUST silently ignore the "a=sctp-init" line.
+If the data is not properly base64 encoded this results in an error.
 
 The offering endpoint then informs its SCTP implementation of the series of bytes.
 The SCTP implementation is responsible for validating the format of the SCTP init chunk.
-If the series of bytes is not a valid SCTP init chunk, the offering endpoint MUST silently ignore the "a=sctp-init" line.
+If the series of bytes is not a valid SCTP init chunk this results in an error.
 
 ## Modifying the Session
 
@@ -232,6 +232,8 @@ Remote offers MAY negotiate a new "a=sctp-init" line in conjunction with either
 
 * a new SCTP association as described in {{Section 9.3 of ?RFC8841}}
 * or a new DTLS association as described in {{Section 5.5 of ?RFC8842}}.
+
+Attempting to add an sctp-init on an existing SCTP association results in an error.
 
 # SCTP considerations
 
