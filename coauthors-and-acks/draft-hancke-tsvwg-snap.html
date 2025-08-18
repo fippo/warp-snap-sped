@@ -1419,10 +1419,10 @@ This message is then base64-encoded and added to the data "m=" section as an "a=
 <a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-answerer-processing-of-the-" class="section-name selfRef">Answerer Processing of the SDP Offer</a>
         </h3>
 <p id="section-5.3-1">If the answering endpoint negotiates a data "m=" section, it will parse the "a=sctp-init" line from the data "m=" section, if present.<a href="#section-5.3-1" class="pilcrow">¶</a></p>
-<p id="section-5.3-2">If the data is not properly base64 encoded the answerer <span class="bcp14">MUST</span> silently ignore the "a=sctp-init" line and not generate one in response.<a href="#section-5.3-2" class="pilcrow">¶</a></p>
+<p id="section-5.3-2">If the data is not properly base64 encoded this results in an error.<a href="#section-5.3-2" class="pilcrow">¶</a></p>
 <p id="section-5.3-3">The answering endpoint then informs its SCTP implementation of the series of bytes. The SCTP implementation is responsible for
 validating the format of the SCTP init chunk.<a href="#section-5.3-3" class="pilcrow">¶</a></p>
-<p id="section-5.3-4">If the series of bytes is not a valid SCTP init chunk, the answering endpoint <span class="bcp14">MUST</span> silently ignore the "a=sctp-init" line and not generate one in response.<a href="#section-5.3-4" class="pilcrow">¶</a></p>
+<p id="section-5.3-4">If the series of bytes is not a valid SCTP init chunk this results in an error.<a href="#section-5.3-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="generating-the-sdp-answer">
@@ -1442,10 +1442,10 @@ it <span class="bcp14">MUST</span> let its SCTP implementation generate a serial
 <a href="#section-5.5" class="section-number selfRef">5.5. </a><a href="#name-offerer-processing-of-the-s" class="section-name selfRef">Offerer Processing of the SDP Answer</a>
         </h3>
 <p id="section-5.5-1">If the answer negotiated a data "m=" section, the offering endpoint parses the "a=sctp-init" line, if present, from the data "m=" section.<a href="#section-5.5-1" class="pilcrow">¶</a></p>
-<p id="section-5.5-2">If the data is not properly base64 encoded the offer <span class="bcp14">MUST</span> silently ignore the "a=sctp-init" line.<a href="#section-5.5-2" class="pilcrow">¶</a></p>
+<p id="section-5.5-2">If the data is not properly base64 encoded this results in an error.<a href="#section-5.5-2" class="pilcrow">¶</a></p>
 <p id="section-5.5-3">The offering endpoint then informs its SCTP implementation of the series of bytes.
 The SCTP implementation is responsible for validating the format of the SCTP init chunk.
-If the series of bytes is not a valid SCTP init chunk, the offering endpoint <span class="bcp14">MUST</span> silently ignore the "a=sctp-init" line.<a href="#section-5.5-3" class="pilcrow">¶</a></p>
+If the series of bytes is not a valid SCTP init chunk this results in an error.<a href="#section-5.5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="modifying-the-session">
@@ -1464,6 +1464,7 @@ initial negotiation.<a href="#section-5.6-1" class="pilcrow">¶</a></p>
             <p id="section-5.6-3.2.1">or a new DTLS association as described in <span><a href="https://rfc-editor.org/rfc/rfc8842#section-5.5" class="relref">Section 5.5</a> of [<a href="#RFC8842" class="cite xref">RFC8842</a>]</span>.<a href="#section-5.6-3.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
+<p id="section-5.6-4">Attempting to add an sctp-init on an existing SCTP association results in an error.<a href="#section-5.6-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
