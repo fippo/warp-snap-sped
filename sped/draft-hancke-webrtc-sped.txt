@@ -249,18 +249,8 @@ Table of Contents
    agent MAY acknowledge packets both received embedded in STUN as well
    as received without embedding.
 
-   *TODO: needs consensus* The acknowledgments only cover the current
-   outstanding flight, similar to the DTLS 1.3 ACKs defined in Section 7
-   of [RFC9147] and the client should clear the list of pending outgoing
-   packets when preparing to send a new flight.
-
-   This implies that the META-DTLS-IN-STUN-ACKNOWLEDGEMENT will have a
-   length of 0 with two exceptions: * when acknowledging the fourth
-   flight of a DTLS 1.2 handshake * when acknowledging the partial
-   receipt of a flight consisting of multiple packets, e.g.
-
    When a sender receives a STUN binding response for a packet that
-   included an embedded DTLS packet it adds the CRC-32 of that packet to
+   includes an embedded DTLS packet it adds the CRC-32 of that packet to
    the list of acknowledgements from the META-DTLS-IN-STUN-
    ACKNOWLEDGEMENT attribute unless the CRC-32 is already included.
 

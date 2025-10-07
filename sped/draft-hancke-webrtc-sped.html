@@ -1394,15 +1394,10 @@ packet did not arrive as expected (either because it was lost or it arrived out 
 The STUN agent stops including the META-DTLS-IN-STUN-ACKNOWLEDGEMENT in messages it sends when receiving a STUN message that includes a
 META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute but no META-DTLS-IN-STUN attribute which signals that the remote STUN agent has completed the DTLS handshake.<a href="#section-4.5-1" class="pilcrow">¶</a></p>
 <p id="section-4.5-2"><strong>TODO: needs consensus</strong> During the DTLS handshake the receiving STUN agent MAY acknowledge packets both received embedded in STUN as well as received without embedding.<a href="#section-4.5-2" class="pilcrow">¶</a></p>
-<p id="section-4.5-3"><strong>TODO: needs consensus</strong> The acknowledgments only cover the current outstanding flight, similar to the DTLS 1.3 ACKs defined in <span><a href="https://rfc-editor.org/rfc/rfc9147#section-7" class="relref">Section 7</a> of [<a href="#RFC9147" class="cite xref">RFC9147</a>]</span>
-and the client should clear the list of pending outgoing packets when preparing to send a new flight.<a href="#section-4.5-3" class="pilcrow">¶</a></p>
-<p id="section-4.5-4">This implies that the META-DTLS-IN-STUN-ACKNOWLEDGEMENT will have a length of 0 with two exceptions:
-* when acknowledging the fourth flight of a DTLS 1.2 handshake
-* when acknowledging the partial receipt of a flight consisting of multiple packets, e.g.<a href="#section-4.5-4" class="pilcrow">¶</a></p>
-<p id="section-4.5-5">When a sender receives a STUN binding response for a packet that included an embedded DTLS packet it adds the CRC-32 of that packet to the list
-of acknowledgements from the META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute unless the CRC-32 is already included.<a href="#section-4.5-5" class="pilcrow">¶</a></p>
-<p id="section-4.5-6">When a receiver receives a STUN binding response for a packet that includes a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute it can remove the
-CRC-32s from the list of received packets.<a href="#section-4.5-6" class="pilcrow">¶</a></p>
+<p id="section-4.5-3">When a sender receives a STUN binding response for a packet that includes an embedded DTLS packet it adds the CRC-32 of that packet to the list
+of acknowledgements from the META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute unless the CRC-32 is already included.<a href="#section-4.5-3" class="pilcrow">¶</a></p>
+<p id="section-4.5-4">When a receiver receives a STUN binding response for a packet that includes a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute it can remove the
+CRC-32s from the list of received packets.<a href="#section-4.5-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="handling-flights-consisting-of-multiple-packets">
