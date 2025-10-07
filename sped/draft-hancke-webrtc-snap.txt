@@ -4,11 +4,8 @@
 
 Network Working Group                                          P. Hancke
 Internet-Draft                                       Meta Platforms Inc.
-Intended status: Informational                                 J. Uberti
-Expires: 17 February 2026                                         OpenAI
-                                                               V. Boivie
-                                                                  Google
-                                                          16 August 2025
+Intended status: Informational                            7 October 2025
+Expires: 10 April 2026
 
 
                  SCTP Negotiation Acceleration Protocol
@@ -30,7 +27,7 @@ About This Document
    This note is to be removed before publishing as an RFC.
 
    The latest revision of this draft can be found at
-   https://fippo.github.io/warp-snap-sped/draft-hancke-tsvwg-snap-
+   https://fippo.github.io/warp-snap-sped/draft-hancke-webrtc-snap-
    latest.html.  Status information for this document may be found at
    https://datatracker.ietf.org/doc/draft-hancke-tsvwg/.
 
@@ -57,7 +54,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 17 February 2026.
+   This Internet-Draft will expire on 10 April 2026.
 
 Copyright Notice
 
@@ -92,12 +89,11 @@ Table of Contents
    7.  Example negotiation
    8.  Security Considerations
    9.  IANA Considerations
-     9.1.  New SDP attributes
    10. References
      10.1.  Normative References
      10.2.  Informative References
    Acknowledgments
-   Authors' Addresses
+   Author's Address
 
 1.  Introduction
 
@@ -163,6 +159,8 @@ Table of Contents
       |<------------ DCEP ACK ---------------------|
       |                                            |
 
+   Further reductions of the startup sequence are described in WARP-TODO
+
 2.  Conventions and Definitions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -193,11 +191,11 @@ Table of Contents
 
    This section defines a new SDP media-level attribute, "sctp-init".
    The attribute can be associated with an SDP media description ("m="
-   line) with a "UDP/DTLS/SCTP" protocol identifier (defined in
-   [RFC8841]) and the <fmt> parameter value of 'webrtc-datachannel'
-   (defined in [RFC8832]).
+   line) with a "UDP/DTLS/SCTP" protocol identifier (defined in RFC
+   8841) and the <fmt> parameter value of 'webrtc-datachannel' (defined
+   in RFC 8832).
 
-   An example follows, see Section 7 for the full SDP exchange:
+   An example follows, see section X.X for the full SDP exchange:
 
    a=sctp-init:AQAAHols3R0AUAAA/////+B5ZR3AAAAEgAgABoLA
 
@@ -314,8 +312,8 @@ Table of Contents
 6.  SCTP considerations
 
    The creation of the "sctp-init" attribute SHOULD NOT change the state
-   of the SCTP association to ASSOCIATE as described in Section 4 of
-   [RFC9260] and SHOULD NOT start the T1-init timer.
+   of the SCTP association to ASSOCIATE as described in {Section 4 of
+   RFC9260} and SHOULD NOT start the T1-init timer.
 
    Processing of the "sctp-init" attribute from the remote side SHOULD
    NOT change the state of the SCTP association and should not start any
@@ -323,8 +321,8 @@ Table of Contents
 
    When the "sctp-init" attribute has been negotiated, both endpoints
    SHOULD consider the SCTP association to be in the ESTABLISHED state,
-   as described in Section 4 of [RFC9260], once the DTLS handshake
-   finishes.  The steps A-E described in Section 5.1 of [RFC9260] can be
+   as described in {Section 4 of RFC9260}, once the DTLS handshake
+   finishes.  The steps A-E described in {Section 5.1 of RFC9260} can be
    skipped.
 
 7.  Example negotiation
@@ -419,14 +417,14 @@ Table of Contents
 
    SNAP removes SCTP's anti-amplification mechanism in order to
    accelerate connection startup.  However, when SCTP runs atop DTLS as
-   specified in [RFC8261], any attempt to send junk traffic over SCTP
+   specified in {RFC8261}, any attempt to send junk traffic over SCTP
    will fail as it will not be properly encrypted.  Therefore SNAP does
    not add any new amplification risk.
 
    Exposing the content of the SCTP INIT, in particular the “Initiate
    Tag”, in the SDP does not introduce new security concerns since
    running SCTP atop DTLS protects against the off-path attacks
-   described in Section 5.3.1 of [RFC9260].
+   described in {Section 5.3.1 of RFC9260}.
 
    Exposing the content of the SCTP init tag to the application layer,
    e.g. Javascript applications or the signaling channel in the case of
@@ -441,10 +439,7 @@ Table of Contents
 
 9.  IANA Considerations
 
-9.1.  New SDP attributes
-
-   This document defines a new SDP media-level attribute,"sctp-init".
-   The details of the attribute are defined in Section 4.2.
+   This document has no IANA actions.
 
 10.  References
 
@@ -474,10 +469,6 @@ Table of Contents
               Channels", RFC 8831, DOI 10.17487/RFC8831, January 2021,
               <https://www.rfc-editor.org/rfc/rfc8831>.
 
-   [RFC8832]  Jesup, R., Loreto, S., and M. Tüxen, "WebRTC Data Channel
-              Establishment Protocol", RFC 8832, DOI 10.17487/RFC8832,
-              January 2021, <https://www.rfc-editor.org/rfc/rfc8832>.
-
    [RFC8841]  Holmberg, C., Shpount, R., Loreto, S., and G. Camarillo,
               "Session Description Protocol (SDP) Offer/Answer
               Procedures for Stream Control Transmission Protocol (SCTP)
@@ -493,21 +484,10 @@ Table of Contents
 
 Acknowledgments
 
-   The authors wish to thank Harald Alvestrand, Lennart Grahl and Jonas
-   Oreland for their invaluable comments.
+   Lennart Grahl
 
-Authors' Addresses
+Author's Address
 
    Philipp Hancke
    Meta Platforms Inc.
    Email: philipp.hancke@googlemail.com
-
-
-   Justin Uberti
-   OpenAI
-   Email: justin@uberti.name
-
-
-   Victor Boivie
-   Google
-   Email: boivie@google.com
