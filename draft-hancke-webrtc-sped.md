@@ -3,7 +3,7 @@ title: "STUN Protocol for Embeddiing DTLS"
 abbrev: "SPED"
 category: info
 
-docname: draft-todo-webrtc-sped
+docname: draft-hancke-webrtc-sped-latest
 submissiontype: IETF
 number:
 date:
