@@ -47,15 +47,15 @@ informative:
 This uses SCTP {{!RFC9260}} and a DTLS encapsulation of SCTP packets {{?RFC8261}}.
 
 Using the SDP negotiation procedure described in this document allows skipping the exchange of the SCTP INIT, INIT ACK,
-COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by up to two round trip times.
+COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a data channel by up to two round trip times.
 
 --- middle
 
 # Introduction
 
 SCTP {{RFC9260}} establishes its associations using a four-way handshake, which primarily serves to protect against
-half-open (SYN-flood) attacks. For WebRTC, SCTP runs encapsulated within DTLS {{RFC8261}} which establishes a secure,
-encrypted channel between the peers, which prevents half-open attacks.
+half-open (SYN-flood) attacks. For WebRTC, SCTP runs encapsulated within DTLS {{RFC8261}}, which establishes a secure,
+encrypted channel between the peers that prevents half-open attacks.
 
 The full connection setup between two entities using WebRTC, consisting of the exchange of SDP over the signaling channel,
 ICE and DTLS establishment and the SCTP handshake, is shown below (with annotations for the number of full round trips):
@@ -90,7 +90,7 @@ although only one direction is shown here for simplicity.
 Note: {{RFC9260}} allows the packets with the COOKIE ECHO and COOKIE ACK to carry data.
 This means the second RTT is not strictly necessary but was observed in practice.
 
-When the SCTP INIT chunk is signalled in the SDP, using the "sctp-init" attribute described
+When the SCTP INIT chunk is signaled in the SDP, using the "sctp-init" attribute described
 in this document, this flow can be reduced to the following exchange:
 
 ~~~
@@ -142,7 +142,7 @@ An example follows, see {{example}} for the full SDP exchange:
 a=sctp-init:AQAAHols3R0AUAAA/////+B5ZR3AAAAEgAgABoLA
 ~~~
 
-This is equivalent to the following SCTP INIT CHUNK:
+This is equivalent to the following SCTP INIT chunk:
 
 ~~~
 0                   1                   2                   3
@@ -177,7 +177,7 @@ This is equivalent to the following SCTP INIT CHUNK:
 
 **Purpose**: allows the SDP to carry the information contained in a SCTP INIT chunk
 
-**Appropriate values**: a base64 encoded blob.
+**Appropriate values**: A base64-encoded value.
 
 **Syntax**: sctp-init-value = base64 ; base64 defined in RFC 4566
 
@@ -189,27 +189,27 @@ This section defines how the "sctp-init" attribute can be negotiated using the S
 
 ## Generating the Initial SDP Offer
 
-If the offering endpoint has created a WebRTC datachannel, it MUST let the SCTP implementation generate
-a serialized INIT CHUNK that it would normally send over the network as a series of bytes.
+If the offering endpoint has created a WebRTC data channel, it MUST let the SCTP implementation generate
+a serialized INIT chunk that it would normally send over the network as a series of bytes.
 This message is then base64-encoded and added to the data "m=" section as an "a=sctp-init" line.
 
 ## Answerer Processing of the SDP Offer
 
 If the answering endpoint negotiates a data "m=" section, it will parse the "a=sctp-init" line from the data "m=" section, if present.
 
-If the data is not properly base64 encoded this results in an error.
+If the data is not properly base64-encoded this results in an error.
 
 The answering endpoint then informs its SCTP implementation of the series of bytes. The SCTP implementation is responsible for
-validating the format of the SCTP init chunk.
+validating the format of the SCTP INIT chunk.
 
-If the series of bytes is not a valid SCTP init chunk this results in an error.
+If the series of bytes is not a valid SCTP INIT chunk this results in an error.
 
 ## Generating the SDP Answer
 
-An endpoint not supporting the extension described in this document MUST NOT include a "a=sctp-init" attribute in its response.
+An endpoint not supporting the extension described in this document MUST NOT include a "a=sctp-init" attribute in its answer.
 
 If the answering endpoint negotiated a data "m=" section and detected a valid "a=sctp-init" line in the offer, as described above,
-it MUST let its SCTP implementation generate a serialized INIT CHUNK that it would normally send over the network as a series of bytes.
+it MUST let its SCTP implementation generate a serialized INIT chunk that it would normally send over the network as a series of bytes.
 
 This message is base64-encoded and added to the data "m=" section as a "a=sctp-init" line.
 
@@ -217,11 +217,11 @@ This message is base64-encoded and added to the data "m=" section as a "a=sctp-i
 
 If the answer negotiated a data "m=" section, the offering endpoint parses the "a=sctp-init" line, if present, from the data "m=" section.
 
-If the data is not properly base64 encoded this results in an error.
+If the data is not properly base64-encoded this results in an error.
 
 The offering endpoint then informs its SCTP implementation of the series of bytes.
-The SCTP implementation is responsible for validating the format of the SCTP init chunk.
-If the series of bytes is not a valid SCTP init chunk this results in an error.
+The SCTP implementation is responsible for validating the format of the SCTP INIT chunk.
+If the series of bytes is not a valid SCTP INIT chunk this results in an error.
 
 ## Modifying the Session
 
@@ -229,18 +229,17 @@ Subsequent offers and answers MUST include the "a=sctp-init" line in the negotia
 initial negotiation.
 
 Remote offers MAY negotiate a new "a=sctp-init" line in conjunction with either
-
 * a new SCTP association as described in {{Section 9.3 of ?RFC8841}}
 * or a new DTLS association as described in {{Section 5.5 of ?RFC8842}}.
 
-Attempting to add an sctp-init on an existing SCTP association results in an error.
+Attempting to add an sctp-init attribute to an existing SCTP association results in an error.
 
 # SCTP considerations
 
-The creation of the "sctp-init" attribute SHOULD NOT change the state of the SCTP association to ASSOCIATE as described
-in {{Section 4 of RFC9260}} and SHOULD NOT start the T1-init timer.
+The creation of the "sctp-init" attribute SHOULD NOT change the state of the SCTP association into the COOKIE-WAIT state as described
+in {{Section 5.1 of RFC9260}} and SHOULD NOT start the T1-init timer.
 
-Processing of the "sctp-init" attribute from the remote side SHOULD NOT change the state of the SCTP association and should not start any timer.
+Processing of the "sctp-init" attribute from the remote side SHOULD NOT change the state of the SCTP association and SHOULD NOT start any timer.
 
 When the "sctp-init" attribute has been negotiated, both endpoints SHOULD consider the SCTP association to be in the ESTABLISHED state,
 as described in {{Section 4 of RFC9260}}, once the DTLS handshake finishes. The steps A-E described in {{Section 5.1 of RFC9260}} can be skipped.
@@ -345,11 +344,11 @@ SNAP removes SCTP's anti-amplification mechanism in order to accelerate connecti
 However, when SCTP runs atop DTLS as specified in {{RFC8261}}, any attempt to send junk traffic over SCTP will fail
 as it will not be properly encrypted. Therefore SNAP does not add any new amplification risk.
 
-Exposing the content of the SCTP INIT, in particular the “Initiate Tag”, in the SDP does not introduce new security
+Exposing the content of the SCTP INIT chunk, in particular the "Initiate Tag", in the SDP does not introduce new security
 concerns since running SCTP atop DTLS protects against the off-path attacks described in {{Section 5.3.1 of RFC9260}}.
 
-Exposing the content of the SCTP init tag to the application layer, e.g. Javascript applications or the signaling
-channel in the case of WebRTC does allow these to add or remove variable length parameters. Since these parameters
+Exposing the content of the SCTP init tag to the application layer, e.g., JavaScript applications or the signaling
+channel in the case of WebRTC does allow these to add or remove variable-length parameters. Since these parameters
 are optional and used for feature negotiation, removing one is equivalent to the remote side not supporting the
 parameter and does not introduce a new security risk. Adding a parameter that is not supported may cause the remote
 side to send those but this is equivalent to receiving a packet for a feature that was not negotiated and hence does
