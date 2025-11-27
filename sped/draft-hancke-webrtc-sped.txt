@@ -119,6 +119,7 @@ Table of Contents
       |<-3---------- DTLS ServerHello -------------|
       |------------- DTLS Finished --------------->|
       |<-4---------- DTLS Finished ----------------|
+      |                                            |
       |------------- Application data ------------>|
 
    In addition, deployment experience has shown reliability issues,
@@ -217,8 +218,8 @@ Table of Contents
 
    Embedding DTLS in STUN requires considerations for reducing the MTU
    used by the DTLS layer for the fragmentation of the handshake.  The
-   goal is to fit the DTLS packet into STUN packet with a predefined
-   maximum size.
+   goal is to fit the DTLS handshake packets into STUN packets with a
+   predefined maximum size.
 
    The following attributes must be taken into account:
 
@@ -268,7 +269,8 @@ Table of Contents
                                  Table 1
 
    Applications that use additional STUN attributes MUST reduce the DTLS
-   MTU further.
+   MTU further.  The reduced MTU should only be used until the DTLS
+   handshake is complete.
 
 3.2.2.  Handling flights consisting of multiple packets
 
@@ -337,11 +339,13 @@ Table of Contents
    An outbound DTLS packet is considered acknowledged and removed from
    the "pending" list if either of these conditions is met:
 
-   ∗ A STUN message is received from the peer containing a META-DTLS-IN-
-   STUN-ACKNOWLEDGEMENT attribute that includes the packet's CRC-32
-   hash. * For a DTLS packet sent embedded in a STUN binding request, a
-   STUN binding success response is received for that request.  This
-   serves as an implicit acknowledgement.
+   *  A STUN message is received from the peer containing a META-DTLS-
+      IN-STUN-ACKNOWLEDGEMENT attribute that includes the packet's
+      CRC-32 hash.
+
+   *  For a DTLS packet sent embedded in a STUN binding request, a STUN
+      binding success response is received for that request.  This
+      serves as an implicit acknowledgement.
 
 3.3.3.  For pairs that are in WAITING state
 
@@ -524,9 +528,9 @@ Table of Contents
 
    *ICE Option*: sped
 
-   *Contact*: IESG iesg@ietf.org (mailto:iesg@ietf.org)
+   *Contact*: TODO
 
-   *Change controller*: IESG
+   *Change controller*: TODO
 
    *Description*: An ICE option of 'sped' indicates support for
    embedding DTLS in STUN as described in this specification.
