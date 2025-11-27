@@ -55,6 +55,7 @@ Client                                       Server
    |<-3---------- DTLS ServerHello -------------|
    |------------- DTLS Finished --------------->|
    |<-4---------- DTLS Finished ----------------|
+   |                                            |
    |------------- Application data ------------>|
 ~~~
 
@@ -123,7 +124,7 @@ the DTLS layer receives packets from the ICE layer directly. The DTLS layer MUST
 
 ### MTU considerations
 Embedding DTLS in STUN requires considerations for reducing the MTU used by the DTLS layer for the fragmentation of the handshake.
-The goal is to fit the DTLS packet into STUN packet with a predefined maximum size.
+The goal is to fit the DTLS handshake packets into STUN packets with a predefined maximum size.
 
 The following attributes must be taken into account:
 
@@ -141,6 +142,7 @@ The following attributes must be taken into account:
 |Total|124+|
 
 Applications that use additional STUN attributes MUST reduce the DTLS MTU further.
+The reduced MTU should only be used until the DTLS handshake is complete.
 
 ### Handling flights consisting of multiple packets
 A single DTLS flight may be too large to fit into a single UDP packet, especially when using Post-Quantum Cryptography (PQC).
@@ -150,7 +152,7 @@ Addressing this without re-introducing additional delays is an open question.
 ## ICE procedures
 To manage delivery of DTLS handshake packets, the ICE agent maintains a list of outbound DTLS packets that have not yet been acknowledged by the peer. Each packet is identified by a CRC-32 hash. Packets are resent until they are acknowledged.
 
-Packets can be sent embedded in STUN messages using the `META-DTLS-IN-STUN` attribute, or without embedding on a validated ICE candidate pair.
+Packets can be sent embedded in STUN messages using the META-DTLS-IN-STUN attribute, or without embedding on a validated ICE candidate pair.
 
 The agent also maintains a list of the CRC-32 hashes of received DTLS handshake packets to send as acknowledgements to the peer.
 
@@ -174,13 +176,13 @@ An ICE agent maintains two lists related to DTLS packet delivery:
 * A "pending" list of CRC-32 hashes of all outbound DTLS packets that have not yet been acknowledged.
 * A "received" list of CRC-32 hashes of all unique inbound DTLS packets that it has processed.
 
-When an agent sends a STUN message, it includes the contents of its "received" list in a `META-DTLS-IN-STUN-ACKNOWLEDGEMENT` attribute. This list MUST be included, even if empty, until the DTLS handshake is complete on both sides.
+When an agent sends a STUN message, it includes the contents of its "received" list in a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute. This list MUST be included, even if empty, until the DTLS handshake is complete on both sides.
 
-When an agent receives a STUN binding request or response containing a `META-DTLS-IN-STUN` attribute, it calculates the CRC-32 hash of the embedded DTLS packet. If this hash is not already in its "received" list, it adds it.
+When an agent receives a STUN binding request or response containing a META-DTLS-IN-STUN attribute, it calculates the CRC-32 hash of the embedded DTLS packet. If this hash is not already in its "received" list, it adds it.
 
 An outbound DTLS packet is considered acknowledged and removed from the "pending" list if either of these conditions is met:
 
-∗ A STUN message is received from the peer containing a `META-DTLS-IN-STUN-ACKNOWLEDGEMENT` attribute that includes the packet's CRC-32 hash.
+* A STUN message is received from the peer containing a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute that includes the packet's CRC-32 hash.
 * For a DTLS packet sent embedded in a STUN binding request, a STUN binding success response is received for that request. This serves as an implicit acknowledgement.
 
 ### For pairs that are in WAITING state
@@ -285,16 +287,16 @@ in {{Section B.1 of ?RFC8845}} which should prevent issues.
 
 # IANA Considerations
 
-This document defines two new STUN attributes, `META-DTLS-IN-STUN` and `META-DTLS-IN-STUN-ACKNOWLEDGEMENT`. These attributes will need to be registered with IANA in the "STUN Attributes" registry, following the procedures defined in {{?RFC8489}}. Provisional names have been used in this draft and the registry.
+This document defines two new STUN attributes, META-DTLS-IN-STUN and META-DTLS-IN-STUN-ACKNOWLEDGEMENT. These attributes will need to be registered with IANA in the "STUN Attributes" registry, following the procedures defined in {{?RFC8489}}. Provisional names have been used in this draft and the registry.
 
 If an ice-option is considered necessary, the IANA shall register the following ICE option in the "ICE Options" subregistry of the
 "Interactive Connectivity Establishment (ICE) registry", following the procedures defined in {{?RFC6336}}.
 
 **ICE Option**: sped
 
-**Contact**: IESG <iesg@ietf.org>
+**Contact**: TODO
 
-**Change controller**: IESG
+**Change controller**: TODO
 
 **Description**: An ICE option of 'sped' indicates support for embedding DTLS in STUN as described in this specification.
 
