@@ -5,10 +5,10 @@
 Network Working Group                                          P. Hancke
 Internet-Draft                                       Meta Platforms Inc.
 Intended status: Informational                                 J. Uberti
-Expires: 26 May 2026                                              OpenAI
+Expires: 1 June 2026                                              OpenAI
                                                                V. Boivie
                                                                   Google
-                                                        22 November 2025
+                                                        28 November 2025
 
 
                  SCTP Negotiation Acceleration Protocol
@@ -57,7 +57,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 26 May 2026.
+   This Internet-Draft will expire on 1 June 2026.
 
 Copyright Notice
 
@@ -196,6 +196,12 @@ Table of Contents
    line) with a "UDP/DTLS/SCTP" protocol identifier (defined in
    [RFC8841]) and the <fmt> parameter value of 'webrtc-datachannel'
    (defined in [RFC8832]).
+
+   NOTE: This specification only defines the usage of the SDP "sctp-
+   init" attribute when associated with an "m=" line containing one of
+   the following proto values: "UDP/DTLS/SCTP" or "TCP/DTLS/SCTP".
+   Usage of the attribute with other proto values needs to be defined in
+   a separate specification.
 
    An example follows, see Section 7 for the full SDP exchange:
 

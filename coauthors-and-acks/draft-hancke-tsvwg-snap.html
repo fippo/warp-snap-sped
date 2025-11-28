@@ -1054,7 +1054,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Hancke, et al.</td>
-<td class="center">Expires 26 May 2026</td>
+<td class="center">Expires 1 June 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1067,12 +1067,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-hancke-tsvwg-snap</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-11-22" class="published">22 November 2025</time>
+<time datetime="2025-11-28" class="published">28 November 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-05-26">26 May 2026</time></dd>
+<dd class="expires"><time datetime="2026-06-01">1 June 2026</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1133,7 +1133,7 @@ COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a data channel by
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 26 May 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 1 June 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1342,14 +1342,17 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <p id="section-4.1-1">This section defines a new SDP media-level attribute, "sctp-init". The attribute can be associated with
 an SDP media description ("m=" line) with a "UDP/DTLS/SCTP" protocol identifier (defined in <span>[<a href="#RFC8841" class="cite xref">RFC8841</a>]</span>)
 and the &lt;fmt&gt; parameter value of 'webrtc-datachannel' (defined in <span>[<a href="#RFC8832" class="cite xref">RFC8832</a>]</span>).<a href="#section-4.1-1" class="pilcrow">¶</a></p>
-<p id="section-4.1-2">An example follows, see <a href="#example" class="auto internal xref">Section 7</a> for the full SDP exchange:<a href="#section-4.1-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.1-3">
+<p id="section-4.1-2">NOTE: This specification only defines the usage of the SDP "sctp-init" attribute when associated with
+an "m=" line containing one of the following proto values: "UDP/DTLS/SCTP" or "TCP/DTLS/SCTP".
+Usage of the attribute with other proto values needs to be defined in a separate specification.<a href="#section-4.1-2" class="pilcrow">¶</a></p>
+<p id="section-4.1-3">An example follows, see <a href="#example" class="auto internal xref">Section 7</a> for the full SDP exchange:<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1-4">
 <pre>
 a=sctp-init:AQAAHols3R0AUAAA/////+B5ZR3AAAAEgAgABoLA
-</pre><a href="#section-4.1-3" class="pilcrow">¶</a>
+</pre><a href="#section-4.1-4" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-4">This is equivalent to the following SCTP INIT chunk:<a href="#section-4.1-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.1-5">
+<p id="section-4.1-5">This is equivalent to the following SCTP INIT chunk:<a href="#section-4.1-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1-6">
 <pre>
 0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -1369,7 +1372,7 @@ a=sctp-init:AQAAHols3R0AUAAA/////+B5ZR3AAAAEgAgABoLA
 /                       |          FORWARD_TSN(0xc0)            /
 \ 0xc0, 0x00, 0x00, 0x04| 0x80, 0x08, 0x00, 0x06, 0x82, 0xc0    \
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-</pre><a href="#section-4.1-5" class="pilcrow">¶</a>
+</pre><a href="#section-4.1-6" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
