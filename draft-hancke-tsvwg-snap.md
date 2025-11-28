@@ -136,6 +136,10 @@ This section defines a new SDP media-level attribute, "sctp-init". The attribute
 an SDP media description ("m=" line) with a "UDP/DTLS/SCTP" protocol identifier (defined in {{RFC8841}})
 and the &lt;fmt&gt; parameter value of 'webrtc-datachannel' (defined in {{?RFC8832}}).
 
+NOTE: This specification only defines the usage of the SDP "sctp-init" attribute when associated with
+an "m=" line containing one of the following proto values: "UDP/DTLS/SCTP" or "TCP/DTLS/SCTP".
+Usage of the attribute with other proto values needs to be defined in a separate specification.
+
 An example follows, see {{example}} for the full SDP exchange:
 
 ~~~
