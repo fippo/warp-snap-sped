@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-11-27T01:45:55.466218+00:00",
+  "timestamp": "2025-11-30T01:58:29.105736+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -54,7 +54,7 @@
     {
       "number": 1,
       "id": "PR_kwDOPBQjh86jGMKY",
-      "title": "+coauthors and acknowledgments",
+      "title": "snap: add coauthors and acknowledgments",
       "url": "https://github.com/fippo/warp-snap-sped/pull/1",
       "state": "OPEN",
       "author": "fippo",
@@ -63,13 +63,13 @@
       "labels": [],
       "body": "and fix lots of references and update the draft name\r\n\r\n@boivie @juberti PTAL",
       "createdAt": "2025-08-11T17:28:11Z",
-      "updatedAt": "2025-11-22T11:46:20Z",
+      "updatedAt": "2025-11-28T12:48:16Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "12f4365a8c24d71f66c84269f89a5ba6a3d68b89",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "coauthors-and-acks",
-      "headRefOid": "2edaaf18f6f9043a536c8634ff3869211c43259d",
+      "headRefOid": "b4c215dadf69903e315c79faf800e22decdc8a1c",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
