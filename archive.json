@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-12-02T01:49:53.892619+00:00",
+  "timestamp": "2025-12-04T01:50:19.563124+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -63,7 +63,7 @@
       "labels": [],
       "body": "and fix lots of references and update the draft name\r\n\r\n@boivie @juberti PTAL",
       "createdAt": "2025-08-11T17:28:11Z",
-      "updatedAt": "2025-11-28T12:48:16Z",
+      "updatedAt": "2025-12-02T05:48:58Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "12f4365a8c24d71f66c84269f89a5ba6a3d68b89",
@@ -81,6 +81,13 @@
           "body": "I wonder if we need (or should) say that this attribute is only defined together with a proto value defined in https://datatracker.ietf.org/doc/html/rfc8841#section-4.2",
           "createdAt": "2025-08-25T01:31:38Z",
           "updatedAt": "2025-08-25T01:31:38Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Lgtm",
+          "createdAt": "2025-12-02T05:48:58Z",
+          "updatedAt": "2025-12-02T05:48:58Z"
         }
       ],
       "reviews": []
