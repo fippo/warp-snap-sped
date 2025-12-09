@@ -128,13 +128,15 @@ The protocol is using in-band discovery to determine support and MAY (as describ
 Until the DTLS handshake has finished, the ICE agent includes the META-DTLS-IN-STUN-ACKNOWLEDGEMENT and META-DTLS-IN-STUN
 attributes in binding requests and responses as described below.
 
+As a "closing handshake" signaling that this protocol (and the embedded DTLS handshake) has finished, the ICE agent
+
+* stops including the META-DTLS-IN-STUN attribute in STUN messages it sends when receiving a STUN messages that includes an empty META-DTLS-IN-STUN attribute and a META-DTLS-IN-STUN-ACKNOWLEDGMENT attribute.
+* stops including the META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute in STUN messages it sends when receiving a STUN message that includes a
+META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute but no META-DTLS-IN-STUN attribute.
+
 An ICE agent receiving a STUN binding request or response that contains neither a META-DTLS-IN-STUN-ACKNOWLEDGEMENT nor a
 META-DTLS-IN-STUN attribute determines that the peer does not support the protocol defined in this specification
 and stops including of these attributes.
-
-The ICE agent stops including the META-DTLS-IN-STUN-ACKNOWLEDGEMENT in messages it sends when receiving a STUN message that includes a
-META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute but no META-DTLS-IN-STUN attribute which signals that the remote STUN agent has completed
-the DTLS handshake and this protocol concluded.
 
 ### Receipt acknowledgements
 An ICE agent maintains two lists related to DTLS packet delivery:
@@ -142,26 +144,37 @@ An ICE agent maintains two lists related to DTLS packet delivery:
 * A "pending" list of CRC-32 hashes of all outbound DTLS packets that have not yet been acknowledged.
 * A "received" list of CRC-32 hashes of all unique inbound DTLS packets that it has processed.
 
-When an agent sends a STUN message, it includes the contents of its "received" list in a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute. This list MUST be included, even if empty, until the DTLS handshake is complete on both sides.
+When an agent sends a STUN message, it includes the contents of its "received" list in a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute.
+This list MUST be included, even if empty, until the ICE agent receives a STUN binding request or response that
+contains a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute but does not contain a META-DTLS-IN-STUN attribute. This
+acts as a "closing handshake" for the embedding.
 
-When an agent receives a STUN binding request or response containing a META-DTLS-IN-STUN attribute, it calculates the CRC-32 hash of the embedded DTLS packet. If this hash is not already in its "received" list, it adds it.
+When an agent receives a STUN binding request or response containing a META-DTLS-IN-STUN attribute, it calculates the CRC-32 hash of the embedded DTLS packet.
+If this hash is not already in its "received" list, it adds it.
 
 An outbound DTLS packet is considered acknowledged and removed from the "pending" list if either of these conditions is met:
 
 * A STUN message is received from the peer containing a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute that includes the packet's CRC-32 hash.
 * For a DTLS packet sent embedded in a STUN binding request, a STUN binding success response is received for that request. This serves as an implicit acknowledgement.
 
+### Completion of the DTLS handshake
+The DTLS layer MUST notify the ICE agent when the DTLS handshake is complete, its role and what DTLS version was negotiated.
+
+The ICE agent clears the "pending" list of outgoing packets if either
+* the DTLS layer is acting as a DTLS client and the DTLS version is 1.2, or
+* the DTLS layer is acting as a DTLS server and the DTLS version is 1.3.
+
 ### For pairs that are in WAITING state
 When an ICE candidate pair has not received a response, DTLS can not be sent without being embedded as the candidate pair does not have consent
 from the other side. In that state, when sending a STUN binding request the ICE agent embeds
 
 * any pending acknowledgments using the META-DTLS-IN-STUN-ACKNOWLEDGMENT attribute and
-* the next pending DTLS packet (determined in a round-robin fashion), if any, using the META-DTLS-IN-STUN attribute.
+* the next pending DTLS packet (determined in a round-robin fashion) using the META-DTLS-IN-STUN attribute. If the "pending" list is empty, the attribute MUST be included with a zero-length value.
 
 When receiving a binding request with an META-DTLS-IN-STUN attribute, the ICE agents embeds
 
 * any pending acknowledgments using the META-DTLS-IN-STUN-ACKNOWLEDGMENT attribute and
-* the next pending DTLS packet (determined in a round-robin fashion), if any, using the META-DTLS-IN-STUN attribute.
+* the next pending DTLS packet (determined in a round-robin fashion) using the META-DTLS-IN-STUN attribute. If the "pending" list is empty, the attribute MUST be included with a zero-length value.
 
 ### For pairs in SUCCEEDED state
 When the ICE candidate pair has received a binding response and is in succeeded state, any new DTLS flights SHOULD immediately be sent without being embedded in
@@ -186,12 +199,14 @@ the other side will potentially receive many duplicated DTLS packets.
 Lite ICE agents which are commonly used by servers by definition only respond to binding requests and do not send
 binding requests themselves. Due to the lock-step behavior of DTLS this is not a problem.
 
+TODO: can lite agents immediately send without embedding?
+
 ## DTLS procedures
 For the protocol described in this specification the DTLS handshake is started before ICE finds a valid pair and MUST disable the DTLS
 resend timeout as resends will be handled by the STUN (application) layer using cached packets.
 
 Instead of receiving the DTLS packets after demultiplexing (described in {{Section 7 of ?RFC7983}}),
-the DTLS layer receives packets from the ICE layer directly. The DTLS layer MUST notify the ICE agent when the DTLS handshake is complete.
+the DTLS layer receives packets from the ICE layer directly.
 
 ### MTU considerations
 Embedding DTLS in STUN requires considerations for reducing the MTU used by the DTLS layer for the fragmentation of the handshake.
