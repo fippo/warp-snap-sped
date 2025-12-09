@@ -115,40 +115,6 @@ Client                                       Server
 
 Resiliency to packet loss is achieved by acknowledgements and more aggressive resends piggybacked onto ICE checks.
 
-## DTLS procedures
-For the protocol described in this specification the DTLS handshake is started before ICE finds a valid pair and MUST disable the DTLS
-resend timeout as resends will be handled by the STUN (application) layer using cached packets.
-
-Instead of receiving the DTLS packets after demultiplexing (described in {{Section 7 of ?RFC7983}}),
-the DTLS layer receives packets from the ICE layer directly. The DTLS layer MUST notify the ICE agent when the DTLS handshake is complete.
-
-### MTU considerations
-Embedding DTLS in STUN requires considerations for reducing the MTU used by the DTLS layer for the fragmentation of the handshake.
-The goal is to fit the DTLS handshake packets into STUN packets with a predefined maximum size.
-
-The following attributes must be taken into account:
-
-|Attribute|Size|Defined in|
-|STUN header|20|{{?RFC8489}}|
-|ICE-CONTROLLED /ICE-CONTROLLING|12|{{Section 7.3.1 of ?RFC8445}}|
-|PRIORITY|8|{{Section 7.3.1 of ?RFC8445}}|
-|USE-CANDIDATE|4|{{Section 7.3.1 of ?RFC8445}}, not on first packet but subsequent packets|
-|MESSAGE-INTEGRITY|24|{{Section 15.4 of ?RFC8489}}|
-|FINGERPRINT|8|{{Section 15.5 of ?RFC8489}}|
-|DTLS-in-STUN|4|This specification. Overhead for the attribute header.|
-|DTLS-in-STUN-ACKNOWLEDGEMENT|20|This specification.|
-|USERNAME|16+|{{Section 7.3.1 of ?RFC8445}}. Variable, typically 4 byte header plus 9 bytes for two four-byte username fragments and the colon plus 3 bytes padding. The actual size is known before the DTLS exchange starts, either from the SDP exchange or a peer-reflexive candidate.|
-|TURN XOR-PEER-ADDRESS|24|Assuming 16 bytes IPv6, see {{?RFC8656}}|
-|Total|124+|
-
-Applications that use additional STUN attributes MUST reduce the DTLS MTU further.
-The reduced MTU should only be used until the DTLS handshake is complete.
-
-### Handling flights consisting of multiple packets
-A single DTLS flight may be too large to fit into a single UDP packet, especially when using Post-Quantum Cryptography (PQC).
-
-Addressing this without re-introducing additional delays is an open question.
-
 ## ICE procedures
 To manage delivery of DTLS handshake packets, the ICE agent maintains a list of outbound DTLS packets that have not yet been acknowledged by the peer. Each packet is identified by a CRC-32 hash. Packets are resent until they are acknowledged.
 
@@ -219,6 +185,40 @@ the other side will potentially receive many duplicated DTLS packets.
 ### Lite agents
 Lite ICE agents which are commonly used by servers by definition only respond to binding requests and do not send
 binding requests themselves. Due to the lock-step behavior of DTLS this is not a problem.
+
+## DTLS procedures
+For the protocol described in this specification the DTLS handshake is started before ICE finds a valid pair and MUST disable the DTLS
+resend timeout as resends will be handled by the STUN (application) layer using cached packets.
+
+Instead of receiving the DTLS packets after demultiplexing (described in {{Section 7 of ?RFC7983}}),
+the DTLS layer receives packets from the ICE layer directly. The DTLS layer MUST notify the ICE agent when the DTLS handshake is complete.
+
+### MTU considerations
+Embedding DTLS in STUN requires considerations for reducing the MTU used by the DTLS layer for the fragmentation of the handshake.
+The goal is to fit the DTLS handshake packets into STUN packets with a predefined maximum size.
+
+The following attributes must be taken into account:
+
+|Attribute|Size|Defined in|
+|STUN header|20|{{?RFC8489}}|
+|ICE-CONTROLLED /ICE-CONTROLLING|12|{{Section 7.3.1 of ?RFC8445}}|
+|PRIORITY|8|{{Section 7.3.1 of ?RFC8445}}|
+|USE-CANDIDATE|4|{{Section 7.3.1 of ?RFC8445}}, not on first packet but subsequent packets|
+|MESSAGE-INTEGRITY|24|{{Section 15.4 of ?RFC8489}}|
+|FINGERPRINT|8|{{Section 15.5 of ?RFC8489}}|
+|DTLS-in-STUN|4|This specification. Overhead for the attribute header.|
+|DTLS-in-STUN-ACKNOWLEDGEMENT|20|This specification.|
+|USERNAME|16+|{{Section 7.3.1 of ?RFC8445}}. Variable, typically 4 byte header plus 9 bytes for two four-byte username fragments and the colon plus 3 bytes padding. The actual size is known before the DTLS exchange starts, either from the SDP exchange or a peer-reflexive candidate.|
+|TURN XOR-PEER-ADDRESS|24|Assuming 16 bytes IPv6, see {{?RFC8656}}|
+|Total|124+|
+
+Applications that use additional STUN attributes MUST reduce the DTLS MTU further.
+The reduced MTU should only be used until the DTLS handshake is complete.
+
+### Handling flights consisting of multiple packets
+A single DTLS flight may be too large to fit into a single UDP packet, especially when using Post-Quantum Cryptography (PQC).
+
+Addressing this without re-introducing additional delays is an open question.
 
 # STUN Extensions
 
