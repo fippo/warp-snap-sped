@@ -4,8 +4,8 @@
 
 Network Working Group                                          P. Hancke
 Internet-Draft                                       Meta Platforms Inc.
-Intended status: Informational                           9 December 2025
-Expires: 12 June 2026
+Intended status: Informational                          11 December 2025
+Expires: 14 June 2026
 
 
                     STUN Protocol for Embedding DTLS
@@ -47,7 +47,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 June 2026.
+   This Internet-Draft will expire on 14 June 2026.
 
 Copyright Notice
 
@@ -69,18 +69,19 @@ Table of Contents
    2.  Terminology
    3.  Embedding DTLS in STUN
      3.1.  Example negotiation
-     3.2.  ICE procedures
-       3.2.1.  Inband discovery and negotiation
-       3.2.2.  Receipt acknowledgements
-       3.2.3.  Completion of the DTLS handshake
-       3.2.4.  For pairs that are in WAITING state
-       3.2.5.  For pairs in SUCCEEDED state
-       3.2.6.  Resending packets
-       3.2.7.  Sending on multiple candidate pairs
-       3.2.8.  Lite agents
-     3.3.  DTLS procedures
-       3.3.1.  MTU considerations
-       3.3.2.  Handling flights consisting of multiple packets
+     3.2.  Embedding data, acknowledgements and resends
+     3.3.  ICE procedures
+       3.3.1.  Inband discovery and negotiation
+       3.3.2.  Receipt acknowledgements
+       3.3.3.  Completion of the DTLS handshake
+       3.3.4.  For pairs that are in WAITING state
+       3.3.5.  For pairs in SUCCEEDED state
+       3.3.6.  Resending packets
+       3.3.7.  Sending on multiple candidate pairs
+       3.3.8.  Lite agents
+     3.4.  DTLS procedures
+       3.4.1.  MTU considerations
+       3.4.2.  Handling flights consisting of multiple packets
    4.  STUN Extensions
      4.1.  New attributes
      4.2.  META-DTLS-IN-STUN
@@ -200,10 +201,31 @@ Table of Contents
       |------------- Application data ------------>|
       |----- ICE Check + DTLS Finished (resend)--->|
 
-   Resiliency to packet loss is achieved by acknowledgements and more
-   aggressive resends piggybacked onto ICE checks.
+3.2.  Embedding data, acknowledgements and resends
 
-3.2.  ICE procedures
+   The protocol defined in this specification embeds DTLS data as a STUN
+   attribute, similar to the DATA attribute defined in [RFC5766].  The
+   recipient acknowledges data with this attribute using another STUN
+   attribute containing a list of CRC-32 hashes of the data.
+
+   In addition to allowing saving one round-trip time for establishing
+   the connection this has also shown to be useful for dealing with
+   packet loss due to the higher frequency of ICE connectvity checks
+   compared to DTLS resends (which commonly use an exponential backoff)
+   as well as utilizing that ICE is potentially probing multiple
+   candidate pairs.  This is particularly important for fragmented
+   handshake packets, such as those used in DTLS-PQC, where only one of
+   many packets in a DTLS flight might be lost and need retransmission.
+
+   While some of the semantics defined in this specification are
+   specific to establishing the DTLS connection, the concept of using
+   STUN attributes, e.g. on the periodic STUN consent defined in
+   [RFC7675], as a transport for embedding data * whose receipt should
+   be acknowledged * should be sent on multiple paths * is not time-
+   critical is applicable on a wider scope and can be specified by
+   defining STUN attribute pairs for data and acknowledgements.
+
+3.3.  ICE procedures
 
    To manage delivery of DTLS handshake packets, the ICE agent maintains
    a list of outbound DTLS packets that have not yet been acknowledged
@@ -217,7 +239,7 @@ Table of Contents
    The agent also maintains a list of the CRC-32 hashes of received DTLS
    handshake packets to send as acknowledgements to the peer.
 
-3.2.1.  Inband discovery and negotiation
+3.3.1.  Inband discovery and negotiation
 
    The protocol is using in-band discovery to determine support and MAY
    (as described below) use ice-options for negotiation using SDP offer/
@@ -246,7 +268,7 @@ Table of Contents
    protocol defined in this specification and stops including of these
    attributes.
 
-3.2.2.  Receipt acknowledgements
+3.3.2.  Receipt acknowledgements
 
    An ICE agent maintains two lists related to DTLS packet delivery:
 
@@ -280,7 +302,7 @@ Table of Contents
       binding success response is received for that request.  This
       serves as an implicit acknowledgement.
 
-3.2.3.  Completion of the DTLS handshake
+3.3.3.  Completion of the DTLS handshake
 
    The DTLS layer MUST notify the ICE agent when the DTLS handshake is
    complete, its role and what DTLS version was negotiated.
@@ -290,7 +312,7 @@ Table of Contents
    1.2, or * the DTLS layer is acting as a DTLS server and the DTLS
    version is 1.3.
 
-3.2.4.  For pairs that are in WAITING state
+3.3.4.  For pairs that are in WAITING state
 
    When an ICE candidate pair has not received a response, DTLS can not
    be sent without being embedded as the candidate pair does not have
@@ -314,7 +336,7 @@ Table of Contents
       using the META-DTLS-IN-STUN attribute.  If the "pending" list is
       empty, the attribute MUST be included with a zero-length value.
 
-3.2.5.  For pairs in SUCCEEDED state
+3.3.5.  For pairs in SUCCEEDED state
 
    When the ICE candidate pair has received a binding response and is in
    succeeded state, any new DTLS flights SHOULD immediately be sent
@@ -332,14 +354,14 @@ Table of Contents
    *  the next pending DTLS packet (determined in a round-robin fashion)
       using the META-DTLS-IN-STUN attribute.
 
-3.2.6.  Resending packets
+3.3.6.  Resending packets
 
    Resends should happen with the regularly scheduled ICE checks but MAY
    be triggered by the receipt of an acknowledgment and determining that
    a packet did not arrive as expected (either because it was lost or it
    arrived out of order).
 
-3.2.7.  Sending on multiple candidate pairs
+3.3.7.  Sending on multiple candidate pairs
 
    ICE performs checks on multiple candidate pairs in parallel.  This
    implies that embedding a DTLS packet can happen in rapid succession
@@ -347,7 +369,7 @@ Table of Contents
    and the other side will potentially receive many duplicated DTLS
    packets.
 
-3.2.8.  Lite agents
+3.3.8.  Lite agents
 
    Lite ICE agents which are commonly used by servers by definition only
    respond to binding requests and do not send binding requests
@@ -356,7 +378,7 @@ Table of Contents
 
    TODO: can lite agents immediately send without embedding?
 
-3.3.  DTLS procedures
+3.4.  DTLS procedures
 
    For the protocol described in this specification the DTLS handshake
    is started before ICE finds a valid pair and MUST disable the DTLS
@@ -367,7 +389,7 @@ Table of Contents
    in Section 7 of [RFC7983]), the DTLS layer receives packets from the
    ICE layer directly.
 
-3.3.1.  MTU considerations
+3.4.1.  MTU considerations
 
    Embedding DTLS in STUN requires considerations for reducing the MTU
    used by the DTLS layer for the fragmentation of the handshake.  The
@@ -425,7 +447,7 @@ Table of Contents
    MTU further.  The reduced MTU should only be used until the DTLS
    handshake is complete.
 
-3.3.2.  Handling flights consisting of multiple packets
+3.4.2.  Handling flights consisting of multiple packets
 
    A single DTLS flight may be too large to fit into a single UDP
    packet, especially when using Post-Quantum Cryptography (PQC).
@@ -609,6 +631,12 @@ Table of Contents
               DOI 10.17487/RFC5245, April 2010,
               <https://www.rfc-editor.org/rfc/rfc5245>.
 
+   [RFC5766]  Mahy, R., Matthews, P., and J. Rosenberg, "Traversal Using
+              Relays around NAT (TURN): Relay Extensions to Session
+              Traversal Utilities for NAT (STUN)", RFC 5766,
+              DOI 10.17487/RFC5766, April 2010,
+              <https://www.rfc-editor.org/rfc/rfc5766>.
+
    [RFC6336]  Westerlund, M. and C. Perkins, "IANA Registry for
               Interactive Connectivity Establishment (ICE) Options",
               RFC 6336, DOI 10.17487/RFC6336, July 2011,
@@ -617,6 +645,11 @@ Table of Contents
    [RFC6347]  Rescorla, E. and N. Modadugu, "Datagram Transport Layer
               Security Version 1.2", RFC 6347, DOI 10.17487/RFC6347,
               January 2012, <https://www.rfc-editor.org/rfc/rfc6347>.
+
+   [RFC7675]  Perumal, M., Wing, D., Ravindranath, R., Reddy, T., and M.
+              Thomson, "Session Traversal Utilities for NAT (STUN) Usage
+              for Consent Freshness", RFC 7675, DOI 10.17487/RFC7675,
+              October 2015, <https://www.rfc-editor.org/rfc/rfc7675>.
 
    [RFC7983]  Petit-Huguenin, M. and G. Salgueiro, "Multiplexing Scheme
               Updates for Secure Real-time Transport Protocol (SRTP)
