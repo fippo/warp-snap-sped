@@ -113,7 +113,23 @@ Client                                       Server
    |----- ICE Check + DTLS Finished (resend)--->|
 ~~~
 
-Resiliency to packet loss is achieved by acknowledgements and more aggressive resends piggybacked onto ICE checks.
+## Embedding data, acknowledgements and resends
+
+The protocol defined in this specification embeds DTLS data as a STUN attribute, similar to the DATA attribute defined in {{?RFC5766}}.
+The recipient acknowledges data with this attribute using another STUN attribute containing a list of CRC-32 hashes of the data.
+
+In addition to allowing saving one round-trip time for establishing the connection this has also shown to be useful for dealing
+with packet loss due to the higher frequency of ICE connectvity checks compared to DTLS resends (which commonly use an exponential backoff)
+as well as utilizing that ICE is potentially probing multiple candidate pairs. This is particularly important for fragmented handshake packets,
+such as those used in DTLS-PQC, where only one of many packets in a DTLS flight might be lost and need retransmission.
+
+While some of the semantics defined in this specification are specific to establishing the DTLS connection,
+the concept of using STUN attributes, e.g. on the periodic STUN consent defined in {{?RFC7675}},
+as a transport for embedding data
+* whose receipt should be acknowledged
+* should be sent on multiple paths
+* is not time-critical
+is applicable on a wider scope and can be specified by defining STUN attribute pairs for data and acknowledgements.
 
 ## ICE procedures
 To manage delivery of DTLS handshake packets, the ICE agent maintains a list of outbound DTLS packets that have not yet been acknowledged by the peer. Each packet is identified by a CRC-32 hash. Packets are resent until they are acknowledged.
