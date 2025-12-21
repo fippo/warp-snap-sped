@@ -3,14 +3,14 @@ title: "SCTP Negotiation Acceleration Protocol"
 abbrev: "SNAP"
 category: info
 
-docname: draft-hancke-tsvwg-snap
+docname: draft-hancke-tsvwg-snap-00
 submissiontype: IETF
 number:
-date:
+date: 2025-12-21
 consensus: true
 v: 3
 area: AREA
-workgroup: Network Working Group
+workgroup: Transport and Services Working Group
 keyword:
  - sctp
  - webrtc
@@ -25,17 +25,17 @@ venue:
 
 author:
  -
-    fullname: Philipp Hancke
-    organization: Meta Platforms Inc.
-    email: philipp.hancke@googlemail.com
+  fullname: Philipp Hancke
+  organization: Meta Platforms Inc.
+  email: philipp.hancke@googlemail.com
  -
-    fullname: Justin Uberti
-    organization: OpenAI
-    email: justin@uberti.name
+  fullname: Justin Uberti
+  organization: OpenAI
+  email: justin@uberti.name
  -
-    fullname: Victor Boivie
-    organization: Google
-    email: boivie@google.com
+  fullname: Victor Boivie
+  organization: Google
+  email: boivie@google.com
 
 normative:
 
@@ -43,17 +43,19 @@ informative:
 
 --- abstract
 
-{{?RFC8831}} defines WebRTC Data Channels that allow the transport of arbitrary non-media data over a WebRTC PeerConnection.
-This uses SCTP {{!RFC9260}} and a DTLS encapsulation of SCTP packets {{?RFC8261}}.
-
-Using the SDP negotiation procedure described in this document allows skipping the exchange of the SCTP INIT, INIT ACK,
-COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a data channel by up to two round trip times.
+WebRTC Data Channels use the Stream Control Transmission Protocol (SCTP) over a Datagram Transport Layer Security (DTLS) association.
+The standard SCTP connection establishment requires a handshake that introduces latency. This document specifies a method to
+accelerate the datachannel establishment by embedding the SCTP initialization parameters within the Session Description Protocol
+(SDP) offer/answer exchange. This reduces the time required to open a data channel by up to two network round-trip times.
 
 --- middle
 
 # Introduction
 
-SCTP {{RFC9260}} establishes its associations using a four-way handshake, which primarily serves to protect against
+{{?RFC8831}} defines WebRTC Data Channels that allow the transport of arbitrary non-media data over a WebRTC PeerConnection.
+This uses SCTP {{!RFC9260}} and a DTLS encapsulation of SCTP packets {{?RFC8261}}.
+
+SCTP establishes its associations using a four-way handshake, which primarily serves to protect against
 half-open (SYN-flood) attacks. For WebRTC, SCTP runs encapsulated within DTLS {{RFC8261}}, which establishes a secure,
 encrypted channel between the peers that prevents half-open attacks.
 
@@ -118,15 +120,15 @@ Client                                       Server
 
 # Terminology
 
-**SCTP INIT**: the SCTP INIT chunk as described in {{Section 3.3.2 of RFC9260}}.
+SCTP INITthe SCTP INIT chunk as described in {{Section 3.3.2 of RFC9260}}.
 
-**SCTP INIT ACK**: the SCTP INIT ACK chunk as described in {{Section 3.3.3 of RFC9260}}.
+SCTP INIT ACK: the SCTP INIT ACK chunk as described in {{Section 3.3.3 of RFC9260}}.
 
-**SCTP COOKIE ECHO**: the SCTP COOKIE ECHO chunk as described in {{Section 3.3.11 of RFC9260}}.
+SCTP COOKIE ECHO: the SCTP COOKIE ECHO chunk as described in {{Section 3.3.11 of RFC9260}}.
 
-**SCTP COOKIE ACK**: the SCTP COOKIE ACK chunk as described in {{Section 3.3.12 of RFC9260}}.
+SCTP COOKIE ACK: the SCTP COOKIE ACK chunk as described in {{Section 3.3.12 of RFC9260}}.
 
-**RTT**: Round-Trip Time
+RTT: Round-Trip Time
 
 # SDP sctp-init attribute
 
@@ -171,19 +173,19 @@ This is equivalent to the following SCTP INIT chunk:
 
 ## Syntax {#syntax}
 
-**Attribute name**: sctp-init
+Attribute name: sctp-init
 
-**Type of attribute**: media
+Type of attribute: media
 
-**Mux category**: CAUTION
+Mux category: CAUTION
 
-**Subject to charset**: No
+Subject to charset: No
 
-**Purpose**: allows the SDP to carry the information contained in a SCTP INIT chunk
+Purpose: allows the SDP to carry the information contained in a SCTP INIT chunk
 
-**Appropriate values**: A base64-encoded value.
+Appropriate values: A base64-encoded value.
 
-**Syntax**: sctp-init-value = base64 ; base64 defined in RFC 4566
+Syntax: sctp-init-value = base64 ; base64 defined in RFC 4566
 
 # SDP Offer/Answer Procedures
 
