@@ -180,8 +180,8 @@ Table of Contents
    SCTP INITthe SCTP INIT chunk as described in Section 3.3.2 of
    [RFC9260].
 
-   SCTP INIT ACK**: the SCTP INIT ACK chunk as described in
-   Section 3.3.3 of [RFC9260].
+   SCTP INIT ACK: the SCTP INIT ACK chunk as described in Section 3.3.3
+   of [RFC9260].
 
    SCTP COOKIE ECHO: the SCTP COOKIE ECHO chunk as described in
    Section 3.3.11 of [RFC9260].
@@ -234,20 +234,20 @@ Table of Contents
 
 4.2.  Syntax
 
-   *Attribute name*: sctp-init
+   Attribute name: sctp-init
 
-   *Type of attribute*: media
+   Type of attribute: media
 
-   *Mux category*: CAUTION
+   Mux category: CAUTION
 
-   *Subject to charset*: No
+   Subject to charset: No
 
-   *Purpose*: allows the SDP to carry the information contained in a
-   SCTP INIT chunk
+   Purpose: allows the SDP to carry the information contained in a SCTP
+   INIT chunk
 
-   *Appropriate values*: A base64-encoded value.
+   Appropriate values: A base64-encoded value.
 
-   *Syntax*: sctp-init-value = base64 ; base64 defined in RFC 4566
+   Syntax: sctp-init-value = base64 ; base64 defined in RFC 4566
 
 5.  SDP Offer/Answer Procedures
 
