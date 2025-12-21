@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-12-18T01:49:43.143041+00:00",
+  "timestamp": "2025-12-21T01:59:35.915966+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -56,24 +56,26 @@
       "id": "PR_kwDOPBQjh86jGMKY",
       "title": "snap: add coauthors and acknowledgments",
       "url": "https://github.com/fippo/warp-snap-sped/pull/1",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "fippo",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "and fix lots of references and update the draft name\r\n\r\n@boivie @juberti PTAL",
       "createdAt": "2025-08-11T17:28:11Z",
-      "updatedAt": "2025-12-02T05:48:58Z",
+      "updatedAt": "2025-12-20T22:27:10Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "12f4365a8c24d71f66c84269f89a5ba6a3d68b89",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "coauthors-and-acks",
       "headRefOid": "b4c215dadf69903e315c79faf800e22decdc8a1c",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2025-12-20T22:27:06Z",
+      "mergedAt": "2025-12-20T22:27:06Z",
+      "mergedBy": "fippo",
+      "mergeCommit": {
+        "oid": "98327f29a55850473c6614bd8663b2f18d1f19b9"
+      },
       "comments": [
         {
           "author": "fippo",
