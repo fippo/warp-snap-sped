@@ -120,7 +120,7 @@ Client                                       Server
 
 # Terminology
 
-SCTP INITthe SCTP INIT chunk as described in {{Section 3.3.2 of RFC9260}}.
+SCTP INIT: the SCTP INIT chunk as described in {{Section 3.3.2 of RFC9260}}.
 
 SCTP INIT ACK: the SCTP INIT ACK chunk as described in {{Section 3.3.3 of RFC9260}}.
 
