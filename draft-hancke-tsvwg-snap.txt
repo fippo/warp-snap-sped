@@ -2,28 +2,28 @@
 
 
 
-Network Working Group                                          P. Hancke
+Transport and Services Working Group                           P. Hancke
 Internet-Draft                                       Meta Platforms Inc.
 Intended status: Informational                                 J. Uberti
-Expires: 23 June 2026                                             OpenAI
+Expires: 24 June 2026                                             OpenAI
                                                                V. Boivie
                                                                   Google
-                                                        20 December 2025
+                                                        21 December 2025
 
 
                  SCTP Negotiation Acceleration Protocol
-                        draft-hancke-tsvwg-snap
+                       draft-hancke-tsvwg-snap-00
 
 Abstract
 
-   [RFC8831] defines WebRTC Data Channels that allow the transport of
-   arbitrary non-media data over a WebRTC PeerConnection.  This uses
-   SCTP [RFC9260] and a DTLS encapsulation of SCTP packets [RFC8261].
-
-   Using the SDP negotiation procedure described in this document allows
-   skipping the exchange of the SCTP INIT, INIT ACK, COOKIE ECHO and
-   COOKIE ACK chunks and reduces the time to open a data channel by up
-   to two round trip times.
+   WebRTC Data Channels use the Stream Control Transmission Protocol
+   (SCTP) over a Datagram Transport Layer Security (DTLS) association.
+   The standard SCTP connection establishment requires a handshake that
+   introduces latency.  This document specifies a method to accelerate
+   the datachannel establishment by embedding the SCTP initialization
+   parameters within the Session Description Protocol (SDP) offer/answer
+   exchange.  This reduces the time required to open a data channel by
+   up to two network round-trip times.
 
 About This Document
 
@@ -32,7 +32,7 @@ About This Document
    The latest revision of this draft can be found at
    https://fippo.github.io/warp-snap-sped/draft-hancke-tsvwg-snap-
    latest.html.  Status information for this document may be found at
-   https://datatracker.ietf.org/doc/draft-hancke-tsvwg/.
+   https://datatracker.ietf.org/doc/draft-hancke-tsvwg-snap/.
 
    Discussion of this document takes place on the WG Working Group
    mailing list (mailto:tsvwg@ietf.org), which is archived at
@@ -57,7 +57,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 23 June 2026.
+   This Internet-Draft will expire on 24 June 2026.
 
 Copyright Notice
 
@@ -101,11 +101,15 @@ Table of Contents
 
 1.  Introduction
 
-   SCTP [RFC9260] establishes its associations using a four-way
-   handshake, which primarily serves to protect against half-open (SYN-
-   flood) attacks.  For WebRTC, SCTP runs encapsulated within DTLS
-   [RFC8261], which establishes a secure, encrypted channel between the
-   peers that prevents half-open attacks.
+   [RFC8831] defines WebRTC Data Channels that allow the transport of
+   arbitrary non-media data over a WebRTC PeerConnection.  This uses
+   SCTP [RFC9260] and a DTLS encapsulation of SCTP packets [RFC8261].
+
+   SCTP establishes its associations using a four-way handshake, which
+   primarily serves to protect against half-open (SYN-flood) attacks.
+   For WebRTC, SCTP runs encapsulated within DTLS [RFC8261], which
+   establishes a secure, encrypted channel between the peers that
+   prevents half-open attacks.
 
    The full connection setup between two entities using WebRTC,
    consisting of the exchange of SDP over the signaling channel, ICE and
@@ -173,19 +177,19 @@ Table of Contents
 
 3.  Terminology
 
-   *SCTP INIT*: the SCTP INIT chunk as described in Section 3.3.2 of
+   SCTP INIT: the SCTP INIT chunk as described in Section 3.3.2 of
    [RFC9260].
 
-   *SCTP INIT ACK*: the SCTP INIT ACK chunk as described in
-   Section 3.3.3 of [RFC9260].
+   SCTP INIT ACK: the SCTP INIT ACK chunk as described in Section 3.3.3
+   of [RFC9260].
 
-   *SCTP COOKIE ECHO*: the SCTP COOKIE ECHO chunk as described in
+   SCTP COOKIE ECHO: the SCTP COOKIE ECHO chunk as described in
    Section 3.3.11 of [RFC9260].
 
-   *SCTP COOKIE ACK*: the SCTP COOKIE ACK chunk as described in
+   SCTP COOKIE ACK: the SCTP COOKIE ACK chunk as described in
    Section 3.3.12 of [RFC9260].
 
-   *RTT*: Round-Trip Time
+   RTT: Round-Trip Time
 
 4.  SDP sctp-init attribute
 
@@ -230,20 +234,20 @@ Table of Contents
 
 4.2.  Syntax
 
-   *Attribute name*: sctp-init
+   Attribute name: sctp-init
 
-   *Type of attribute*: media
+   Type of attribute: media
 
-   *Mux category*: CAUTION
+   Mux category: CAUTION
 
-   *Subject to charset*: No
+   Subject to charset: No
 
-   *Purpose*: allows the SDP to carry the information contained in a
-   SCTP INIT chunk
+   Purpose: allows the SDP to carry the information contained in a SCTP
+   INIT chunk
 
-   *Appropriate values*: A base64-encoded value.
+   Appropriate values: A base64-encoded value.
 
-   *Syntax*: sctp-init-value = base64 ; base64 defined in RFC 4566
+   Syntax: sctp-init-value = base64 ; base64 defined in RFC 4566
 
 5.  SDP Offer/Answer Procedures
 
