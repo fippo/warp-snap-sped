@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-12-23T01:54:26.901611+00:00",
+  "timestamp": "2025-12-25T01:54:45.958198+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -125,24 +125,26 @@
       "id": "PR_kwDOPBQjh865_3QA",
       "title": "snap: fix most nits",
       "url": "https://github.com/fippo/warp-snap-sped/pull/3",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "fippo",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "raised by idnits.",
       "createdAt": "2025-12-21T09:58:08Z",
-      "updatedAt": "2025-12-22T06:31:19Z",
+      "updatedAt": "2025-12-23T09:34:19Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "98327f29a55850473c6614bd8663b2f18d1f19b9",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "snap-nits",
-      "headRefOid": "5f934b98c101808121297d299c6893d49ffbd9c2",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "e0fef95e3eedef1deca3921c44ebe3824ef8faeb",
+      "closedAt": "2025-12-23T09:34:16Z",
+      "mergedAt": "2025-12-23T09:34:16Z",
+      "mergedBy": "fippo",
+      "mergeCommit": {
+        "oid": "36b2bde96f497affe8522bf45abfd8c03e4b33ac"
+      },
       "comments": [],
       "reviews": [
         {
