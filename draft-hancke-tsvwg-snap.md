@@ -6,7 +6,7 @@ category: info
 docname: draft-hancke-tsvwg-snap-00
 submissiontype: IETF
 number:
-date: 2025-12-21
+date: 2025-12-29
 consensus: true
 v: 3
 area: AREA
