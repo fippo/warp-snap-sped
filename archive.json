@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-01-11T02:06:37.735658+00:00",
+  "timestamp": "2026-01-13T01:54:28.225116+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -63,6 +63,22 @@
       "body": "In section 5, a number of sections have \"this results in an error\", but no information about what happens when an error happens.\n\nThe general principle of SDP is \"if you don't understand it, ignore it\" - this could, for instance, happen if a future version of this spec extended the SCTP INIT encoding so that old parsers didn't understand that it was a valid INIT chunk.\n\nSuggestion:\n\nAdd an overall description of error handling to section 5.1:\n\nIf the result of processing an \"a=sctp-init\" attribute results in an error, the implementation MUST ignore the attribute, ignore any \"a=sctp-init\" attributes that occur later in the session, and stop generating \"a=sctp-init\" attributes. This ensures that incompatible implementations of this spec or any future version of it will fall back to not using a=sctp-init.\n\n\n\n",
       "createdAt": "2026-01-09T10:37:29Z",
       "updatedAt": "2026-01-09T10:37:29Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 5,
+      "id": "I_kwDOPBQjh87izVhO",
+      "title": "DCEP acceleration",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/5",
+      "state": "OPEN",
+      "author": "sirzooro",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "It would be nice to eliminate extra roundtrip needed to open DataChannel. Please define new optional SCTP parameter to embed DCEP DATA_CHANNEL_OPEN message in SCTP INIT, and DCEP DATA_CHANNEL_ACK in SCTP INIT_ACK. One generic parameter like DCEP_MESSAGE would be enough to handle both DCEP messages.",
+      "createdAt": "2026-01-12T16:42:23Z",
+      "updatedAt": "2026-01-12T16:42:23Z",
       "closedAt": null,
       "comments": []
     }
