@@ -139,7 +139,8 @@ Packets can be sent embedded in STUN messages using the META-DTLS-IN-STUN attrib
 The agent also maintains a list of the CRC-32 hashes of received DTLS handshake packets to send as acknowledgements to the peer.
 
 ### Inband discovery and negotiation
-The protocol is using in-band discovery to determine support and MAY (as described below) use ice-options for negotiation using SDP offer/answer.
+The protocol is using in-band discovery to determine support in addition to the use of ice-options for negotiation using SDP offer/answer described below.
+This is necessary as the STUN binding requests may reach the offerer before the SDP answer.
 
 Until the DTLS handshake has finished, the ICE agent includes the META-DTLS-IN-STUN-ACKNOWLEDGEMENT and META-DTLS-IN-STUN
 attributes in binding requests and responses as described below.
@@ -172,6 +173,11 @@ An outbound DTLS packet is considered acknowledged and removed from the "pending
 
 * A STUN message is received from the peer containing a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute that includes the packet's CRC-32 hash.
 * For a DTLS packet sent embedded in a STUN binding request, a STUN binding success response is received for that request. This serves as an implicit acknowledgement.
+
+The "pending" list is cleared when the DTLS layer signals that
+
+* a new flight is going to be sent.
+* the current flight of packets has timed out and a resend is going to happen.
 
 ### Completion of the DTLS handshake
 The DTLS layer MUST notify the ICE agent when the DTLS handshake is complete, its role and what DTLS version was negotiated.
@@ -213,13 +219,11 @@ the other side will potentially receive many duplicated DTLS packets.
 
 ### Lite agents
 Lite ICE agents which are commonly used by servers by definition only respond to binding requests and do not send
-binding requests themselves. Due to the lock-step behavior of DTLS this is not a problem.
-
-TODO: can lite agents immediately send without embedding?
+binding requests themselves. Due to the lock-step behavior of DTLS this is not a problem, also Lite ICE Agents
+can send DTLS without embedding once they received a valid binding request from a peer.
 
 ## DTLS procedures
-For the protocol described in this specification the DTLS handshake is started before ICE finds a valid pair and MUST disable the DTLS
-resend timeout as resends will be handled by the STUN (application) layer using cached packets.
+For the protocol described in this specification the DTLS handshake is started before ICE finds a valid pair.
 
 Instead of receiving the DTLS packets after demultiplexing (described in {{Section 7 of ?RFC7983}}),
 the DTLS layer receives packets from the ICE layer directly.
