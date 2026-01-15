@@ -4,8 +4,8 @@
 
 Network Working Group                                          P. Hancke
 Internet-Draft                                       Meta Platforms Inc.
-Intended status: Informational                          11 December 2025
-Expires: 14 June 2026
+Intended status: Informational                           15 January 2026
+Expires: 19 July 2026
 
 
                     STUN Protocol for Embedding DTLS
@@ -47,11 +47,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 June 2026.
+   This Internet-Draft will expire on 19 July 2026.
 
 Copyright Notice
 
-   Copyright (c) 2025 IETF Trust and the persons identified as the
+   Copyright (c) 2026 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -241,9 +241,10 @@ Table of Contents
 
 3.3.1.  Inband discovery and negotiation
 
-   The protocol is using in-band discovery to determine support and MAY
-   (as described below) use ice-options for negotiation using SDP offer/
-   answer.
+   The protocol is using in-band discovery to determine support in
+   addition to the use of ice-options for negotiation using SDP offer/
+   answer described below.  This is necessary as the STUN binding
+   requests may reach the offerer before the SDP answer.
 
    Until the DTLS handshake has finished, the ICE agent includes the
    META-DTLS-IN-STUN-ACKNOWLEDGEMENT and META-DTLS-IN-STUN attributes in
@@ -301,6 +302,13 @@ Table of Contents
    *  For a DTLS packet sent embedded in a STUN binding request, a STUN
       binding success response is received for that request.  This
       serves as an implicit acknowledgement.
+
+   The "pending" list is cleared when the DTLS layer signals that
+
+   *  a new flight is going to be sent.
+
+   *  the current flight of packets has timed out and a resend is going
+      to happen.
 
 3.3.3.  Completion of the DTLS handshake
 
@@ -374,16 +382,13 @@ Table of Contents
    Lite ICE agents which are commonly used by servers by definition only
    respond to binding requests and do not send binding requests
    themselves.  Due to the lock-step behavior of DTLS this is not a
-   problem.
-
-   TODO: can lite agents immediately send without embedding?
+   problem, also Lite ICE Agents can send DTLS without embedding once
+   they received a valid binding request from a peer.
 
 3.4.  DTLS procedures
 
    For the protocol described in this specification the DTLS handshake
-   is started before ICE finds a valid pair and MUST disable the DTLS
-   resend timeout as resends will be handled by the STUN (application)
-   layer using cached packets.
+   is started before ICE finds a valid pair.
 
    Instead of receiving the DTLS packets after demultiplexing (described
    in Section 7 of [RFC7983]), the DTLS layer receives packets from the

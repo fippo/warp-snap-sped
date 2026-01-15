@@ -6,32 +6,34 @@
 <meta content="initial-scale=1.0" name="viewport">
 <title>SCTP Negotiation Acceleration Protocol</title>
 <meta content="Philipp Hancke" name="author">
+<meta content="Justin Uberti" name="author">
+<meta content="Victor Boivie" name="author">
 <meta content="
-        defines WebRTC Data Channels that allow the transport of arbitrary non-media data over a WebRTC PeerConnection.
-This uses SCTP   and a DTLS encapsulation of SCTP packets  . 
-       Using the SDP negotiation procedure described in this document allows skipping the exchange of the SCTP INIT, INIT ACK,
-COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by up to two round trip times. 
+       WebRTC Data Channels use the Stream Control Transmission Protocol (SCTP) over a Datagram Transport Layer Security (DTLS) association.
+The standard SCTP connection establishment requires a handshake that introduces latency. This document specifies a method to
+accelerate the datachannel establishment by embedding the SCTP initialization parameters within the Session Description Protocol
+(SDP) offer/answer exchange. This reduces the time required to open a data channel by up to two network round-trip times. 
     " name="description">
 <meta content="xml2rfc 3.31.0" name="generator">
 <meta content="sctp" name="keyword">
 <meta content="webrtc" name="keyword">
 <meta content="sdp" name="keyword">
-<meta content="draft-hancke-tsvwg-snap" name="ietf.draft">
+<meta content="draft-hancke-tsvwg-snap-00" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.31.0
     Python 3.12.12
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
-    intervaltree 3.1.0
+    intervaltree 3.2.1
     Jinja2 3.1.6
-    lxml 5.3.1
-    platformdirs 4.5.0
+    lxml 6.0.2
+    platformdirs 4.5.1
     pycountry 24.6.1
-    PyYAML 6.0.2
+    PyYAML 6.0.3
     requests 2.32.5
     wcwidth 0.2.14
 -->
-<link href="draft-hancke-webrtc-snap.xml" rel="alternate" type="application/rfc+xml">
+<link href="draft-hancke-tsvwg-snap.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
 <style type="text/css">@font-face {
   font-family: 'Lora';
@@ -1051,8 +1053,8 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <td class="right">December 2025</td>
 </tr></thead>
 <tfoot><tr>
-<td class="left">Hancke</td>
-<td class="center">Expires 14 June 2026</td>
+<td class="left">Hancke, et al.</td>
+<td class="center">Expires 2 July 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1060,22 +1062,30 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <div id="internal-metadata" class="document-information">
 <dl id="identifiers">
 <dt class="label-workgroup">Workgroup:</dt>
-<dd class="workgroup">Network Working Group</dd>
+<dd class="workgroup">Transport and Services Working Group</dd>
 <dt class="label-internet-draft">Internet-Draft:</dt>
-<dd class="internet-draft">draft-hancke-tsvwg-snap</dd>
+<dd class="internet-draft">draft-hancke-tsvwg-snap-00</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-12-11" class="published">11 December 2025</time>
+<time datetime="2025-12-29" class="published">29 December 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-06-14">14 June 2026</time></dd>
-<dt class="label-authors">Author:</dt>
+<dd class="expires"><time datetime="2026-07-02">2 July 2026</time></dd>
+<dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
       <div class="author-name">P. Hancke</div>
 <div class="org">Meta Platforms Inc.</div>
+</div>
+<div class="author">
+      <div class="author-name">J. Uberti</div>
+<div class="org">OpenAI</div>
+</div>
+<div class="author">
+      <div class="author-name">V. Boivie</div>
+<div class="org">Google</div>
 </div>
 </dd>
 </dl>
@@ -1083,10 +1093,10 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <h1 id="title">SCTP Negotiation Acceleration Protocol</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1"><span>[<a href="#RFC8831" class="cite xref">RFC8831</a>]</span> defines WebRTC Data Channels that allow the transport of arbitrary non-media data over a WebRTC PeerConnection.
-This uses SCTP <span>[<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> and a DTLS encapsulation of SCTP packets <span>[<a href="#RFC8261" class="cite xref">RFC8261</a>]</span>.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
-<p id="section-abstract-2">Using the SDP negotiation procedure described in this document allows skipping the exchange of the SCTP INIT, INIT ACK,
-COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by up to two round trip times.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">WebRTC Data Channels use the Stream Control Transmission Protocol (SCTP) over a Datagram Transport Layer Security (DTLS) association.
+The standard SCTP connection establishment requires a handshake that introduces latency. This document specifies a method to
+accelerate the datachannel establishment by embedding the SCTP initialization parameters within the Session Description Protocol
+(SDP) offer/answer exchange. This reduces the time required to open a data channel by up to two network round-trip times.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-about-this-document">
@@ -1094,8 +1104,8 @@ COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by 
       </h2>
 <p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
 <p id="section-note.1-2">
-        The latest revision of this draft can be found at <span><a href="https://fippo.github.io/warp-snap-sped/draft-hancke-webrtc-snap-latest.html">https://fippo.github.io/warp-snap-sped/draft-hancke-webrtc-snap-latest.html</a></span>.
-        Status information for this document may be found at <span><a href="https://datatracker.ietf.org/doc/draft-hancke-tsvwg/">https://datatracker.ietf.org/doc/draft-hancke-tsvwg/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
+        The latest revision of this draft can be found at <span><a href="https://fippo.github.io/warp-snap-sped/draft-hancke-tsvwg-snap-latest.html">https://fippo.github.io/warp-snap-sped/draft-hancke-tsvwg-snap-latest.html</a></span>.
+        Status information for this document may be found at <span><a href="https://datatracker.ietf.org/doc/draft-hancke-tsvwg-snap/">https://datatracker.ietf.org/doc/draft-hancke-tsvwg-snap/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
 <p id="section-note.1-3">
         Discussion of this document takes place on the
         WG Working Group mailing list (<span><a href="mailto:tsvwg@ietf.org">mailto:tsvwg@ietf.org</a></span>),
@@ -1123,7 +1133,7 @@ COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by 
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 14 June 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 2 July 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1206,6 +1216,11 @@ COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by 
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
             <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-new-sdp-attributes" class="internal xref">New SDP attributes</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
             <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-references" class="internal xref">References</a></p>
@@ -1222,7 +1237,7 @@ COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by 
             <p id="section-toc.1-1.11.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
-            <p id="section-toc.1-1.12.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+            <p id="section-toc.1-1.12.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1233,12 +1248,14 @@ COOKIE ECHO and COOKIE ACK chunks and reduces the time to open a datachannel by 
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1">SCTP <span>[<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> establishes its associations using a four-way handshake, which primarily serves to protect against
-half-open (SYN-flood) attacks. For WebRTC, SCTP runs encapsulated within DTLS <span>[<a href="#RFC8261" class="cite xref">RFC8261</a>]</span> which establishes a secure,
-encrypted channel between the peers, which prevents half-open attacks.<a href="#section-1-1" class="pilcrow">¶</a></p>
-<p id="section-1-2">The full connection setup between two entities using WebRTC, consisting of the exchange of SDP over the signaling channel,
-ICE and DTLS establishment and the SCTP handshake, is shown below (with annotations for the number of full round trips):<a href="#section-1-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-1-3">
+<p id="section-1-1"><span>[<a href="#RFC8831" class="cite xref">RFC8831</a>]</span> defines WebRTC Data Channels that allow the transport of arbitrary non-media data over a WebRTC PeerConnection.
+This uses SCTP <span>[<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> and a DTLS encapsulation of SCTP packets <span>[<a href="#RFC8261" class="cite xref">RFC8261</a>]</span>.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">SCTP establishes its associations using a four-way handshake, which primarily serves to protect against
+half-open (SYN-flood) attacks. For WebRTC, SCTP runs encapsulated within DTLS <span>[<a href="#RFC8261" class="cite xref">RFC8261</a>]</span>, which establishes a secure,
+encrypted channel between the peers that prevents half-open attacks.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">The full connection setup between two entities using WebRTC, consisting of the exchange of SDP over the signaling channel,
+ICE and DTLS establishment and the SCTP handshake, is shown below (with annotations for the number of full round trips):<a href="#section-1-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-1-4">
 <pre>
 Client                                       Server
    |                                            |
@@ -1261,15 +1278,15 @@ Client                                       Server
    |------------- "hello world"----------------&gt;|
    |&lt;------------ DCEP ACK ---------------------|
    |                                            |
-</pre><a href="#section-1-3" class="pilcrow">¶</a>
+</pre><a href="#section-1-4" class="pilcrow">¶</a>
 </div>
-<p id="section-1-4">Note that SCTP typically does a "simultaneous open", i.e. both sides take the active role,
-although only one direction is shown here for simplicity.<a href="#section-1-4" class="pilcrow">¶</a></p>
-<p id="section-1-5">Note: <span>[<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> allows the packets with the COOKIE ECHO and COOKIE ACK to carry data.
-This means the second RTT is not strictly necessary but was observed in practice.<a href="#section-1-5" class="pilcrow">¶</a></p>
-<p id="section-1-6">When the SCTP INIT chunk is signalled in the SDP, using the "sctp-init" attribute described
-in this document, this flow can be reduced to the following exchange:<a href="#section-1-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-1-7">
+<p id="section-1-5">Note that SCTP typically does a "simultaneous open", i.e. both sides take the active role,
+although only one direction is shown here for simplicity.<a href="#section-1-5" class="pilcrow">¶</a></p>
+<p id="section-1-6">Note: <span>[<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> allows the packets with the COOKIE ECHO and COOKIE ACK to carry data.
+This means the second RTT is not strictly necessary but was observed in practice.<a href="#section-1-6" class="pilcrow">¶</a></p>
+<p id="section-1-7">When the SCTP INIT chunk is signaled in the SDP, using the "sctp-init" attribute described
+in this document, this flow can be reduced to the following exchange:<a href="#section-1-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-1-8">
 <pre>
 Client                                       Server
    |                                            |
@@ -1287,9 +1304,8 @@ Client                                       Server
    |------------- "hello world"----------------&gt;|
    |&lt;------------ DCEP ACK ---------------------|
    |                                            |
-</pre><a href="#section-1-7" class="pilcrow">¶</a>
+</pre><a href="#section-1-8" class="pilcrow">¶</a>
 </div>
-<p id="section-1-8">Further reductions of the startup sequence are described in WARP-TODO<a href="#section-1-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="conventions-and-definitions">
@@ -1308,11 +1324,11 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
       <h2 id="name-terminology">
 <a href="#section-3" class="section-number selfRef">3. </a><a href="#name-terminology" class="section-name selfRef">Terminology</a>
       </h2>
-<p id="section-3-1"><strong>SCTP INIT</strong>: the SCTP INIT chunk as described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-3.3.2" class="relref">Section 3.3.2</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<p id="section-3-2"><strong>SCTP INIT ACK</strong>: the SCTP INIT ACK chunk as described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-3.3.3" class="relref">Section 3.3.3</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>.<a href="#section-3-2" class="pilcrow">¶</a></p>
-<p id="section-3-3"><strong>SCTP COOKIE ECHO</strong>: the SCTP COOKIE ECHO chunk as described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-3.3.11" class="relref">Section 3.3.11</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>.<a href="#section-3-3" class="pilcrow">¶</a></p>
-<p id="section-3-4"><strong>SCTP COOKIE ACK</strong>: the SCTP COOKIE ACK chunk as described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-3.3.12" class="relref">Section 3.3.12</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>.<a href="#section-3-4" class="pilcrow">¶</a></p>
-<p id="section-3-5"><strong>RTT</strong>: Round-Trip Time<a href="#section-3-5" class="pilcrow">¶</a></p>
+<p id="section-3-1">SCTP INIT: the SCTP INIT chunk as described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-3.3.2" class="relref">Section 3.3.2</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">SCTP INIT ACK: the SCTP INIT ACK chunk as described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-3.3.3" class="relref">Section 3.3.3</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>.<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-3">SCTP COOKIE ECHO: the SCTP COOKIE ECHO chunk as described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-3.3.11" class="relref">Section 3.3.11</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>.<a href="#section-3-3" class="pilcrow">¶</a></p>
+<p id="section-3-4">SCTP COOKIE ACK: the SCTP COOKIE ACK chunk as described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-3.3.12" class="relref">Section 3.3.12</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>.<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-5">RTT: Round-Trip Time<a href="#section-3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="sdp-sctp-init-attribute">
@@ -1326,16 +1342,19 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-general" class="section-name selfRef">General</a>
         </h3>
 <p id="section-4.1-1">This section defines a new SDP media-level attribute, "sctp-init". The attribute can be associated with
-an SDP media description ("m=" line) with a "UDP/DTLS/SCTP" protocol identifier (defined in RFC 8841)
-and the &lt;fmt&gt; parameter value of 'webrtc-datachannel' (defined in RFC 8832).<a href="#section-4.1-1" class="pilcrow">¶</a></p>
-<p id="section-4.1-2">An example follows, see section X.X for the full SDP exchange:<a href="#section-4.1-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.1-3">
+an SDP media description ("m=" line) with a "UDP/DTLS/SCTP" protocol identifier (defined in <span>[<a href="#RFC8841" class="cite xref">RFC8841</a>]</span>)
+and the &lt;fmt&gt; parameter value of 'webrtc-datachannel' (defined in <span>[<a href="#RFC8832" class="cite xref">RFC8832</a>]</span>).<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1-2">NOTE: This specification only defines the usage of the SDP "sctp-init" attribute when associated with
+an "m=" line containing one of the following proto values: "UDP/DTLS/SCTP" or "TCP/DTLS/SCTP".
+Usage of the attribute with other proto values needs to be defined in a separate specification.<a href="#section-4.1-2" class="pilcrow">¶</a></p>
+<p id="section-4.1-3">An example follows, see <a href="#example" class="auto internal xref">Section 7</a> for the full SDP exchange:<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1-4">
 <pre>
 a=sctp-init:AQAAHols3R0AUAAA/////+B5ZR3AAAAEgAgABoLA
-</pre><a href="#section-4.1-3" class="pilcrow">¶</a>
+</pre><a href="#section-4.1-4" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-4">This is equivalent to the following SCTP INIT CHUNK:<a href="#section-4.1-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.1-5">
+<p id="section-4.1-5">This is equivalent to the following SCTP INIT chunk:<a href="#section-4.1-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1-6">
 <pre>
 0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -1355,7 +1374,7 @@ a=sctp-init:AQAAHols3R0AUAAA/////+B5ZR3AAAAEgAgABoLA
 /                       |          FORWARD_TSN(0xc0)            /
 \ 0xc0, 0x00, 0x00, 0x04| 0x80, 0x08, 0x00, 0x06, 0x82, 0xc0    \
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-</pre><a href="#section-4.1-5" class="pilcrow">¶</a>
+</pre><a href="#section-4.1-6" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -1364,13 +1383,13 @@ a=sctp-init:AQAAHols3R0AUAAA/////+B5ZR3AAAAEgAgABoLA
         <h3 id="name-syntax">
 <a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-syntax" class="section-name selfRef">Syntax</a>
         </h3>
-<p id="section-4.2-1"><strong>Attribute name</strong>: sctp-init<a href="#section-4.2-1" class="pilcrow">¶</a></p>
-<p id="section-4.2-2"><strong>Type of attribute</strong>: media<a href="#section-4.2-2" class="pilcrow">¶</a></p>
-<p id="section-4.2-3"><strong>Mux category</strong>: CAUTION<a href="#section-4.2-3" class="pilcrow">¶</a></p>
-<p id="section-4.2-4"><strong>Subject to charset</strong>: No<a href="#section-4.2-4" class="pilcrow">¶</a></p>
-<p id="section-4.2-5"><strong>Purpose</strong>: allows the SDP to carry the information contained in a SCTP INIT chunk<a href="#section-4.2-5" class="pilcrow">¶</a></p>
-<p id="section-4.2-6"><strong>Appropriate values</strong>: a base64 encoded blob.<a href="#section-4.2-6" class="pilcrow">¶</a></p>
-<p id="section-4.2-7"><strong>Syntax</strong>: sctp-init-value = base64 ; base64 defined in RFC 4566<a href="#section-4.2-7" class="pilcrow">¶</a></p>
+<p id="section-4.2-1">Attribute name: sctp-init<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-2">Type of attribute: media<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.2-3">Mux category: CAUTION<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-4">Subject to charset: No<a href="#section-4.2-4" class="pilcrow">¶</a></p>
+<p id="section-4.2-5">Purpose: allows the SDP to carry the information contained in a SCTP INIT chunk<a href="#section-4.2-5" class="pilcrow">¶</a></p>
+<p id="section-4.2-6">Appropriate values: A base64-encoded value.<a href="#section-4.2-6" class="pilcrow">¶</a></p>
+<p id="section-4.2-7">Syntax: sctp-init-value = base64 ; base64 defined in RFC 4566<a href="#section-4.2-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1393,8 +1412,8 @@ a=sctp-init:AQAAHols3R0AUAAA/////+B5ZR3AAAAEgAgABoLA
         <h3 id="name-generating-the-initial-sdp-">
 <a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-generating-the-initial-sdp-" class="section-name selfRef">Generating the Initial SDP Offer</a>
         </h3>
-<p id="section-5.2-1">If the offering endpoint has created a WebRTC datachannel, it <span class="bcp14">MUST</span> let the SCTP implementation generate
-a serialized INIT CHUNK that it would normally send over the network as a series of bytes.
+<p id="section-5.2-1">If the offering endpoint has created a WebRTC data channel, it <span class="bcp14">MUST</span> let the SCTP implementation generate
+a serialized INIT chunk that it would normally send over the network as a series of bytes.
 This message is then base64-encoded and added to the data "m=" section as an "a=sctp-init" line.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1404,10 +1423,10 @@ This message is then base64-encoded and added to the data "m=" section as an "a=
 <a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-answerer-processing-of-the-" class="section-name selfRef">Answerer Processing of the SDP Offer</a>
         </h3>
 <p id="section-5.3-1">If the answering endpoint negotiates a data "m=" section, it will parse the "a=sctp-init" line from the data "m=" section, if present.<a href="#section-5.3-1" class="pilcrow">¶</a></p>
-<p id="section-5.3-2">If the data is not properly base64 encoded the answerer <span class="bcp14">MUST</span> silently ignore the "a=sctp-init" line and not generate one in response.<a href="#section-5.3-2" class="pilcrow">¶</a></p>
+<p id="section-5.3-2">If the data is not properly base64-encoded this results in an error.<a href="#section-5.3-2" class="pilcrow">¶</a></p>
 <p id="section-5.3-3">The answering endpoint then informs its SCTP implementation of the series of bytes. The SCTP implementation is responsible for
-validating the format of the SCTP init chunk.<a href="#section-5.3-3" class="pilcrow">¶</a></p>
-<p id="section-5.3-4">If the series of bytes is not a valid SCTP init chunk, the answering endpoint <span class="bcp14">MUST</span> silently ignore the "a=sctp-init" line and not generate one in response.<a href="#section-5.3-4" class="pilcrow">¶</a></p>
+validating the format of the SCTP INIT chunk.<a href="#section-5.3-3" class="pilcrow">¶</a></p>
+<p id="section-5.3-4">If the series of bytes is not a valid SCTP INIT chunk this results in an error.<a href="#section-5.3-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="generating-the-sdp-answer">
@@ -1415,9 +1434,9 @@ validating the format of the SCTP init chunk.<a href="#section-5.3-3" class="pil
         <h3 id="name-generating-the-sdp-answer">
 <a href="#section-5.4" class="section-number selfRef">5.4. </a><a href="#name-generating-the-sdp-answer" class="section-name selfRef">Generating the SDP Answer</a>
         </h3>
-<p id="section-5.4-1">An endpoint not supporting the extension described in this document <span class="bcp14">MUST NOT</span> include a "a=sctp-init" attribute in its response.<a href="#section-5.4-1" class="pilcrow">¶</a></p>
+<p id="section-5.4-1">An endpoint not supporting the extension described in this document <span class="bcp14">MUST NOT</span> include a "a=sctp-init" attribute in its answer.<a href="#section-5.4-1" class="pilcrow">¶</a></p>
 <p id="section-5.4-2">If the answering endpoint negotiated a data "m=" section and detected a valid "a=sctp-init" line in the offer, as described above,
-it <span class="bcp14">MUST</span> let its SCTP implementation generate a serialized INIT CHUNK that it would normally send over the network as a series of bytes.<a href="#section-5.4-2" class="pilcrow">¶</a></p>
+it <span class="bcp14">MUST</span> let its SCTP implementation generate a serialized INIT chunk that it would normally send over the network as a series of bytes.<a href="#section-5.4-2" class="pilcrow">¶</a></p>
 <p id="section-5.4-3">This message is base64-encoded and added to the data "m=" section as a "a=sctp-init" line.<a href="#section-5.4-3" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1427,10 +1446,10 @@ it <span class="bcp14">MUST</span> let its SCTP implementation generate a serial
 <a href="#section-5.5" class="section-number selfRef">5.5. </a><a href="#name-offerer-processing-of-the-s" class="section-name selfRef">Offerer Processing of the SDP Answer</a>
         </h3>
 <p id="section-5.5-1">If the answer negotiated a data "m=" section, the offering endpoint parses the "a=sctp-init" line, if present, from the data "m=" section.<a href="#section-5.5-1" class="pilcrow">¶</a></p>
-<p id="section-5.5-2">If the data is not properly base64 encoded the offer <span class="bcp14">MUST</span> silently ignore the "a=sctp-init" line.<a href="#section-5.5-2" class="pilcrow">¶</a></p>
+<p id="section-5.5-2">If the data is not properly base64-encoded this results in an error.<a href="#section-5.5-2" class="pilcrow">¶</a></p>
 <p id="section-5.5-3">The offering endpoint then informs its SCTP implementation of the series of bytes.
-The SCTP implementation is responsible for validating the format of the SCTP init chunk.
-If the series of bytes is not a valid SCTP init chunk, the offering endpoint <span class="bcp14">MUST</span> silently ignore the "a=sctp-init" line.<a href="#section-5.5-3" class="pilcrow">¶</a></p>
+The SCTP implementation is responsible for validating the format of the SCTP INIT chunk.
+If the series of bytes is not a valid SCTP INIT chunk this results in an error.<a href="#section-5.5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="modifying-the-session">
@@ -1440,15 +1459,10 @@ If the series of bytes is not a valid SCTP init chunk, the offering endpoint <sp
         </h3>
 <p id="section-5.6-1">Subsequent offers and answers <span class="bcp14">MUST</span> include the "a=sctp-init" line in the negotiated SDP with the same value as in the
 initial negotiation.<a href="#section-5.6-1" class="pilcrow">¶</a></p>
-<p id="section-5.6-2">Remote offers <span class="bcp14">MAY</span> negotiate a new "a=sctp-init" line in conjunction with either<a href="#section-5.6-2" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-5.6-3.1">
-            <p id="section-5.6-3.1.1">a new SCTP association as described in <span><a href="https://rfc-editor.org/rfc/rfc8841#section-9.3" class="relref">Section 9.3</a> of [<a href="#RFC8841" class="cite xref">RFC8841</a>]</span><a href="#section-5.6-3.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-5.6-3.2">
-            <p id="section-5.6-3.2.1">or a new DTLS association as described in <span><a href="https://rfc-editor.org/rfc/rfc8842#section-5.5" class="relref">Section 5.5</a> of [<a href="#RFC8842" class="cite xref">RFC8842</a>]</span>.<a href="#section-5.6-3.2.1" class="pilcrow">¶</a></p>
-</li>
-        </ul>
+<p id="section-5.6-2">Remote offers <span class="bcp14">MAY</span> negotiate a new "a=sctp-init" line in conjunction with either
+* a new SCTP association as described in <span><a href="https://rfc-editor.org/rfc/rfc8841#section-9.3" class="relref">Section 9.3</a> of [<a href="#RFC8841" class="cite xref">RFC8841</a>]</span>
+* or a new DTLS association as described in <span><a href="https://rfc-editor.org/rfc/rfc8842#section-5.5" class="relref">Section 5.5</a> of [<a href="#RFC8842" class="cite xref">RFC8842</a>]</span>.<a href="#section-5.6-2" class="pilcrow">¶</a></p>
+<p id="section-5.6-3">Attempting to add an sctp-init attribute to an existing SCTP association results in an error.<a href="#section-5.6-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1458,11 +1472,11 @@ initial negotiation.<a href="#section-5.6-1" class="pilcrow">¶</a></p>
       <h2 id="name-sctp-considerations">
 <a href="#section-6" class="section-number selfRef">6. </a><a href="#name-sctp-considerations" class="section-name selfRef">SCTP considerations</a>
       </h2>
-<p id="section-6-1">The creation of the "sctp-init" attribute <span class="bcp14">SHOULD NOT</span> change the state of the SCTP association to ASSOCIATE as described
-in {Section 4 of RFC9260} and <span class="bcp14">SHOULD NOT</span> start the T1-init timer.<a href="#section-6-1" class="pilcrow">¶</a></p>
-<p id="section-6-2">Processing of the "sctp-init" attribute from the remote side <span class="bcp14">SHOULD NOT</span> change the state of the SCTP association and should not start any timer.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-1">The creation of the "sctp-init" attribute <span class="bcp14">SHOULD NOT</span> change the state of the SCTP association into the COOKIE-WAIT state as described
+in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-5.1" class="relref">Section 5.1</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> and <span class="bcp14">SHOULD NOT</span> start the T1-init timer.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">Processing of the "sctp-init" attribute from the remote side <span class="bcp14">SHOULD NOT</span> change the state of the SCTP association and <span class="bcp14">SHOULD NOT</span> start any timer.<a href="#section-6-2" class="pilcrow">¶</a></p>
 <p id="section-6-3">When the "sctp-init" attribute has been negotiated, both endpoints <span class="bcp14">SHOULD</span> consider the SCTP association to be in the ESTABLISHED state,
-as described in {Section 4 of RFC9260}, once the DTLS handshake finishes. The steps A-E described in {Section 5.1 of RFC9260} can be skipped.<a href="#section-6-3" class="pilcrow">¶</a></p>
+as described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-4" class="relref">Section 4</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>, once the DTLS handshake finishes. The steps A-E described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-5.1" class="relref">Section 5.1</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> can be skipped.<a href="#section-6-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="example">
@@ -1570,12 +1584,12 @@ a=sctp-init:AQAAHl+zdHQAUAAA/////6Gq3HTAAAAEgAgABoLA
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
 <p id="section-8-1">SNAP removes SCTP's anti-amplification mechanism in order to accelerate connection startup.
-However, when SCTP runs atop DTLS as specified in {RFC8261}, any attempt to send junk traffic over SCTP will fail
+However, when SCTP runs atop DTLS as specified in <span>[<a href="#RFC8261" class="cite xref">RFC8261</a>]</span>, any attempt to send junk traffic over SCTP will fail
 as it will not be properly encrypted. Therefore SNAP does not add any new amplification risk.<a href="#section-8-1" class="pilcrow">¶</a></p>
-<p id="section-8-2">Exposing the content of the SCTP INIT, in particular the “Initiate Tag”, in the SDP does not introduce new security
-concerns since running SCTP atop DTLS protects against the off-path attacks described in {Section 5.3.1 of RFC9260}.<a href="#section-8-2" class="pilcrow">¶</a></p>
-<p id="section-8-3">Exposing the content of the SCTP init tag to the application layer, e.g. Javascript applications or the signaling
-channel in the case of WebRTC does allow these to add or remove variable length parameters. Since these parameters
+<p id="section-8-2">Exposing the content of the SCTP INIT chunk, in particular the "Initiate Tag", in the SDP does not introduce new security
+concerns since running SCTP atop DTLS protects against the off-path attacks described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-5.3.1" class="relref">Section 5.3.1</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>.<a href="#section-8-2" class="pilcrow">¶</a></p>
+<p id="section-8-3">Exposing the content of the SCTP init tag to the application layer, e.g., JavaScript applications or the signaling
+channel in the case of WebRTC does allow these to add or remove variable-length parameters. Since these parameters
 are optional and used for feature negotiation, removing one is equivalent to the remote side not supporting the
 parameter and does not introduce a new security risk. Adding a parameter that is not supported may cause the remote
 side to send those but this is equivalent to receiving a packet for a feature that was not negotiated and hence does
@@ -1587,7 +1601,14 @@ not introduce a new security concern.<a href="#section-8-3" class="pilcrow">¶</
       <h2 id="name-iana-considerations">
 <a href="#section-9" class="section-number selfRef">9. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-9-1">This document has no IANA actions.<a href="#section-9-1" class="pilcrow">¶</a></p>
+<div id="new-sdp-attributes">
+<section id="section-9.1">
+        <h3 id="name-new-sdp-attributes">
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-new-sdp-attributes" class="section-name selfRef">New SDP attributes</a>
+        </h3>
+<p id="section-9.1-1">This document defines a new SDP media-level attribute, "sctp-init". The details of the attribute are defined in <a href="#syntax" class="auto internal xref">Section 4.2</a>.<a href="#section-9.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 <div id="sec-combined-references">
@@ -1630,6 +1651,10 @@ not introduce a new security concern.<a href="#section-8-3" class="pilcrow">¶</
         <dd>
 <span class="refAuthor">Jesup, R.</span>, <span class="refAuthor">Loreto, S.</span>, and <span class="refAuthor">M. Tüxen</span>, <span class="refTitle">"WebRTC Data Channels"</span>, <span class="seriesInfo">RFC 8831</span>, <span class="seriesInfo">DOI 10.17487/RFC8831</span>, <time datetime="2021-01" class="refDate">January 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8831">https://www.rfc-editor.org/rfc/rfc8831</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="RFC8832">[RFC8832]</dt>
+        <dd>
+<span class="refAuthor">Jesup, R.</span>, <span class="refAuthor">Loreto, S.</span>, and <span class="refAuthor">M. Tüxen</span>, <span class="refTitle">"WebRTC Data Channel Establishment Protocol"</span>, <span class="seriesInfo">RFC 8832</span>, <span class="seriesInfo">DOI 10.17487/RFC8832</span>, <time datetime="2021-01" class="refDate">January 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8832">https://www.rfc-editor.org/rfc/rfc8832</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC8841">[RFC8841]</dt>
         <dd>
 <span class="refAuthor">Holmberg, C.</span>, <span class="refAuthor">Shpount, R.</span>, <span class="refAuthor">Loreto, S.</span>, and <span class="refAuthor">G. Camarillo</span>, <span class="refTitle">"Session Description Protocol (SDP) Offer/Answer Procedures for Stream Control Transmission Protocol (SCTP) over Datagram Transport Layer Security (DTLS) Transport"</span>, <span class="seriesInfo">RFC 8841</span>, <span class="seriesInfo">DOI 10.17487/RFC8841</span>, <time datetime="2021-01" class="refDate">January 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8841">https://www.rfc-editor.org/rfc/rfc8841</a>&gt;</span>. </dd>
@@ -1648,13 +1673,13 @@ not introduce a new security concern.<a href="#section-8-3" class="pilcrow">¶</
       <h2 id="name-acknowledgments">
 <a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
       </h2>
-<p id="appendix-A-1">Lennart Grahl<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<p id="appendix-A-1">The authors wish to thank Harald Alvestrand, Lennart Grahl and Jonas Oreland for their invaluable comments.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="authors-addresses">
 <section id="appendix-B">
-      <h2 id="name-authors-address">
-<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+      <h2 id="name-authors-addresses">
+<a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
       </h2>
 <address class="vcard">
         <div dir="auto" class="left"><span class="fn nameRole">Philipp Hancke</span></div>
@@ -1662,6 +1687,22 @@ not introduce a new security concern.<a href="#section-8-3" class="pilcrow">¶</
 <div class="email">
 <span>Email:</span>
 <a href="mailto:philipp.hancke@googlemail.com" class="email">philipp.hancke@googlemail.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Justin Uberti</span></div>
+<div dir="auto" class="left"><span class="org">OpenAI</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:justin@uberti.name" class="email">justin@uberti.name</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Victor Boivie</span></div>
+<div dir="auto" class="left"><span class="org">Google</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:boivie@google.com" class="email">boivie@google.com</a>
 </div>
 </address>
 </section>
