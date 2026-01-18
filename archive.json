@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-01-13T01:54:28.225116+00:00",
+  "timestamp": "2026-01-18T02:05:17.563350+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -139,13 +139,13 @@
       "labels": [],
       "body": "acronym not finalized :joy: ",
       "createdAt": "2025-12-11T19:42:51Z",
-      "updatedAt": "2025-12-11T19:42:51Z",
+      "updatedAt": "2026-01-15T11:38:13Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
-      "baseRefOid": "12f4365a8c24d71f66c84269f89a5ba6a3d68b89",
+      "baseRefOid": "ad9ccb10725cd77d606ddb6d4fab4ed324191177",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "sped",
-      "headRefOid": "92608140e82c35d8e38408cea61b56783f19510b",
+      "headRefOid": "5aaf62629c40844236fbd11d31a6389120cee50d",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
