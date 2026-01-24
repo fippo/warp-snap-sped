@@ -4,8 +4,8 @@
 
 Network Working Group                                          P. Hancke
 Internet-Draft                                       Meta Platforms Inc.
-Intended status: Informational                           15 January 2026
-Expires: 19 July 2026
+Intended status: Informational                           24 January 2026
+Expires: 28 July 2026
 
 
                     STUN Protocol for Embedding DTLS
@@ -47,7 +47,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 19 July 2026.
+   This Internet-Draft will expire on 28 July 2026.
 
 Copyright Notice
 
@@ -220,17 +220,24 @@ Table of Contents
    While some of the semantics defined in this specification are
    specific to establishing the DTLS connection, the concept of using
    STUN attributes, e.g. on the periodic STUN consent defined in
-   [RFC7675], as a transport for embedding data * whose receipt should
-   be acknowledged * should be sent on multiple paths * is not time-
-   critical is applicable on a wider scope and can be specified by
-   defining STUN attribute pairs for data and acknowledgements.
+   [RFC7675], as a transport for embedding data
+
+   *  whose receipt should be acknowledged
+
+   *  should be sent on multiple paths
+
+   *  is not time-critical
+
+   is applicable on a wider scope and can be specified by defining STUN
+   attribute pairs for data and acknowledgements.
 
 3.3.  ICE procedures
 
    To manage delivery of DTLS handshake packets, the ICE agent maintains
    a list of outbound DTLS packets that have not yet been acknowledged
    by the peer.  Each packet is identified by a CRC-32 hash.  Packets
-   are resent until they are acknowledged.
+   are resent until they are acknowledged or removed from the list of
+   outbound packets.
 
    Packets can be sent embedded in STUN messages using the META-DTLS-IN-
    STUN attribute, or without embedding on a validated ICE candidate

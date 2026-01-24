@@ -26,7 +26,7 @@
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.32.5
-    wcwidth 0.2.14
+    wcwidth 0.3.0
 -->
 <link href="draft-hancke-webrtc-sped.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -567,6 +567,7 @@ aside, blockquote {
 }
 blockquote {
   margin: 1em 0;
+  border-left: 2px var(--pilcrow-strong) solid;
 }
 cite {
   display: block;
@@ -637,7 +638,7 @@ a.pilcrow {
   }
 }
 @media not print {
-  :hover > a.pilcrow {
+  :hover > a.pilcrow, a.pilcrow:focus {
     opacity: 1;
   }
   a.pilcrow[href]:hover {
@@ -1049,7 +1050,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Hancke</td>
-<td class="center">Expires 19 July 2026</td>
+<td class="center">Expires 28 July 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1062,12 +1063,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-hancke-webrtc-sped-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-01-15" class="published">15 January 2026</time>
+<time datetime="2026-01-24" class="published">24 January 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-07-19">19 July 2026</time></dd>
+<dd class="expires"><time datetime="2026-07-28">28 July 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1117,7 +1118,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 19 July 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 28 July 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1375,11 +1376,19 @@ as well as utilizing that ICE is potentially probing multiple candidate pairs. T
 such as those used in DTLS-PQC, where only one of many packets in a DTLS flight might be lost and need retransmission.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
 <p id="section-3.2-3">While some of the semantics defined in this specification are specific to establishing the DTLS connection,
 the concept of using STUN attributes, e.g. on the periodic STUN consent defined in <span>[<a href="#RFC7675" class="cite xref">RFC7675</a>]</span>,
-as a transport for embedding data
-* whose receipt should be acknowledged
-* should be sent on multiple paths
-* is not time-critical
-is applicable on a wider scope and can be specified by defining STUN attribute pairs for data and acknowledgements.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+as a transport for embedding data<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.2-4.1">
+            <p id="section-3.2-4.1.1">whose receipt should be acknowledged<a href="#section-3.2-4.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-3.2-4.2">
+            <p id="section-3.2-4.2.1">should be sent on multiple paths<a href="#section-3.2-4.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-3.2-4.3">
+            <p id="section-3.2-4.3.1">is not time-critical<a href="#section-3.2-4.3.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-3.2-5">is applicable on a wider scope and can be specified by defining STUN attribute pairs for data and acknowledgements.<a href="#section-3.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="ice-procedures">
@@ -1387,7 +1396,7 @@ is applicable on a wider scope and can be specified by defining STUN attribute p
         <h3 id="name-ice-procedures">
 <a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-ice-procedures" class="section-name selfRef">ICE procedures</a>
         </h3>
-<p id="section-3.3-1">To manage delivery of DTLS handshake packets, the ICE agent maintains a list of outbound DTLS packets that have not yet been acknowledged by the peer. Each packet is identified by a CRC-32 hash. Packets are resent until they are acknowledged.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.3-1">To manage delivery of DTLS handshake packets, the ICE agent maintains a list of outbound DTLS packets that have not yet been acknowledged by the peer. Each packet is identified by a CRC-32 hash. Packets are resent until they are acknowledged or removed from the list of outbound packets.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
 <p id="section-3.3-2">Packets can be sent embedded in STUN messages using the META-DTLS-IN-STUN attribute, or without embedding on a validated ICE candidate pair.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
 <p id="section-3.3-3">The agent also maintains a list of the CRC-32 hashes of received DTLS handshake packets to send as acknowledgements to the peer.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
 <div id="inband-discovery-and-negotiation">
