@@ -126,13 +126,15 @@ such as those used in DTLS-PQC, where only one of many packets in a DTLS flight 
 While some of the semantics defined in this specification are specific to establishing the DTLS connection,
 the concept of using STUN attributes, e.g. on the periodic STUN consent defined in {{?RFC7675}},
 as a transport for embedding data
+
 * whose receipt should be acknowledged
 * should be sent on multiple paths
 * is not time-critical
+
 is applicable on a wider scope and can be specified by defining STUN attribute pairs for data and acknowledgements.
 
 ## ICE procedures
-To manage delivery of DTLS handshake packets, the ICE agent maintains a list of outbound DTLS packets that have not yet been acknowledged by the peer. Each packet is identified by a CRC-32 hash. Packets are resent until they are acknowledged.
+To manage delivery of DTLS handshake packets, the ICE agent maintains a list of outbound DTLS packets that have not yet been acknowledged by the peer. Each packet is identified by a CRC-32 hash. Packets are resent until they are acknowledged or removed from the list of outbound packets.
 
 Packets can be sent embedded in STUN messages using the META-DTLS-IN-STUN attribute, or without embedding on a validated ICE candidate pair.
 
