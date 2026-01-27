@@ -136,7 +136,7 @@ as a transport for embedding data
 
 is applicable on a wider scope and can be specified by defining STUN attribute pairs for data and acknowledgements.
 
-## ICE procedures
+## ICE procedures {#ice}
 To manage delivery of DTLS handshake packets, the ICE agent maintains a list of outbound DTLS packets that have not yet been acknowledged by the peer. Each packet is identified by a CRC-32 hash. Packets are resent until they are acknowledged or removed from the list of outbound packets.
 
 Packets can be sent embedded in STUN messages using the META-DTLS-IN-STUN attribute, or without embedding on a validated ICE candidate pair.
@@ -144,7 +144,7 @@ Packets can be sent embedded in STUN messages using the META-DTLS-IN-STUN attrib
 The agent also maintains a list of the CRC-32 hashes of received DTLS handshake packets to send as acknowledgements to the peer.
 
 ### Inband discovery and negotiation
-The protocol is using in-band discovery to determine support in addition to the use of ice-options for negotiation using SDP offer/answer described below.
+The protocol is using in-band discovery to determine support in addition to the use of ice-options for negotiation using SDP offer/answer described in {{sdp}}.
 This is necessary as the STUN binding requests may reach the offerer before the SDP answer.
 
 Until the DTLS handshake has finished, the ICE agent includes the META-DTLS-IN-STUN-ACKNOWLEDGEMENT and META-DTLS-IN-STUN
@@ -290,7 +290,7 @@ The attribute MAY be empty but included in a binding request or binding response
 This typically happens when the SDP answerer has a "passive" DTLS role and sends binding requests which may arrive at the SDP offerer before the answer.
 It is recommended that this attribute is included before the META-DTLS-IN-STUN attribute.
 
-# SDP Offer/Answer Procedures
+# SDP Offer/Answer Procedures {#sdp}
 TODO(NEEDS CONSENSUS): is this needed?
 
 The protocol is designed to work with in-band discovery as described above. If negotiating the protocol via the SDP
@@ -302,11 +302,11 @@ The offerer MUST be prepared to receive the STUN attributes described below even
 
 ## Generating the SDP Answer
 An answering endpoint not supporting the ice-option described in this document must not include it in its response.
-Otherwise the endpoint includes the "sped" ice-option in its answer and can start using the STUN attributes using the semantics defined below.
+Otherwise the endpoint includes the "sped" ice-option in its answer and can start using the STUN attributes using the semantics defined in {{ice}}.
 
 ## Offerer Processing of the SDP Answer
 If the answer does not include the "sped" ice-option, the offerer SHOULD ignore the STUN attributes defined in this specification
-and MUST NOT send them. Otherwise the offerer includes the STUN attributes using the semantics defined below.
+and MUST NOT send them. Otherwise the offerer includes the STUN attributes using the semantics defined in {{ice}}.
 
 ## Modifying the Session
 Subsequent offers and answers MUST include the ice-option in the negotiated SDP with the same value as in the initial negotiation.
