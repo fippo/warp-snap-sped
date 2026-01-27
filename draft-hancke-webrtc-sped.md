@@ -35,7 +35,10 @@ informative:
 
 --- abstract
 
-TODO
+WebRTC uses the Interactive Connectivity Establishment (ICE) and Datagram Transport Layer Security (DTLS)
+to establish secure connections. This document defines a protocol to embed the DTLS handshake into
+the STUN packets used by ICE which allows parallelizing these sequential handshakes and reduces the number of round trips
+it takes to establish a secure connection.
 
 --- middle
 
