@@ -1,5 +1,5 @@
 ---
-title: "STUN Protocol for Embedding DTLS"
+title: "Embedding DTLS in STUN"
 abbrev: "SPED"
 category: info
 
@@ -346,15 +346,15 @@ If an ice-option is considered necessary, the IANA shall register the following 
 
 The ICE-DTLS draft from 2012 proposed a similar mechanism to SPED, in which a single RTT could be removed from session setup by
 replacing STUN Request and Response messages with DTLS ClientHello and ServerHello messages (rather than piggybacking the DTLS
-messages as SPED does).
+messages as described in this document).
 
-The ICE-DTLS mechanism ends up being considerably more complex than SPED, on account of the fact that the entirety of ICE
-functionality needs to be ported over to DTLS (eg consent checks) or retained as a complementary approach (eg peer address discovery).
-Furthermore, since it changes the details of connectivity negotiation, it is not backward compatible and therefore must be negotiated
-via SDP ice-options.
+The ICE-DTLS mechanism ends up being considerably more complex than the protocol described in this document , on account of the fact
+that the entirety of ICE functionality needs to be ported over to DTLS (eg consent checks) or retained as a complementary approach
+(e.g. peer address discovery). Furthermore, since it changes the details of connectivity negotiation, it is not backward compatible
+and therefore must be negotiated via SDP ice-options.
 
-SPED, on the other hand, is inherently backward compatible with existing WebRTC implementations. It is also more compatible with
-demultiplexing multiple ICE sessions using different STUN username fragments on the same UDP port.
+Embedding DTLS in STUN is, on the other hand, is inherently backward compatible with existing WebRTC implementations.
+It is also more compatible with demultiplexing multiple ICE sessions using different STUN username fragments on the same UDP port.
 
 --- back
 
