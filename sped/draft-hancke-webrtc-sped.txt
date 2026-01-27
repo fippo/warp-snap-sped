@@ -8,7 +8,7 @@ Intended status: Informational                           27 January 2026
 Expires: 31 July 2026
 
 
-                    STUN Protocol for Embedding DTLS
+                         Embedding DTLS in STUN
                     draft-hancke-webrtc-sped-latest
 
 Abstract
@@ -255,7 +255,7 @@ Table of Contents
 
    The protocol is using in-band discovery to determine support in
    addition to the use of ice-options for negotiation using SDP offer/
-   answer described below.  This is necessary as the STUN binding
+   answer described in Section 5.  This is necessary as the STUN binding
    requests may reach the offerer before the SDP answer.
 
    Until the DTLS handshake has finished, the ICE agent includes the
@@ -539,14 +539,14 @@ Table of Contents
    An answering endpoint not supporting the ice-option described in this
    document must not include it in its response.  Otherwise the endpoint
    includes the "sped" ice-option in its answer and can start using the
-   STUN attributes using the semantics defined below.
+   STUN attributes using the semantics defined in Section 3.3.
 
 5.3.  Offerer Processing of the SDP Answer
 
    If the answer does not include the "sped" ice-option, the offerer
    SHOULD ignore the STUN attributes defined in this specification and
    MUST NOT send them.  Otherwise the offerer includes the STUN
-   attributes using the semantics defined below.
+   attributes using the semantics defined in Section 3.3.
 
 5.4.  Modifying the Session
 
@@ -606,20 +606,20 @@ Table of Contents
    which a single RTT could be removed from session setup by replacing
    STUN Request and Response messages with DTLS ClientHello and
    ServerHello messages (rather than piggybacking the DTLS messages as
-   SPED does).
+   described in this document).
 
    The ICE-DTLS mechanism ends up being considerably more complex than
-   SPED, on account of the fact that the entirety of ICE functionality
-   needs to be ported over to DTLS (eg consent checks) or retained as a
-   complementary approach (eg peer address discovery).  Furthermore,
-   since it changes the details of connectivity negotiation, it is not
-   backward compatible and therefore must be negotiated via SDP ice-
-   options.
+   the protocol described in this document , on account of the fact that
+   the entirety of ICE functionality needs to be ported over to DTLS (eg
+   consent checks) or retained as a complementary approach (e.g. peer
+   address discovery).  Furthermore, since it changes the details of
+   connectivity negotiation, it is not backward compatible and therefore
+   must be negotiated via SDP ice-options.
 
-   SPED, on the other hand, is inherently backward compatible with
-   existing WebRTC implementations.  It is also more compatible with
-   demultiplexing multiple ICE sessions using different STUN username
-   fragments on the same UDP port.
+   Embedding DTLS in STUN is, on the other hand, is inherently backward
+   compatible with existing WebRTC implementations.  It is also more
+   compatible with demultiplexing multiple ICE sessions using different
+   STUN username fragments on the same UDP port.
 
 9.  References
 
