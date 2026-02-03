@@ -196,12 +196,12 @@ When an ICE candidate pair has not received a response, DTLS can not be sent wit
 from the other side. In that state, when sending a STUN binding request the ICE agent embeds
 
 * any pending acknowledgments using the META-DTLS-IN-STUN-ACKNOWLEDGMENT attribute and
-* the next pending DTLS packet (determined in a round-robin fashion) using the META-DTLS-IN-STUN attribute. If the "pending" list is empty, the attribute MUST be included with a zero-length value.
+* the next pending DTLS packet (e.g. determined in a round-robin fashion) using the META-DTLS-IN-STUN attribute. If the "pending" list is empty, the attribute MUST be included with a zero-length value.
 
 When receiving a binding request with an META-DTLS-IN-STUN attribute, the ICE agents embeds
 
 * any pending acknowledgments using the META-DTLS-IN-STUN-ACKNOWLEDGMENT attribute and
-* the next pending DTLS packet (determined in a round-robin fashion) using the META-DTLS-IN-STUN attribute. If the "pending" list is empty, the attribute MUST be included with a zero-length value.
+* the next pending DTLS packet (e.g. determined in a round-robin fashion) using the META-DTLS-IN-STUN attribute. If the "pending" list is empty, the attribute MUST be included with a zero-length value.
 
 ### For pairs in SUCCEEDED state
 When the ICE candidate pair has received a binding response and is in succeeded state, any new DTLS flights SHOULD immediately be sent without being embedded in
@@ -211,7 +211,7 @@ while DTLS data is already sent ahead of the final handshake packets.
 When the STUN agent is sending a scheduled check as described in {{Section 5.8 of ?RFC5245}} it SHOULD embed
 
 * any pending acknowledgments using the META-DTLS-IN-STUN-ACKNOWLEDGMENT attribute and
-* the next pending DTLS packet (determined in a round-robin fashion) using the META-DTLS-IN-STUN attribute.
+* the next pending DTLS packet (e.g. determined in a round-robin fashion) using the META-DTLS-IN-STUN attribute.
 
 ### Resending packets
 Resends should happen with the regularly scheduled ICE checks but MAY be triggered by the receipt of an acknowledgment and determining that a
