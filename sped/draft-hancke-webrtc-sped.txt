@@ -4,8 +4,8 @@
 
 Network Working Group                                          P. Hancke
 Internet-Draft                                       Meta Platforms Inc.
-Intended status: Informational                           27 January 2026
-Expires: 31 July 2026
+Intended status: Informational                           3 February 2026
+Expires: 7 August 2026
 
 
                          Embedding DTLS in STUN
@@ -52,7 +52,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 31 July 2026.
+   This Internet-Draft will expire on 7 August 2026.
 
 Copyright Notice
 
@@ -342,9 +342,10 @@ Table of Contents
    *  any pending acknowledgments using the META-DTLS-IN-STUN-
       ACKNOWLEDGMENT attribute and
 
-   *  the next pending DTLS packet (determined in a round-robin fashion)
-      using the META-DTLS-IN-STUN attribute.  If the "pending" list is
-      empty, the attribute MUST be included with a zero-length value.
+   *  the next pending DTLS packet (e.g. determined in a round-robin
+      fashion) using the META-DTLS-IN-STUN attribute.  If the "pending"
+      list is empty, the attribute MUST be included with a zero-length
+      value.
 
    When receiving a binding request with an META-DTLS-IN-STUN attribute,
    the ICE agents embeds
@@ -352,9 +353,10 @@ Table of Contents
    *  any pending acknowledgments using the META-DTLS-IN-STUN-
       ACKNOWLEDGMENT attribute and
 
-   *  the next pending DTLS packet (determined in a round-robin fashion)
-      using the META-DTLS-IN-STUN attribute.  If the "pending" list is
-      empty, the attribute MUST be included with a zero-length value.
+   *  the next pending DTLS packet (e.g. determined in a round-robin
+      fashion) using the META-DTLS-IN-STUN attribute.  If the "pending"
+      list is empty, the attribute MUST be included with a zero-length
+      value.
 
 3.3.5.  For pairs in SUCCEEDED state
 
@@ -371,8 +373,8 @@ Table of Contents
    *  any pending acknowledgments using the META-DTLS-IN-STUN-
       ACKNOWLEDGMENT attribute and
 
-   *  the next pending DTLS packet (determined in a round-robin fashion)
-      using the META-DTLS-IN-STUN attribute.
+   *  the next pending DTLS packet (e.g. determined in a round-robin
+      fashion) using the META-DTLS-IN-STUN attribute.
 
 3.3.6.  Resending packets
 
