@@ -188,6 +188,7 @@ The "pending" list is cleared when the DTLS layer signals that
 The DTLS layer MUST notify the ICE agent when the DTLS handshake is complete, its role and what DTLS version was negotiated.
 
 The ICE agent clears the "pending" list of outgoing packets if either
+
 * the DTLS layer is acting as a DTLS client and the DTLS version is 1.2, or
 * the DTLS layer is acting as a DTLS server and the DTLS version is 1.3.
 
@@ -230,8 +231,8 @@ can send DTLS without embedding once they received a valid binding request from 
 ## DTLS procedures
 For the protocol described in this specification the DTLS handshake is started before ICE finds a valid pair.
 
-Instead of receiving the DTLS packets after demultiplexing (described in {{Section 7 of ?RFC7983}}),
-the DTLS layer receives packets from the ICE layer directly.
+In addition to receiving the DTLS packets after demultiplexing (described in {{Section 7 of ?RFC7983}}),
+the DTLS layer also receives packets from the ICE layer.
 
 ### MTU considerations
 Embedding DTLS in STUN requires considerations for reducing the MTU used by the DTLS layer for the fragmentation of the handshake.
