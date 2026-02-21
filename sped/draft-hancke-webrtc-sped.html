@@ -170,7 +170,7 @@ it takes to establish a secure connection.
   font-weight: 400;
   font-display: swap;
   src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
   font-family: 'Oxygen Mono';
@@ -178,7 +178,8 @@ it takes to establish a secure connection.
   font-weight: 400;
   font-display: swap;
   src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 }
 
 @font-face {
@@ -1053,7 +1054,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Hancke</td>
-<td class="center">Expires 7 August 2026</td>
+<td class="center">Expires 25 August 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1066,12 +1067,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-hancke-webrtc-sped-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-02-03" class="published">3 February 2026</time>
+<time datetime="2026-02-21" class="published">21 February 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-08-07">7 August 2026</time></dd>
+<dd class="expires"><time datetime="2026-08-25">25 August 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1124,7 +1125,7 @@ it takes to establish a secure connection.<a href="#section-abstract-1" class="p
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 7 August 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 25 August 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1201,10 +1202,10 @@ it takes to establish a secure connection.<a href="#section-abstract-1" class="p
                 <p id="section-toc.1-1.3.2.4.1"><a href="#section-3.4" class="auto internal xref">3.4</a>.  <a href="#name-dtls-procedures" class="internal xref">DTLS procedures</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.4.2.1">
-                    <p id="section-toc.1-1.3.2.4.2.1.1"><a href="#section-3.4.1" class="auto internal xref">3.4.1</a>.  <a href="#name-mtu-considerations" class="internal xref">MTU considerations</a></p>
+                    <p id="section-toc.1-1.3.2.4.2.1.1"><a href="#section-3.4.1" class="auto internal xref">3.4.1</a>.  <a href="#name-handling-flights-consisting" class="internal xref">Handling flights consisting of multiple packets</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.4.2.2">
-                    <p id="section-toc.1-1.3.2.4.2.2.1"><a href="#section-3.4.2" class="auto internal xref">3.4.2</a>.  <a href="#name-handling-flights-consisting" class="internal xref">Handling flights consisting of multiple packets</a></p>
+                    <p id="section-toc.1-1.3.2.4.2.2.1"><a href="#section-3.4.2" class="auto internal xref">3.4.2</a>.  <a href="#name-mtu-considerations" class="internal xref">MTU considerations</a></p>
 </li>
                 </ul>
 </li>
@@ -1475,15 +1476,9 @@ If this hash is not already in its "received" list, it adds it.<a href="#section
 <a href="#section-3.3.3" class="section-number selfRef">3.3.3. </a><a href="#name-completion-of-the-dtls-hand" class="section-name selfRef">Completion of the DTLS handshake</a>
           </h4>
 <p id="section-3.3.3-1">The DTLS layer MUST notify the ICE agent when the DTLS handshake is complete, its role and what DTLS version was negotiated.<a href="#section-3.3.3-1" class="pilcrow">¶</a></p>
-<p id="section-3.3.3-2">The ICE agent clears the "pending" list of outgoing packets if either<a href="#section-3.3.3-2" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-3.3.3-3.1">
-              <p id="section-3.3.3-3.1.1">the DTLS layer is acting as a DTLS client and the DTLS version is 1.2, or<a href="#section-3.3.3-3.1.1" class="pilcrow">¶</a></p>
-</li>
-            <li class="normal" id="section-3.3.3-3.2">
-              <p id="section-3.3.3-3.2.1">the DTLS layer is acting as a DTLS server and the DTLS version is 1.3.<a href="#section-3.3.3-3.2.1" class="pilcrow">¶</a></p>
-</li>
-          </ul>
+<p id="section-3.3.3-2">The ICE agent clears the "pending" list of outgoing packets if the DTLS layer
+is acting as a DTLS client and the DTLS version is 1.2.<a href="#section-3.3.3-2" class="pilcrow">¶</a></p>
+<p id="section-3.3.3-3">No DTLS packets are added to the "pending" list after the handshake completes.<a href="#section-3.3.3-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="for-pairs-that-are-in-waiting-state">
@@ -1570,14 +1565,23 @@ can send DTLS without embedding once they received a valid binding request from 
 <p id="section-3.4-1">For the protocol described in this specification the DTLS handshake is started before ICE finds a valid pair.<a href="#section-3.4-1" class="pilcrow">¶</a></p>
 <p id="section-3.4-2">In addition to receiving the DTLS packets after demultiplexing (described in <span><a href="https://rfc-editor.org/rfc/rfc7983#section-7" class="relref">Section 7</a> of [<a href="#RFC7983" class="cite xref">RFC7983</a>]</span>),
 the DTLS layer also receives packets from the ICE layer.<a href="#section-3.4-2" class="pilcrow">¶</a></p>
-<div id="mtu-considerations">
+<div id="handling-flights-consisting-of-multiple-packets">
 <section id="section-3.4.1">
-          <h4 id="name-mtu-considerations">
-<a href="#section-3.4.1" class="section-number selfRef">3.4.1. </a><a href="#name-mtu-considerations" class="section-name selfRef">MTU considerations</a>
+          <h4 id="name-handling-flights-consisting">
+<a href="#section-3.4.1" class="section-number selfRef">3.4.1. </a><a href="#name-handling-flights-consisting" class="section-name selfRef">Handling flights consisting of multiple packets</a>
           </h4>
-<p id="section-3.4.1-1">Embedding DTLS in STUN requires considerations for reducing the MTU used by the DTLS layer for the fragmentation of the handshake.
-The goal is to fit the DTLS handshake packets into STUN packets with a predefined maximum size.<a href="#section-3.4.1-1" class="pilcrow">¶</a></p>
-<p id="section-3.4.1-2">The following attributes must be taken into account:<a href="#section-3.4.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.4.1-1">A single DTLS flight may be too large to fit into a single UDP packet, especially when using Post-Quantum Cryptography (PQC).<a href="#section-3.4.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.4.1-2">Addressing this without re-introducing additional delays is an open question.<a href="#section-3.4.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="mtu-considerations">
+<section id="section-3.4.2">
+          <h4 id="name-mtu-considerations">
+<a href="#section-3.4.2" class="section-number selfRef">3.4.2. </a><a href="#name-mtu-considerations" class="section-name selfRef">MTU considerations</a>
+          </h4>
+<p id="section-3.4.2-1">Embedding DTLS in STUN requires considerations for reducing the MTU used by the DTLS layer for the fragmentation of the handshake.
+The goal is to fit the DTLS handshake packets into STUN packets with a predefined maximum size.<a href="#section-3.4.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.4.2-2">The following attributes must be taken into account:<a href="#section-3.4.2-2" class="pilcrow">¶</a></p>
 <table class="center" id="table-1">
             <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
@@ -1658,17 +1662,8 @@ The goal is to fit the DTLS handshake packets into STUN packets with a predefine
               </tr>
             </tbody>
           </table>
-<p id="section-3.4.1-4">Applications that use additional STUN attributes MUST reduce the DTLS MTU further.
-The reduced MTU should only be used until the DTLS handshake is complete.<a href="#section-3.4.1-4" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="handling-flights-consisting-of-multiple-packets">
-<section id="section-3.4.2">
-          <h4 id="name-handling-flights-consisting">
-<a href="#section-3.4.2" class="section-number selfRef">3.4.2. </a><a href="#name-handling-flights-consisting" class="section-name selfRef">Handling flights consisting of multiple packets</a>
-          </h4>
-<p id="section-3.4.2-1">A single DTLS flight may be too large to fit into a single UDP packet, especially when using Post-Quantum Cryptography (PQC).<a href="#section-3.4.2-1" class="pilcrow">¶</a></p>
-<p id="section-3.4.2-2">Addressing this without re-introducing additional delays is an open question.<a href="#section-3.4.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.4.2-4">Applications that use additional STUN attributes MUST reduce the DTLS MTU further.
+The reduced MTU should only be used until the DTLS handshake is complete.<a href="#section-3.4.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
