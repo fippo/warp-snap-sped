@@ -187,10 +187,10 @@ The "pending" list is cleared when the DTLS layer signals that
 ### Completion of the DTLS handshake
 The DTLS layer MUST notify the ICE agent when the DTLS handshake is complete, its role and what DTLS version was negotiated.
 
-The ICE agent clears the "pending" list of outgoing packets if either
+The ICE agent clears the "pending" list of outgoing packets if the DTLS layer
+is acting as a DTLS client and the DTLS version is 1.2.
 
-* the DTLS layer is acting as a DTLS client and the DTLS version is 1.2, or
-* the DTLS layer is acting as a DTLS server and the DTLS version is 1.3.
+No DTLS packets are added to the "pending" list after the handshake completes.
 
 ### For pairs that are in WAITING state
 When an ICE candidate pair has not received a response, DTLS can not be sent without being embedded as the candidate pair does not have consent
@@ -234,6 +234,11 @@ For the protocol described in this specification the DTLS handshake is started b
 In addition to receiving the DTLS packets after demultiplexing (described in {{Section 7 of ?RFC7983}}),
 the DTLS layer also receives packets from the ICE layer.
 
+### Handling flights consisting of multiple packets
+A single DTLS flight may be too large to fit into a single UDP packet, especially when using Post-Quantum Cryptography (PQC).
+
+Addressing this without re-introducing additional delays is an open question.
+
 ### MTU considerations
 Embedding DTLS in STUN requires considerations for reducing the MTU used by the DTLS layer for the fragmentation of the handshake.
 The goal is to fit the DTLS handshake packets into STUN packets with a predefined maximum size.
@@ -255,11 +260,6 @@ The following attributes must be taken into account:
 
 Applications that use additional STUN attributes MUST reduce the DTLS MTU further.
 The reduced MTU should only be used until the DTLS handshake is complete.
-
-### Handling flights consisting of multiple packets
-A single DTLS flight may be too large to fit into a single UDP packet, especially when using Post-Quantum Cryptography (PQC).
-
-Addressing this without re-introducing additional delays is an open question.
 
 # STUN Extensions
 
