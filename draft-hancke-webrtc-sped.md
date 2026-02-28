@@ -167,8 +167,8 @@ An ICE agent maintains two lists related to DTLS packet delivery:
 * A "received" list of CRC-32 hashes of all unique inbound DTLS packets that it has processed.
 
 When an agent sends a STUN message, it includes the contents of its "received" list in a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute.
-This list MUST be included, even if empty, until the ICE agent receives a STUN binding request or response that
-contains a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute but does not contain a META-DTLS-IN-STUN attribute. This
+This list MUST be included, even if empty, until the DTLS handshake has completed and the ICE agent receives a STUN binding request
+or response that contains a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute but does not contain a META-DTLS-IN-STUN attribute. This
 acts as a "closing handshake" for the embedding.
 
 When an agent receives a STUN binding request or response containing a META-DTLS-IN-STUN attribute, it calculates the CRC-32 hash of the embedded DTLS packet.
