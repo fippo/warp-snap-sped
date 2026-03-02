@@ -1,0 +1,2726 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Cyrillic,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>STUN Protocol for Embedding DTLS (SPED)</title>
+<meta content="Philipp Hancke" name="author">
+<meta content="Justin Uberti" name="author">
+<meta content="Jonas Oreland" name="author">
+<meta content="
+       WebRTC setup normally serializes ICE and DTLS, adding at least one extra round trip before secure
+media can flow. This document defines the STUN Protocol for Embedding DTLS (SPED), which carries
+DTLS handshake data and acknowledgements inside STUN Binding Requests and Responses. SPED allows
+ICE and DTLS to proceed in parallel, improves setup behavior under loss, and remains backward
+compatible with existing ICE processing. 
+    " name="description">
+<meta content="xml2rfc 3.31.0" name="generator">
+<meta content="webrtc" name="keyword">
+<meta content="stun" name="keyword">
+<meta content="dtls" name="keyword">
+<meta content="draft-hancke-webrtc-sped-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.31.0
+    Python 3.12.12
+    ConfigArgParse 1.7
+    google-i18n-address 3.1.1
+    intervaltree 3.2.1
+    Jinja2 3.1.6
+    lxml 6.0.2
+    platformdirs 4.5.1
+    pycountry 24.6.1
+    PyYAML 6.0.3
+    requests 2.32.5
+    wcwidth 0.3.0
+-->
+<link href="draft-hancke-webrtc-sped.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+}
+
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  --font-title: "Sofia Sans Semi Condensed", sans-serif;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+section {
+  clear: both;
+}
+.section-number {
+  padding-right: 0.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 680;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1#title {
+  font-size: 32px;
+  line-height: 40px;
+  clear: both;
+}
+h1#title, h1#rfcnum {
+  margin: 1.5em 0 0.2em;
+}
+h1#rfcnum + h1#title {
+  margin: 0.2em 0;
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+}
+#abstract+p code, #abstract+p samp, #abstract+p tt {
+  font-size: 16px;
+  line-height: 0;
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignRight.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignRight {
+  margin: 1em 0;
+}
+.alignRight > *:first-child {
+  border: none;
+  margin: 0;
+  float: right;
+  clear: both;
+}
+.alignRight > *:nth-child(2) {
+  clear: both;
+  display: block;
+  border: none;
+}
+svg {
+  display: block;
+}
+/* font-family isn't space-separated, but =~ will have to do */
+svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
+  font-family: var(--font-mono);
+}
+.alignCenter.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignCenter.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignCenter {
+  margin: 1em 0;
+}
+.alignCenter > *:first-child {
+  border: none;
+  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+     support flexbox yet.
+  */
+  display: table;
+  margin: 0 auto;
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+  & :is(ol, ul) {
+    margin-left: 1em;
+  }
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+  & li {
+    margin-top: 0.5em;
+  }
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  margin: 0 0 0 2em;
+  & li {
+    margin: 0;
+    & :first-child { margin-top: 0; }
+    & :last-child { margin-bottom: 0; }
+  }
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+  &.olPercent {
+    --indent: 5ch;
+    & > dt {
+      min-width: calc(var(--indent) - 2ch);
+    }
+  }
+  &.olPercent > dt {
+    float: none;
+  }
+
+  dl > dd > & {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+  }
+}
+dl:not(.dlNewline) > dt {
+  float: left;
+  margin-right: 2ch;
+  min-width: 8ch;
+}
+dl > dd {
+  margin-bottom: .8em;
+  margin-left: var(--indent) !important; /* stupid element overrides */
+  min-height: 2ex;
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+  & > :is(:first-child, .break:first-child + *) {
+    margin-top: 0;
+  }
+  & > :is(:last-child) {
+    margin-bottom: 0;
+  }
+}
+:is(dd, span).break {
+  display: none;
+}
+
+/* links */
+a, a[href].selfRef:hover {
+  text-decoration: none;
+}
+a[href] {
+  color: var(--link-color);
+}
+a[href].selfRef, .iref + a[href].internal {
+  color: var(--text-color);
+}
+a[href]:hover {
+  text-decoration: underline;
+}
+a[href].selfRef:hover {
+  background-color: var(--highlight-color);
+}
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+}
+figure blockquote {
+  margin: 0.8em 0.4em 0.4em;
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+  caption-side: bottom;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) p {
+    margin: -2px 0;
+    max-height: 0;
+    transition: max-height 2s ease, margin 0.5s ease 0.5s;
+    overflow: hidden;
+  }
+  :is(#status-of-memo, #copyright):hover p,
+  :is(#status-of-memo, #copyright) h2:target ~ p {
+    margin: 0.5em 0;
+    max-height: 500px;
+    overflow: auto;
+  }
+  pre, svg {
+    display: inline-block;
+    /* In the horizontal direction, sometimes people make over-sized figures.
+       Scrollbars for those is therefore necessary: auto adds them as necessary..
+       In the vertical direction, the line-height can combine with the font
+       asender/descender height to produce scrollbars: hidden avoids that. */
+    overflow: auto hidden;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+  border-left: 2px var(--pilcrow-strong) solid;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+}
+table.right {
+  margin-left: auto;
+}
+table.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+table.left {
+  margin-right: auto;
+}
+table .text-left {
+  text-align: left;
+}
+table .text-center {
+  text-align: center;
+}
+table .text-right {
+  text-align: right;
+}
+
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+table caption {
+  margin: 0;
+  padding: 3px 0 3px 1em;
+}
+table p {
+  margin: 0;
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+  &[href] {
+    color: var(--pilcrow-weak);
+    &:hover { text-decoration: none; }
+  }
+}
+@media not print {
+  :hover > a.pilcrow, a.pilcrow:focus {
+    opacity: 1;
+  }
+  a.pilcrow[href]:hover {
+    color: var(--pilcrow-strong);
+    background-color: transparent;
+  }
+}
+@media print {
+  a.pilcrow {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: var(--small-font-size);
+}
+.role {
+  font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+  & dt {
+    width: var(--identifier-width);
+    min-width: var(--identifier-width);
+    clear: left;
+    float: left;
+    text-align: right;
+    margin-right: 1ch;
+  }
+  & dd {
+    margin: 0;
+    margin-left: calc(1em + var(--identifier-width)) !important;
+    min-width: 5em;
+  }
+  & .authors {
+    & .author {
+      display: inline-block;
+      margin-right: 1.5em;
+    }
+    & .org {
+      font-style: italic;
+    }
+  }
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+}
+.docInfo .prepared {
+  float: right;
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+
+  & nav {
+    & ul {
+      margin: 0 0.5em 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    & li {
+      line-height: 1.3em;
+      margin: 2px 0;
+      padding-left: 1.2em;
+      text-indent: -1.2em;
+    }
+  }
+  & a.xref {
+    white-space: normal;
+  }
+}
+
+.references {
+  & > dt {
+    text-align: right;
+    font-weight: bold;
+    min-width: 10ch;
+    margin-right: 1.5ch;
+    &:target::before {
+      content: "⇒";
+      margin: 0 10px 0 -25px;
+    }
+  }
+  & > dd {
+    margin-left: 12ch !important;
+    overflow: visible;
+    & .refInstance {
+      margin-bottom: 0.8em;
+    }
+    & .ascii {
+      margin-bottom: 0.25em;
+    }
+  }
+}
+
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  max-width: 20em;
+  margin: 1em auto 1em 0;
+
+  & .nameRole {
+    font-weight: 700;
+    margin-left: 0;
+  }
+  & .label {
+    margin: 0.5em 0;
+  }
+  & .type {
+    display: none;
+  }
+  & .alternative-contact {
+    margin: 0.5em 0 0.25em 0;
+  }
+  & .non-ascii {
+    margin: 0 0 0 2em;
+  }
+  & div.left {
+    text-align: left;
+  }
+  & div.right {
+    text-align: right;
+  }
+}
+
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses > section {
+    column-count: 2;
+    column-gap: 20px;
+  }
+  #authors-addresses > section > h2 {
+    column-span: all;
+  }
+  /* hack for break-inside: avoid-column */
+  #authors-addresses address {
+    display: inline-block;
+    break-inside: avoid-column;
+  }
+}
+
+/* Comments */
+.rfcEditorRemove p:first-of-type {
+  font-style: italic;
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+
+@media screen {
+  #toc nav {
+    font-family: var(--font-title);
+    font-weight: 360;
+    & > ul { margin-bottom: 2em; }
+    & ul {
+      margin: 0 0 0 4px;
+      & :is(p, li) {
+        margin: 2px 0;
+      }
+    }
+  }
+  #toc a.toplink {
+    float: right;
+  }
+}
+@media not screen {
+  #toc a.toplink {
+    display: none;
+  }
+}
+
+
+/* TOC layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 1px 0 0 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 2px 0 2px 6px;
+    padding-right: 1em;
+    font-size: 18px;
+    line-height: 24px;
+    min-width: 190px;
+    text-align: right;
+    background-color: #444;
+    color: white;
+    cursor: pointer;
+    &::before { /* css hamburger */
+      float: right;
+      position: relative;
+      width: 1em;
+      height: 1px;
+      left: -164px;
+      margin: 8px 0 0 0;
+      background: white none repeat scroll 0 0;
+      box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+      content: "";
+    }
+  }
+  #toc nav {
+    display: none;
+    background-color: var(--background-color);
+    padding: 0.5em 1em 1em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    height: calc(100vh - 48px);
+    border-left: 1px solid #ddd;
+  }
+  #toc.active {
+    opacity: 1;
+    & nav { display: block; }
+  }
+  /* Make the collapsed ToC header render white on gray also when it's a link */
+  #toc h2 a,
+  #toc h2 a:is(:link, :focus, :hover),
+  #toc a.toplink,
+  #toc a.toplink:hover {
+    color: white;
+    background-color: #444;
+    text-decoration: none;
+  }
+  #toc a.toplink {
+    margin: 2px 0.5em 0;
+  }
+}
+
+/* TOC layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 0.25em 1em 1em 0;
+  }
+  #toc nav {
+    display: block;
+    height: calc(90vh - 84px);
+    bottom: 0;
+    padding: 0.5em 0 2em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+  #toc a.toplink {
+    margin: 8px 0.5em 0;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc, #n-introduction {
+    page-break-before: always;
+  }
+  #toc {
+    border-top: none;
+    padding-top: 0;
+  }
+  figure, pre, .vcard {
+    page-break-inside: avoid;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  :is(h2, h3, h4, h5, h6)+*, dd {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg :is([stroke="black"], [stroke^="#000"]) {
+  stroke: var(--text-color);
+}
+svg :is([stroke="white"], [stroke^="#fff"]) {
+  stroke: var(--background-color);
+}
+svg :is([fill="black"], [fill^="#000"], :not([fill])) {
+  fill: var(--text-color);
+}
+svg :is([fill="white"], [fill^="#fff"]) {
+  fill: var(--background-color);
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">SPED</td>
+<td class="right">March 2026</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Hancke, et al.</td>
+<td class="center">Expires 3 September 2026</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">Audio/Video Transport Core Maintenance</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-hancke-webrtc-sped-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2026-03-02" class="published">2 March 2026</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Informational</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2026-09-03">3 September 2026</time></dd>
+<dt class="label-authors">Authors:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">P. Hancke</div>
+<div class="org">Meta Platforms Inc.</div>
+</div>
+<div class="author">
+      <div class="author-name">J. Uberti</div>
+<div class="org">OpenAI</div>
+</div>
+<div class="author">
+      <div class="author-name">J. Oreland</div>
+<div class="org">Google</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">STUN Protocol for Embedding DTLS (SPED)</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">WebRTC setup normally serializes ICE and DTLS, adding at least one extra round trip before secure
+media can flow. This document defines the STUN Protocol for Embedding DTLS (SPED), which carries
+DTLS handshake data and acknowledgements inside STUN Binding Requests and Responses. SPED allows
+ICE and DTLS to proceed in parallel, improves setup behavior under loss, and remains backward
+compatible with existing ICE processing.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+</section>
+<section class="note rfcEditorRemove" id="section-note.1">
+      <h2 id="name-about-this-document">
+<a href="#name-about-this-document" class="section-name selfRef">About This Document</a>
+      </h2>
+<p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
+<p id="section-note.1-2">
+        The latest revision of this draft can be found at <span><a href="https://fippo.github.io/warp-snap-sped/draft-hancke-webrtc-sped-latest.html">https://fippo.github.io/warp-snap-sped/draft-hancke-webrtc-sped-latest.html</a></span>.
+        Status information for this document may be found at <span><a href="https://datatracker.ietf.org/doc/draft-hancke-webrtc-sped/">https://datatracker.ietf.org/doc/draft-hancke-webrtc-sped/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
+<p id="section-note.1-3">
+        Discussion of this document takes place on the
+        AVTCORE Working Group mailing list (<span><a href="mailto:avt@ietf.org">mailto:avt@ietf.org</a></span>),
+        which is archived at <span><a href="https://datatracker.ietf.org/wg/avtcore/">https://datatracker.ietf.org/wg/avtcore/</a></span>.
+        Subscribe at <span><a href="https://www.ietf.org/mailman/listinfo/avt/">https://www.ietf.org/mailman/listinfo/avt/</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
+<p id="section-note.1-4">Source for this draft and an issue tracker can be found at
+        <span><a href="https://github.com/fippo/warp-snap-sped">https://github.com/fippo/warp-snap-sped</a></span>.<a href="#section-note.1-4" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 3 September 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2026 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-design" class="internal xref">Design</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-background" class="internal xref">Background</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.1">
+                    <p id="section-toc.1-1.3.2.1.2.1.1" class="keepWithNext"><a href="#section-3.1.1" class="auto internal xref">3.1.1</a>.  <a href="#name-ice-overview" class="internal xref">ICE Overview</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.2">
+                    <p id="section-toc.1-1.3.2.1.2.2.1"><a href="#section-3.1.2" class="auto internal xref">3.1.2</a>.  <a href="#name-dtls-overview" class="internal xref">DTLS Overview</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-goals" class="internal xref">Goals</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-sped-protocol" class="internal xref">SPED Protocol</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3.2.1">
+                    <p id="section-toc.1-1.3.2.3.2.1.1"><a href="#section-3.3.1" class="auto internal xref">3.3.1</a>.  <a href="#name-summary" class="internal xref">Summary</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3.2.2">
+                    <p id="section-toc.1-1.3.2.3.2.2.1"><a href="#section-3.3.2" class="auto internal xref">3.3.2</a>.  <a href="#name-new-stun-attributes" class="internal xref">New STUN Attributes</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3.2.3">
+                    <p id="section-toc.1-1.3.2.3.2.3.1"><a href="#section-3.3.3" class="auto internal xref">3.3.3</a>.  <a href="#name-mtu-considerations" class="internal xref">MTU Considerations</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3.2.4">
+                    <p id="section-toc.1-1.3.2.3.2.4.1"><a href="#section-3.3.4" class="auto internal xref">3.3.4</a>.  <a href="#name-backwards-compatibility" class="internal xref">Backwards Compatibility</a></p>
+</li>
+                </ul>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-mechanism" class="internal xref">Mechanism</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-setup" class="internal xref">Setup</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-sending-a-stun-binding-requ" class="internal xref">Sending a STUN Binding Request or Response</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-receiving-a-stun-binding-re" class="internal xref">Receiving a STUN Binding Request or Response</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4">
+                <p id="section-toc.1-1.4.2.4.1"><a href="#section-4.4" class="auto internal xref">4.4</a>.  <a href="#name-termination" class="internal xref">Termination</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-examples" class="internal xref">Examples</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-vanilla-dtls-12" class="internal xref">Vanilla DTLS 1.2</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-dtls-12-with-sped" class="internal xref">DTLS 1.2 with SPED</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.3">
+                <p id="section-toc.1-1.5.2.3.1"><a href="#section-5.3" class="auto internal xref">5.3</a>.  <a href="#name-vanilla-dtls-13" class="internal xref">Vanilla DTLS 1.3</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.4">
+                <p id="section-toc.1-1.5.2.4.1"><a href="#section-5.4" class="auto internal xref">5.4</a>.  <a href="#name-dtls-13-with-sped" class="internal xref">DTLS 1.3 with SPED</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.5">
+                <p id="section-toc.1-1.5.2.5.1"><a href="#section-5.5" class="auto internal xref">5.5</a>.  <a href="#name-dtls-13-with-non-sped-peer" class="internal xref">DTLS 1.3 with Non-SPED Peer</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.6">
+                <p id="section-toc.1-1.5.2.6.1"><a href="#section-5.6" class="auto internal xref">5.6</a>.  <a href="#name-dtls-13-with-flight-2-loss" class="internal xref">DTLS 1.3 with Flight 2 Loss</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.7">
+                <p id="section-toc.1-1.5.2.7.1"><a href="#section-5.7" class="auto internal xref">5.7</a>.  <a href="#name-dtls-13-with-flight-3-loss" class="internal xref">DTLS 1.3 with Flight 3 Loss</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.8">
+                <p id="section-toc.1-1.5.2.8.1"><a href="#section-5.8" class="auto internal xref">5.8</a>.  <a href="#name-dtls-13-pqc-with-certificat" class="internal xref">DTLS 1.3 PQC with Certificate Fragment Loss</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.9">
+                <p id="section-toc.1-1.5.2.9.1"><a href="#section-5.9" class="auto internal xref">5.9</a>.  <a href="#name-dtls-13-pqc-with-multiple-c" class="internal xref">DTLS 1.3 PQC with Multiple Candidate Pairs and Certificate Fragment Loss</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-implementation-notes" class="internal xref">Implementation Notes</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-prior-work" class="internal xref">Prior Work</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-ice-dtls" class="internal xref">ICE-DTLS</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-future-work" class="internal xref">Future Work</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-dtls-replay-and-spoofing" class="internal xref">DTLS Replay and Spoofing</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-pacing-and-congestion" class="internal xref">Pacing and Congestion</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.1">
+                <p id="section-toc.1-1.11.2.1.1"><a href="#section-11.1" class="auto internal xref">11.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.2">
+                <p id="section-toc.1-1.11.2.2.1"><a href="#section-11.2" class="auto internal xref">11.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-appendix-a-benchmark-number" class="internal xref">Appendix A: Benchmark Numbers</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.1">
+                <p id="section-toc.1-1.12.2.1.1"><a href="#appendix-A.1" class="auto internal xref">A.1</a>.  <a href="#name-dtls-13-with-pqc" class="internal xref">DTLS 1.3 with PQC</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.2">
+                <p id="section-toc.1-1.12.2.2.1"><a href="#appendix-A.2" class="auto internal xref">A.2</a>.  <a href="#name-dtls-13-without-pqc" class="internal xref">DTLS 1.3 without PQC</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.3">
+                <p id="section-toc.1-1.12.2.3.1"><a href="#appendix-A.3" class="auto internal xref">A.3</a>.  <a href="#name-dtls-12" class="internal xref">DTLS 1.2</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
+            <p id="section-toc.1-1.13.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14">
+            <p id="section-toc.1-1.14.1"><a href="#appendix-C" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">The current WebRTC connection setup, as outlined in <span>[<a href="#RFC8829" class="cite xref">RFC8829</a>]</span>, incurs a minimum of 4 RTTs with
+DTLS 1.2, or 3 RTTs with DTLS 1.3, before media can be sent. The serialization of ICE and DTLS is
+a large contributor to that as illustrated below for DTLS 1.2:<a href="#section-1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-1-2">
+<pre>
+Client                                      Server
+  |                                            |
+  |------------- SDP Offer (actpass)----------&gt;|
+  |&lt;-1---------- SDP Answer (passive)----------|
+  |                                            |
+  |&lt;-2---------- ICE/Connectivity Checks -----&gt;|
+  |                                            |
+  |------------- DTLS ClientHello ------------&gt;|
+  |&lt;-3---------- DTLS ServerHello -------------|
+  |------------- DTLS Finished ---------------&gt;|
+  |&lt;-4---------- DTLS Finished ----------------|
+  |                                            |
+  |------------- Application data ------------&gt;|
+</pre><a href="#section-1-2" class="pilcrow">¶</a>
+</div>
+<p id="section-1-3">In addition, deployment experience has shown connection setup reliability issues in scenarios with
+packet loss, caused by the exponential backoff timer typically used in DTLS implementations.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">The protocol defined in this specification, SPED, aims to resolve these concerns by embedding the
+DTLS handshake into STUN, eliminating the delay caused by the serialization of the protocols and
+improving reliability by sending fewer packets as well as simplifying retransmissions. In fact,
+when DTLS 1.3 is used, the protocol can reduce the setup latency to as little as a single
+round-trip, comparable to the latency of the largely deprecated SDES key exchange mechanism
+<span>[<a href="#RFC4568" class="cite xref">RFC4568</a>]</span>.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<p id="section-1-5">The protocol is backward compatible, supports both DTLS 1.2 <span>[<a href="#RFC6347" class="cite xref">RFC6347</a>]</span> and DTLS 1.3
+<span>[<a href="#RFC9147" class="cite xref">RFC9147</a>]</span>, and can accommodate all DTLS cipher suites, including post-quantum cryptography
+(PQC) suites that can increase the number of packets sent during DTLS handshaking.<a href="#section-1-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="conventions-and-definitions">
+<section id="section-2">
+      <h2 id="name-conventions-and-definitions">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+      </h2>
+<p id="section-2-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+"<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
+appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="design">
+<section id="section-3">
+      <h2 id="name-design">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-design" class="section-name selfRef">Design</a>
+      </h2>
+<div id="background">
+<section id="section-3.1">
+        <h3 id="name-background">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-background" class="section-name selfRef">Background</a>
+        </h3>
+<div id="ice-overview">
+<section id="section-3.1.1">
+          <h4 id="name-ice-overview">
+<a href="#section-3.1.1" class="section-number selfRef">3.1.1. </a><a href="#name-ice-overview" class="section-name selfRef">ICE Overview</a>
+          </h4>
+<p id="section-3.1.1-1">The ICE protocol <span>[<a href="#RFC8445" class="cite xref">RFC8445</a>]</span> is complex, but the core steps taken by each ICE agent (client) can be summarized
+as follows:<a href="#section-3.1.1-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-3.1.1-2">
+<li id="section-3.1.1-2.1">
+              <p id="section-3.1.1-2.1.1">Enumerate local ICE candidates and send them, out-of-band, to the peer.<a href="#section-3.1.1-2.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-3.1.1-2.2">
+              <p id="section-3.1.1-2.2.1">Combine local ICE candidates with the received remote ICE candidates to form ICE candidate
+pairs.<a href="#section-3.1.1-2.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-3.1.1-2.3">
+              <p id="section-3.1.1-2.3.1">Evaluate the usability of these ICE candidate pairs by sending STUN Binding Requests. This
+typically happens in parallel, i.e. an ICE agent may have several binding requests in flight
+when there are multiple candidate pairs.<a href="#section-3.1.1-2.3.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-3.1.1-2.4">
+              <p id="section-3.1.1-2.4.1">When a STUN Binding Request is received, reply with a STUN Binding Response.<a href="#section-3.1.1-2.4.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-3.1.1-2.5">
+              <p id="section-3.1.1-2.5.1">When a STUN Binding Response is received, in response to a request, mark the associated ICE
+candidate pair as valid.<a href="#section-3.1.1-2.5.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-3.1.1-2.6">
+              <p id="section-3.1.1-2.6.1">If the ICE agent is in the controlling role, select the "best" ICE candidate pair for
+subsequent sending of data or media, and indicate the selected candidate pair to the remote ICE
+agent by sending a new STUN Binding Request with the USE-CANDIDATE flag set.<a href="#section-3.1.1-2.6.1" class="pilcrow">¶</a></p>
+</li>
+          </ol>
+<p id="section-3.1.1-3">Some endpoints, typically servers, implement a simpler form of ICE known as ICE Lite <span>[<a href="#RFC8445" class="cite xref">RFC8445</a>]</span>. When this
+form of ICE is used, the ICE Lite endpoint omits steps 3 and 5, and Binding Requests only flow in
+one direction, from the full to the lite endpoint.<a href="#section-3.1.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1.1-4">In WebRTC ICE also ensures consent, see RFC 7675<a href="#section-3.1.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="dtls-overview">
+<section id="section-3.1.2">
+          <h4 id="name-dtls-overview">
+<a href="#section-3.1.2" class="section-number selfRef">3.1.2. </a><a href="#name-dtls-overview" class="section-name selfRef">DTLS Overview</a>
+          </h4>
+<p id="section-3.1.2-1">In WebRTC, DTLS handshaking normally starts once ICE has identified a valid candidate pair, using
+"client" and "server" roles determined through the <code>a=setup</code> attribute in WebRTC SDP signaling
+<span>[<a href="#RFC5763" class="cite xref">RFC5763</a>]</span>. SPED changes when these DTLS packets can be sent, but not the DTLS handshake
+contents themselves.<a href="#section-3.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.1.2-2">We define the term "DTLS packet" to mean the unit of DTLS data typically carried in a
+single UDP packet.<a href="#section-3.1.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.1.2-3">DTLS handshake messages are also organized into "DTLS flights", as detailed in <span><a href="https://rfc-editor.org/rfc/rfc9147#section-5.7" class="relref">Section 5.7</a> of [<a href="#RFC9147" class="cite xref">RFC9147</a>]</span>. A
+DTLS flight consists of a set of handshake messages that are sent together by a DTLS endpoint, and
+those messages are carried in one or more DTLS packets.<a href="#section-3.1.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.1.2-4">Ideally, a flight, even if it contains multiple messages, can fit into a single DTLS packet.
+However, if a message is large, for example a large certificate, it can be fragmented across
+multiple DTLS packets.<a href="#section-3.1.2-4" class="pilcrow">¶</a></p>
+<p id="section-3.1.2-5">The DTLS flights used during WebRTC session setup are described below. Note that because
+ICE has already demonstrated remote consent, DTLS' HelloVerifyRequest is not needed to prevent DoS
+attacks.<a href="#section-3.1.2-5" class="pilcrow">¶</a></p>
+<p id="section-3.1.2-6">Once the DTLS handshake has completed, SRTP key extraction occurs and is used to key the sending
+of media <span>[<a href="#RFC5764" class="cite xref">RFC5764</a>]</span>.
+Media cannot be properly decrypted until all handshake messages have been received.<a href="#section-3.1.2-6" class="pilcrow">¶</a></p>
+<div id="dtls-12-handshake">
+<section id="section-3.1.2.1">
+            <h5 id="name-dtls-12-handshake">
+<a href="#section-3.1.2.1" class="section-number selfRef">3.1.2.1. </a><a href="#name-dtls-12-handshake" class="section-name selfRef">DTLS 1.2 Handshake</a>
+            </h5>
+<p id="section-3.1.2.1-1">The DTLS 1.2 handshake, as specified in <span><a href="https://rfc-editor.org/rfc/rfc6347#section-4.2" class="relref">Section 4.2</a> of [<a href="#RFC6347" class="cite xref">RFC6347</a>]</span>, is organized into the
+following DTLS flights:<a href="#section-3.1.2.1-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-3.1.2.1-2">
+<li id="section-3.1.2.1-2.1">
+                <p id="section-3.1.2.1-2.1.1">The DTLS client sends the ClientHello message.<a href="#section-3.1.2.1-2.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li id="section-3.1.2.1-2.2">
+                <p id="section-3.1.2.1-2.2.1">The DTLS server responds with the ServerHello, Certificate, ServerKeyExchange,
+CertificateRequest, and ServerHelloDone messages, packed as noted above.<a href="#section-3.1.2.1-2.2.1" class="pilcrow">¶</a></p>
+</li>
+              <li id="section-3.1.2.1-2.3">
+                <p id="section-3.1.2.1-2.3.1">The DTLS client sends the Certificate, ClientKeyExchange, CertificateVerify,
+ChangeCipherSpec, and Finished messages.<a href="#section-3.1.2.1-2.3.1" class="pilcrow">¶</a></p>
+</li>
+              <li id="section-3.1.2.1-2.4">
+                <p id="section-3.1.2.1-2.4.1">The DTLS server sends the ChangeCipherSpec and Finished messages.<a href="#section-3.1.2.1-2.4.1" class="pilcrow">¶</a></p>
+</li>
+            </ol>
+<p id="section-3.1.2.1-3">Problem that might need to be explained is that the server never gets an ACK flight 4.
+And if it were to resend it would need to stop doing so when receiving either DTLS packets or SRTP packets
+which are successfully decrypted. Which libWebRTC did not use as a signal.<a href="#section-3.1.2.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="dtls-13-handshake">
+<section id="section-3.1.2.2">
+            <h5 id="name-dtls-13-handshake">
+<a href="#section-3.1.2.2" class="section-number selfRef">3.1.2.2. </a><a href="#name-dtls-13-handshake" class="section-name selfRef">DTLS 1.3 Handshake</a>
+            </h5>
+<p id="section-3.1.2.2-1">The DTLS 1.3 handshake, as specified in <span><a href="https://rfc-editor.org/rfc/rfc9147#section-5" class="relref">Section 5</a> of [<a href="#RFC9147" class="cite xref">RFC9147</a>]</span>, is organized into the
+following DTLS flights:<a href="#section-3.1.2.2-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-3.1.2.2-2">
+<li id="section-3.1.2.2-2.1">
+                <p id="section-3.1.2.2-2.1.1">The DTLS client sends the ClientHello message.<a href="#section-3.1.2.2-2.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li id="section-3.1.2.2-2.2">
+                <p id="section-3.1.2.2-2.2.1">The DTLS server sends the ServerHello, EncryptedExtensions, CertificateRequest, Certificate,
+CertificateVerify, and Finished messages.<a href="#section-3.1.2.2-2.2.1" class="pilcrow">¶</a></p>
+</li>
+              <li id="section-3.1.2.2-2.3">
+                <p id="section-3.1.2.2-2.3.1">The DTLS client sends the Certificate, CertificateVerify, and Finished messages.<a href="#section-3.1.2.2-2.3.1" class="pilcrow">¶</a></p>
+</li>
+            </ol>
+<p id="section-3.1.2.2-3">Note that in DTLS 1.3, the DTLS server sends a DTLS acknowledgement packet upon receiving the
+Finished message, but the client does not need to wait for this message to begin sending encrypted
+data.<a href="#section-3.1.2.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="goals">
+<section id="section-3.2">
+        <h3 id="name-goals">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-goals" class="section-name selfRef">Goals</a>
+        </h3>
+<p id="section-3.2-1">The desired properties of this solution are:<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.2-2.1">
+            <p id="section-3.2-2.1.1">It makes WebRTC setup faster by 1 RTT, by allowing ICE and DTLS to proceed in parallel.<a href="#section-3.2-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-3.2-2.2">
+            <p id="section-3.2-2.2.1">It makes WebRTC session setup less susceptible to packet loss.<a href="#section-3.2-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-3.2-2.3">
+            <p id="section-3.2-2.3.1">It is strictly an optimization.<a href="#section-3.2-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-3.2-2.4">
+            <p id="section-3.2-2.4.1">It reduces the number of packets exchanged during session setup, but the size of the STUN
+Binding Request or Response increases.<a href="#section-3.2-2.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-3.2-2.5">
+            <p id="section-3.2-2.5.1">In the event of an incompatibility, each client proceeds with ICE and DTLS as usual.<a href="#section-3.2-2.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-3.2-2.6">
+            <p id="section-3.2-2.6.1">It works with all versions of DTLS &gt;= 1.2, and all DTLS cipher suites.<a href="#section-3.2-2.6.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-3.2-2.7">
+            <p id="section-3.2-2.7.1">It is fully backward compatible with existing ICE processing, including interactions with ICE
+Lite endpoints, as well as endpoints that demultiplex multiple ICE sessions on the same port.<a href="#section-3.2-2.7.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+</section>
+</div>
+<div id="sped-protocol">
+<section id="section-3.3">
+        <h3 id="name-sped-protocol">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-sped-protocol" class="section-name selfRef">SPED Protocol</a>
+        </h3>
+<div id="summary">
+<section id="section-3.3.1">
+          <h4 id="name-summary">
+<a href="#section-3.3.1" class="section-number selfRef">3.3.1. </a><a href="#name-summary" class="section-name selfRef">Summary</a>
+          </h4>
+<p id="section-3.3.1-1">The overall mechanism can be summarized as follows:<a href="#section-3.3.1-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-3.3.1-2">
+<li id="section-3.3.1-2.1">
+              <p id="section-3.3.1-2.1.1">DTLS is started at the same time as ICE.<a href="#section-3.3.1-2.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-3.3.1-2.2">
+              <p id="section-3.3.1-2.2.1">If there is no valid ICE candidate pair, DTLS handshake packets are sent by encapsulating them
+in a new STUN attribute in the next STUN Binding Request or STUN Binding Response.<a href="#section-3.3.1-2.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-3.3.1-2.3">
+              <p id="section-3.3.1-2.3.1">Once a valid ICE candidate pair exists, the client can continue to send DTLS packets either in
+embedded form, or as usual over the specified pair.<a href="#section-3.3.1-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          </ol>
+<p id="section-3.3.1-3">In addition, to improve the reliability of the DTLS handshake, an explicit acknowledgement
+mechanism is built into SPED. Encapsulated DTLS handshake packets are acknowledged by sending their
+CRC-32 in a new STUN attribute in the next STUN Binding Request or STUN Binding Response.<a href="#section-3.3.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="new-stun-attributes">
+<section id="section-3.3.2">
+          <h4 id="name-new-stun-attributes">
+<a href="#section-3.3.2" class="section-number selfRef">3.3.2. </a><a href="#name-new-stun-attributes" class="section-name selfRef">New STUN Attributes</a>
+          </h4>
+<p id="section-3.3.2-1">This STUN extension defines the following new IETF-assigned attributes in the comprehension-optional range:<a href="#section-3.3.2-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.3.2-2.1">
+              <p id="section-3.3.2-2.1.1"><code>TBD1</code>: <code>DTLS-IN-STUN-DATA</code><a href="#section-3.3.2-2.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-3.3.2-2.2">
+              <p id="section-3.3.2-2.2.1"><code>TBD2</code>: <code>DTLS-IN-STUN-ACK</code><a href="#section-3.3.2-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-3.3.2-3">These attributes have lengths that are not always multiples of 4. By the rules of STUN, any
+attribute whose length is not a multiple of 4 bytes <span class="bcp14">MUST</span> be immediately followed by 1 to 3 padding
+bytes to ensure the next attribute, if any, starts on a 4-byte boundary; see <span>[<a href="#RFC5389" class="cite xref">RFC5389</a>]</span>.<a href="#section-3.3.2-3" class="pilcrow">¶</a></p>
+<div id="dtls-in-stun-data">
+<section id="section-3.3.2.1">
+            <h5 id="name-dtls-in-stun-data">
+<a href="#section-3.3.2.1" class="section-number selfRef">3.3.2.1. </a><a href="#name-dtls-in-stun-data" class="section-name selfRef">DTLS-IN-STUN-DATA</a>
+            </h5>
+<ul class="normal">
+<li class="normal" id="section-3.3.2.1-1.1">
+                <p id="section-3.3.2.1-1.1.1">This attribute contains one DTLS handshake packet, or is empty to indicate SPED support when no
+DTLS packet is being embedded.<a href="#section-3.3.2.1-1.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-3.3.2.1-1.2">
+                <p id="section-3.3.2.1-1.2.1">While SPED is active, this attribute <span class="bcp14">MUST</span> be present in every STUN Binding Request or Response
+sent by a SPED-capable agent.<a href="#section-3.3.2.1-1.2.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+<p id="section-3.3.2.1-2">Implementation did not include it (I wrote it in the spec but we return nullopt).
+Proposal: Fix the implementation to send an empty packet.<a href="#section-3.3.2.1-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.3.2.1-3.1">
+                <p id="section-3.3.2.1-3.1.1">The value portion of this attribute is variable length and consists of one DTLS handshake packet
+from a DTLS flight, as described in <span><a href="https://rfc-editor.org/rfc/rfc9147#section-5.1" class="relref">Section 5.1</a> of [<a href="#RFC9147" class="cite xref">RFC9147</a>]</span> or <span><a href="https://rfc-editor.org/rfc/rfc6347#section-4.2" class="relref">Section 4.2</a> of [<a href="#RFC6347" class="cite xref">RFC6347</a>]</span>.<a href="#section-3.3.2.1-3.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-3.3.2.1-3.2">
+                <p id="section-3.3.2.1-3.2.1">As noted, if the attribute length is not a multiple of 4, padding must be added.<a href="#section-3.3.2.1-3.2.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-3.3.2.1-3.3">
+                <p id="section-3.3.2.1-3.3.1">If the value portion of this attribute is empty, it indicates SPED support and that no DTLS
+packet is being embedded in that STUN message. An empty value <span class="bcp14">MUST NOT</span> be injected into the DTLS
+layer.<a href="#section-3.3.2.1-3.3.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+<p id="section-3.3.2.1-4">This is currently happening in two cases:
+1/ first part of a PQC clienthello received, server does not have anything to send. This is fixed
+   by sending an empty packet.
+2/ closing handshake. Proposal: change closing handshake to not include the data attribute
+   (which matches my implementation)<a href="#section-3.3.2.1-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.3.2.1-5.1">
+                <p id="section-3.3.2.1-5.1.1">If the value portion of this attribute is non-empty but the first byte is not DTLS, i.e. between
+20 and 63 inclusive as described in <span><a href="https://rfc-editor.org/rfc/rfc9443#section-3" class="relref">Section 3</a> of [<a href="#RFC9443" class="cite xref">RFC9443</a>]</span>, the attribute <span class="bcp14">SHOULD</span> be silently
+discarded.<a href="#section-3.3.2.1-5.1.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+</section>
+</div>
+<div id="dtls-in-stun-ack">
+<section id="section-3.3.2.2">
+            <h5 id="name-dtls-in-stun-ack">
+<a href="#section-3.3.2.2" class="section-number selfRef">3.3.2.2. </a><a href="#name-dtls-in-stun-ack" class="section-name selfRef">DTLS-IN-STUN-ACK</a>
+            </h5>
+<ul class="normal">
+<li class="normal" id="section-3.3.2.2-1.1">
+                <p id="section-3.3.2.2-1.1.1">This attribute contains acknowledgements of received <code>DTLS-IN-STUN-DATA</code> packets in the order
+they were received.<a href="#section-3.3.2.2-1.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-3.3.2.2-1.2">
+                <p id="section-3.3.2.2-1.2.1">The attribute can be present in either a STUN Binding Request or Response.<a href="#section-3.3.2.2-1.2.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-3.3.2.2-1.3">
+                <p id="section-3.3.2.2-1.3.1">The attribute is variable length and contains a list of uint32 entries, where each entry is the
+computed CRC-32 of a received <code>DTLS-IN-STUN-DATA</code> attribute value, i.e. a DTLS handshake packet,
+ignoring padding.<a href="#section-3.3.2.2-1.3.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-3.3.2.2-1.4">
+                <p id="section-3.3.2.2-1.4.1">The attribute can be empty, i.e. the length of the list of uint32 values can be 0.<a href="#section-3.3.2.2-1.4.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+<p id="section-3.3.2.2-2">Do we need a length restriction? Mostly for the MTU reduction. Oldest packets are pushed out.
+Text for that can be below?<a href="#section-3.3.2.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="mtu-considerations">
+<section id="section-3.3.3">
+          <h4 id="name-mtu-considerations">
+<a href="#section-3.3.3" class="section-number selfRef">3.3.3. </a><a href="#name-mtu-considerations" class="section-name selfRef">MTU Considerations</a>
+          </h4>
+<p id="section-3.3.3-1">When embedding DTLS in STUN, the DTLS MTU <span class="bcp14">MUST</span> take into account the STUN packet overhead, which
+is noted in the table below:<a href="#section-3.3.3-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-1">
+            <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<thead>
+              <tr>
+                <th class="text-left" rowspan="1" colspan="1">Attribute</th>
+                <th class="text-left" rowspan="1" colspan="1">Size</th>
+                <th class="text-left" rowspan="1" colspan="1">Defined in</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">STUN header</td>
+                <td class="text-left" rowspan="1" colspan="1">20</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <span>[<a href="#RFC5389" class="cite xref">RFC5389</a>]</span>
+</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">ICE-CONTROLLED / ICE-CONTROLLING</td>
+                <td class="text-left" rowspan="1" colspan="1">12</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <span><a href="https://rfc-editor.org/rfc/rfc5245#section-19.1" class="relref">Section 19.1</a> of [<a href="#RFC5245" class="cite xref">RFC5245</a>]</span>
+</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">PRIORITY</td>
+                <td class="text-left" rowspan="1" colspan="1">8</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <span><a href="https://rfc-editor.org/rfc/rfc5245#section-19.1" class="relref">Section 19.1</a> of [<a href="#RFC5245" class="cite xref">RFC5245</a>]</span>
+</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">USE-CANDIDATE</td>
+                <td class="text-left" rowspan="1" colspan="1">4</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <span><a href="https://rfc-editor.org/rfc/rfc5245#section-19.1" class="relref">Section 19.1</a> of [<a href="#RFC5245" class="cite xref">RFC5245</a>]</span>; not on first packet but on subsequent packets</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">MESSAGE-INTEGRITY</td>
+                <td class="text-left" rowspan="1" colspan="1">24</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <span><a href="https://rfc-editor.org/rfc/rfc5389#section-15.4" class="relref">Section 15.4</a> of [<a href="#RFC5389" class="cite xref">RFC5389</a>]</span>
+</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">MESSAGE-INTEGRITY-SHA256</td>
+                <td class="text-left" rowspan="1" colspan="1">36</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <span><a href="https://rfc-editor.org/rfc/rfc8489#section-14.6" class="relref">Section 14.6</a> of [<a href="#RFC8489" class="cite xref">RFC8489</a>]</span>; only applicable when <code>ice2</code> is used <span><a href="https://rfc-editor.org/rfc/rfc8445#section-10" class="relref">Section 10</a> of [<a href="#RFC8445" class="cite xref">RFC8445</a>]</span>
+</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">FINGERPRINT</td>
+                <td class="text-left" rowspan="1" colspan="1">8</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <span><a href="https://rfc-editor.org/rfc/rfc5389#section-15.5" class="relref">Section 15.5</a> of [<a href="#RFC5389" class="cite xref">RFC5389</a>]</span>
+</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">DTLS-IN-STUN-DATA</td>
+                <td class="text-left" rowspan="1" colspan="1">4</td>
+                <td class="text-left" rowspan="1" colspan="1">This specification. Overhead for the attribute header</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">DTLS-IN-STUN-ACK</td>
+                <td class="text-left" rowspan="1" colspan="1">4</td>
+                <td class="text-left" rowspan="1" colspan="1">This specification. Overhead for the attribute header; TODO: define max size</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">USERNAME</td>
+                <td class="text-left" rowspan="1" colspan="1">16+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <span><a href="https://rfc-editor.org/rfc/rfc5245#section-7.1.2.3" class="relref">Section 7.1.2.3</a> of [<a href="#RFC5245" class="cite xref">RFC5245</a>]</span>. Variable, typically 4 byte header plus 9 bytes for two four-byte username fragments and the colon plus 3 bytes padding. The actual size is known before the DTLS exchange starts, either from the SDP exchange or a peer-reflexive candidate</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">TURN XOR-PEER-ADDRESS</td>
+                <td class="text-left" rowspan="1" colspan="1">24</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <span>[<a href="#RFC8656" class="cite xref">RFC8656</a>]</span>. Assuming 16 byte IPv6; only applicable when TURN is used</td>
+              </tr>
+            </tbody>
+          </table>
+<p id="section-3.3.3-3">Accordingly, the typical 1200 byte DTLS MTU, based on the recommendation in <span>[<a href="#RFC8831" class="cite xref">RFC8831</a>]</span>, <span class="bcp14">MUST</span> be
+reduced by the size of the expected overhead. Applications that use custom STUN attributes, i.e. not in the table above, <span class="bcp14">MUST</span> reduce the
+DTLS MTU further.<a href="#section-3.3.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="backwards-compatibility">
+<section id="section-3.3.4">
+          <h4 id="name-backwards-compatibility">
+<a href="#section-3.3.4" class="section-number selfRef">3.3.4. </a><a href="#name-backwards-compatibility" class="section-name selfRef">Backwards Compatibility</a>
+          </h4>
+<p id="section-3.3.4-1">SPED is fully backwards compatible with existing ICE agents. If the peer ICE agent does not
+support SPED, this can be detected via the lack of the mandatory <code>DTLS-IN-STUN-DATA</code> attribute in
+its first authenticated ICE check or response, and upon recognizing this fact the local ICE agent
+can easily fall back to standard unencapsulated DTLS.<a href="#section-3.3.4-1" class="pilcrow">¶</a></p>
+<p id="section-3.3.4-2">Given this straightforward in-band negotiation, this specification does not currently define an
+offer/answer negotiation mechanism or any ICE options.<a href="#section-3.3.4-2" class="pilcrow">¶</a></p>
+<p id="section-3.3.4-3">Also an ice-option does still require this detection because STUN packets might arrive before
+the answer.<a href="#section-3.3.4-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="mechanism">
+<section id="section-4">
+      <h2 id="name-mechanism">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-mechanism" class="section-name selfRef">Mechanism</a>
+      </h2>
+<p id="section-4-1">The specifics of the SPED algorithm are detailed below.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<div id="setup">
+<section id="section-4.1">
+        <h3 id="name-setup">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-setup" class="section-name selfRef">Setup</a>
+        </h3>
+<p id="section-4.1-1">When using SPED, an ICE agent keeps two lists:<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-4.1-2">
+<li id="section-4.1-2.1">
+            <p id="section-4.1-2.1.1">A list, L1, of pending DTLS handshake packets.<a href="#section-4.1-2.1.1" class="pilcrow">¶</a></p>
+<p id="section-4.1-2.1.2">
+These packets are created by the DTLS layer. The list is cleared when the DTLS layer creates a
+new flight. Elements in the list are removed when ACKed by the peer.<a href="#section-4.1-2.1.2" class="pilcrow">¶</a></p>
+</li>
+        </ol>
+<p id="section-4.1-3">For DTLS 1.2 the DTLS client should also clear L1 on handshake completion. Tiny perf improvement.
+For DTLS 1.3 this was a bug...<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-4.1-4">
+<li id="section-4.1-4.1">
+            <p id="section-4.1-4.1.1">A list, L2, of pending acknowledgements, as defined above.<a href="#section-4.1-4.1.1" class="pilcrow">¶</a></p>
+</li>
+        </ol>
+</section>
+</div>
+<div id="sending-a-stun-binding-request-or-response">
+<section id="section-4.2">
+        <h3 id="name-sending-a-stun-binding-requ">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-sending-a-stun-binding-requ" class="section-name selfRef">Sending a STUN Binding Request or Response</a>
+        </h3>
+<p id="section-4.2-1">When sending a STUN Binding Request or Response, the ICE agent <span class="bcp14">MUST</span> follow the steps below:<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-4.2-2">
+<li id="section-4.2-2.1">
+            <p id="section-4.2-2.1.1">Embed any pending ACKs from L2 in a DTLS-IN-STUN-ACK attribute.<a href="#section-4.2-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-4.2-2.2">
+            <p id="section-4.2-2.2.1">If there is a pending DTLS handshake packet in L1 and sufficient space remains in the STUN<a href="#section-4.2-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ol>
+<p id="section-4.2-3">Do we need to say handshake packet here and below?<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-4">message, embed one DTLS handshake packet from L1 into a <code>DTLS-IN-STUN-DATA</code> attribute.
+If there are multiple packets they should be be picked in round robin / LRU. Implementation suggestion,
+should not be normative.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-4.2-5">
+<li id="section-4.2-5.1">
+            <p id="section-4.2-5.1.1">Otherwise, include <code>DTLS-IN-STUN-DATA</code> with an empty value simply to indicate SPED support.<a href="#section-4.2-5.1.1" class="pilcrow">¶</a></p>
+</li>
+        </ol>
+</section>
+</div>
+<div id="receiving-a-stun-binding-request-or-response">
+<section id="section-4.3">
+        <h3 id="name-receiving-a-stun-binding-re">
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-receiving-a-stun-binding-re" class="section-name selfRef">Receiving a STUN Binding Request or Response</a>
+        </h3>
+<p id="section-4.3-1">When receiving a STUN Binding Request or Response, the ICE agent <span class="bcp14">MUST</span> follow the steps below:<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-4.3-2">
+<li id="section-4.3-2.1">
+            <p id="section-4.3-2.1.1">If this is the first authenticated STUN message received from the peer, and the
+<code>DTLS-IN-STUN-DATA</code> attribute is not present, conclude that the peer does not support SPED, and
+conclude SPED processing.<a href="#section-4.3-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-4.3-2.2">
+            <p id="section-4.3-2.2.1">If the STUN message contains a <code>DTLS-IN-STUN-ACK</code> attribute, process the CRC-32 values in the
+attribute and remove each ACKed DTLS handshake packet from L1.<a href="#section-4.3-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-4.3-2.3">
+            <p id="section-4.3-2.3.1">If the STUN message contains a non-empty <code>DTLS-IN-STUN-DATA</code> attribute, inject the attribute
+data into the DTLS layer.<a href="#section-4.3-2.3.1" class="pilcrow">¶</a></p>
+</li>
+        </ol>
+<p id="section-4.3-3">The receipt also triggers changes in the SPED state machine.<a href="#section-4.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="termination">
+<section id="section-4.4">
+        <h3 id="name-termination">
+<a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-termination" class="section-name selfRef">Termination</a>
+        </h3>
+<p id="section-4.4-1">Implementations <span class="bcp14">SHOULD</span> terminate use of SPED once a valid ICE candidate pair exists and direct
+sending is possible, as this allows transmission of DTLS packets without waiting on an outgoing
+STUN Binding Request. However, implementations <span class="bcp14">MAY</span> continue to send embedded DTLS if desired and
+only terminate once DTLS handshaking is complete.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
+<p id="section-4.4-2">Disagree, we want reliability for packets sent after ICE is writable too and resend them at
+ICE pacing (whether embedded or not).
+Instead I want a closing handshake as described іn
+https://github.com/fippo/warp-snap-sped/commit/67f969749250907ce22289419470bc633d8aa59b
+where not including the dtls-in-stun attribute means "I am done", opposed to "I have nothing
+to send". This is currently not good in the implementation which does not include data
+e.g. in the response to the first PQC client hello or a binding request from the server
+before the server has data.<a href="#section-4.4-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="examples">
+<section id="section-5">
+      <h2 id="name-examples">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-examples" class="section-name selfRef">Examples</a>
+      </h2>
+<div id="vanilla-dtls-12">
+<section id="section-5.1">
+        <h3 id="name-vanilla-dtls-12">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-vanilla-dtls-12" class="section-name selfRef">Vanilla DTLS 1.2</a>
+        </h3>
+<div class="alignLeft art-text artwork" id="section-5.1-1">
+<pre>
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer -----------------------&gt;|
+  |&lt;-1------ SDP Answer (a=setup:passive) -----|
+  |                                            |
+  |--------- STUN BindingRequest -------------&gt;|
+  |&lt;-2------ STUN BindingResponse -------------|
+  |                                            |
+  |--------- DTLS F1: ClientHello ------------&gt;|
+  |&lt;-3------ DTLS F2: ServerHello, etc---------|
+  |--------- DTLS F3: Finished, etc ----------&gt;|
+  |&lt;-4------ DTLS F4: Finished, etc -----------|
+  |--------- Application data ----------------&gt;|
+</pre><a href="#section-5.1-1" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="dtls-12-with-sped">
+<section id="section-5.2">
+        <h3 id="name-dtls-12-with-sped">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-dtls-12-with-sped" class="section-name selfRef">DTLS 1.2 with SPED</a>
+        </h3>
+<p id="section-5.2-1">With <code>a=setup:passive</code> in the SDP answer, the offerer is the DTLS client:<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.2-2">
+<pre>
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer -----------------------&gt;|
+  |&lt;-1------ SDP Answer (a=setup:passive)------|
+  |                                            |
+  |--------- BindingRequest/DTLS F1 ----------&gt;|
+  |&lt;-2------ BindingResponse/DTLS F2 ----------|
+  |                                            |
+  |--------- DTLS F3: Finished ---------------&gt;|
+  |&lt;-3------ DTLS F4: Finished ----------------|
+  |--------- Application data ----------------&gt;|
+</pre><a href="#section-5.2-2" class="pilcrow">¶</a>
+</div>
+<p id="section-5.2-3">With <code>a=setup:active</code> in the SDP answer, the answerer is the DTLS client:<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.2-4">
+<pre>
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer -----------------------&gt;|
+  |&lt;-1------ SDP Answer (a=setup:active)-------|
+  |                                            |
+  |--------- BindingRequest/{} ---------------&gt;|
+  |&lt;-2------ BindingResponse/DTLS F1 ----------|
+  |                                            |
+  |--------- DTLS F2: ServerHello ------------&gt;|
+  |&lt;-3------ DTLS F3: Finished ----------------|
+  |--------- DTLS F4: Finished ---------------&gt;|
+  |--------- Application data ----------------&gt;|
+</pre><a href="#section-5.2-4" class="pilcrow">¶</a>
+</div>
+<p id="section-5.2-5">The flows are similar when the server uses ICE Lite.<a href="#section-5.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="vanilla-dtls-13">
+<section id="section-5.3">
+        <h3 id="name-vanilla-dtls-13">
+<a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-vanilla-dtls-13" class="section-name selfRef">Vanilla DTLS 1.3</a>
+        </h3>
+<div class="alignLeft art-text artwork" id="section-5.3-1">
+<pre>
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer -----------------------&gt;|
+  |&lt;-1------ SDP Answer (a=setup:passive) -----|
+  |                                            |
+  |--------- STUN BindingRequest -------------&gt;|
+  |&lt;-2------ STUN BindingResponse -------------|
+  |                                            |
+  |--------- DTLS F1: ClientHello ------------&gt;|
+  |&lt;-3------ DTLS F2: ServerHello, etc --------|
+  |--------- DTLS F3: Finished ---------------&gt;|
+  |--------- Application data ----------------&gt;|
+  |&lt;-------- DTLS ACK -------------------------|
+</pre><a href="#section-5.3-1" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="dtls-13-with-sped">
+<section id="section-5.4">
+        <h3 id="name-dtls-13-with-sped">
+<a href="#section-5.4" class="section-number selfRef">5.4. </a><a href="#name-dtls-13-with-sped" class="section-name selfRef">DTLS 1.3 with SPED</a>
+        </h3>
+<p id="section-5.4-1">With <code>a=setup:passive</code> in the SDP answer, the offerer is the DTLS client:<a href="#section-5.4-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.4-2">
+<pre>
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer -----------------------&gt;|
+  |&lt;-1------ SDP Answer (a=setup:passive)------|
+  |                                            |
+  |--------- BindingRequest/DTLS F1 ----------&gt;|
+  |&lt;-2------ BindingResponse/DTLS F2 ----------|
+  |                                            |
+  |--------- DTLS F3: Finished ---------------&gt;|
+  |--------- Application data ----------------&gt;|
+  |&lt;-------- DTLS ACK -------------------------|
+</pre><a href="#section-5.4-2" class="pilcrow">¶</a>
+</div>
+<p id="section-5.4-3">With <code>a=setup:active</code> in the SDP answer, the answerer is the DTLS client, and an additional RTT is incurred:<a href="#section-5.4-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.4-4">
+<pre>
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer (a=setup:actpass)------&gt;|
+  |&lt;-1------ SDP Answer (a=setup:active)-------|
+  |                                            |
+  |--------- BindingRequest/{} ---------------&gt;|
+  |&lt;-2------ BindingResponse/DTLS F1 ----------|
+  |                                            |
+  |--------- DTLS F2: ServerHello, etc -------&gt;|
+  |&lt;-3------ DTLS F3: Finished ----------------|
+  |--------- Application data ----------------&gt;|
+  |--------- DTLS ACK ------------------------&gt;|
+</pre><a href="#section-5.4-4" class="pilcrow">¶</a>
+</div>
+<p id="section-5.4-5">Again, the flows are similar when the server uses ICE Lite.<a href="#section-5.4-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="dtls-13-with-non-sped-peer">
+<section id="section-5.5">
+        <h3 id="name-dtls-13-with-non-sped-peer">
+<a href="#section-5.5" class="section-number selfRef">5.5. </a><a href="#name-dtls-13-with-non-sped-peer" class="section-name selfRef">DTLS 1.3 with Non-SPED Peer</a>
+        </h3>
+<div class="alignLeft art-text artwork" id="section-5.5-1">
+<pre>
+Client                                      Server
+  |                                            |
+  |--------- BindingRequest/DTLS F1 ----------&gt;|
+  |&lt;-------- BindingResponse/               ---|
+</pre><a href="#section-5.5-1" class="pilcrow">¶</a>
+</div>
+<p id="section-5.5-2">The absence of a <code>DTLS-IN-STUN-DATA</code> attribute allows the client to conclude that the server does
+not support SPED.<a href="#section-5.5-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.5-3">
+<pre>
+  |--------- DTLS F1: ClientHello ------------&gt;|
+  |&lt;-------- DTLS F2: ServerHello ------------ |
+  |--------- DTLS F3: Finished ---------------&gt;|
+  |--------- Application data ----------------&gt;|
+  |&lt;-------- DTLS ACK -------------------------|
+</pre><a href="#section-5.5-3" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="dtls-13-with-flight-2-loss">
+<section id="section-5.6">
+        <h3 id="name-dtls-13-with-flight-2-loss">
+<a href="#section-5.6" class="section-number selfRef">5.6. </a><a href="#name-dtls-13-with-flight-2-loss" class="section-name selfRef">DTLS 1.3 with Flight 2 Loss</a>
+        </h3>
+<div class="alignLeft art-text artwork" id="section-5.6-1">
+<pre>
+Client                                       Server
+  |                                             |
+  |--------- BindingRequest/DTLS F1 -----------&gt;|
+    &lt;- LOST  BindingResponse/DTLS F2 -----------|
+  |&lt;-------- BindingRequest/DTLS F2 ------------|
+  |--------- BindingResponse/DTLS F3 ----------&gt;|
+  |--------- Application data -----------------&gt;|
+  |&lt;-------- DTLS ACK --------------------------|
+</pre><a href="#section-5.6-1" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="dtls-13-with-flight-3-loss">
+<section id="section-5.7">
+        <h3 id="name-dtls-13-with-flight-3-loss">
+<a href="#section-5.7" class="section-number selfRef">5.7. </a><a href="#name-dtls-13-with-flight-3-loss" class="section-name selfRef">DTLS 1.3 with Flight 3 Loss</a>
+        </h3>
+<div class="alignLeft art-text artwork" id="section-5.7-1">
+<pre>
+Client                                       Server
+  |                                             |
+  |&lt;-------- BindingRequest/ACK={} -------------|
+  |--------- BindingResponse/F1=ClientHello ---&gt;|
+  |&lt;-------- DTLS ServerHello ------------------|
+  |--------- DTLS Finished ------------ LOST -&gt; |
+  |--------- BindingRequest/F3=DTLS Finished---&gt;|
+</pre><a href="#section-5.7-1" class="pilcrow">¶</a>
+</div>
+<p id="section-5.7-2">Note: The embedding continues until both client and server are known to be writable, but ICE does
+not send any packets it would not otherwise send.
+Might need an update re closing above.<a href="#section-5.7-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.7-3">
+<pre>
+  |&lt;-------- DTLS ACK --------------------------|
+  |--------- Application data -----------------&gt;|
+  |&lt;-------- BindingResponse/ACK={F3} ----------|
+</pre><a href="#section-5.7-3" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="dtls-13-pqc-with-certificate-fragment-loss">
+<section id="section-5.8">
+        <h3 id="name-dtls-13-pqc-with-certificat">
+<a href="#section-5.8" class="section-number selfRef">5.8. </a><a href="#name-dtls-13-pqc-with-certificat" class="section-name selfRef">DTLS 1.3 PQC with Certificate Fragment Loss</a>
+        </h3>
+<p id="section-5.8-1">The DTLS ClientHello is split into 2 packets.
+The DTLS ServerHello is split into 2 packets.<a href="#section-5.8-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.8-2">
+<pre>
+Client                                       Server
+  |                                             |
+  |--------- BindingRequest/F1=ClientHello/1 --&gt;|
+    &lt;- LOST  BindingResponse/ACK={}          ---|
+  |&lt;-------- BindingRequest/ACK={F1/1} ---------|
+</pre><a href="#section-5.8-2" class="pilcrow">¶</a>
+</div>
+<p id="section-5.8-3">Note: When the server sends <code>ACK{F1/1}</code>, it does not yet have a DTLS packet to send since both of
+the packets from the ClientHello have arrived.<a href="#section-5.8-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.8-4">
+<pre>
+  |--------- BindingRequest/F1=ClientHello/2 --&gt;|
+  |&lt;-------- BindingResponse/F2=ServerHello/1 --|
+  |&lt;-------- BindingRequest/F2=ServerHello/2 --&gt;|
+  |--------- BindingRequest/F3=DTLS Finished --&gt;|
+  |--------- DTLS Finished --------------------&gt;|
+  |--------- Application data -----------------&gt;|
+  |&lt;-------- DTLS ACK --------------------------|
+</pre><a href="#section-5.8-4" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="dtls-13-pqc-with-multiple-candidate-pairs-and-certificate-fragment-loss">
+<section id="section-5.9">
+        <h3 id="name-dtls-13-pqc-with-multiple-c">
+<a href="#section-5.9" class="section-number selfRef">5.9. </a><a href="#name-dtls-13-pqc-with-multiple-c" class="section-name selfRef">DTLS 1.3 PQC with Multiple Candidate Pairs and Certificate Fragment Loss</a>
+        </h3>
+<p id="section-5.9-1">The DTLS ClientHello is split into 2 packets.
+The DTLS ServerHello is split into 2 packets.
+There are two candidate pairs, CP1 and CP2.
+The ICE agent retransmits BindingRequest once.<a href="#section-5.9-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.9-2">
+<pre>
+Client                                        Server
+  |                                              |
+CP1  |--------- BindingRequest/F1=ClientHello/1 ---&gt;|
+CP1    &lt;- LOST  BindingResponse/ACK={F1/1} ---------|
+CP2  |--------- BindingRequest/F1=ClientHello/2  --&gt;|
+CP2    &lt;- LOST  BindingResponse/F2=ServerHello/1 ---|
+CP1  |--------- BindingRequest/F1=ClientHello/1 ---&gt;|
+CP1  |&lt;-------- BindingResponse/F2=ServerHello/1 ---|
+CP2  |--------- BindingRequest/ACK={F2/1} ---------&gt;|
+CP2  |&lt;-------- BindingResponse/F2=ServerHello/2 ---|
+  |--------- DTLS Finished -------------------------&gt;|
+  |--------- Application data ----------------------&gt;|
+  |&lt;-------- DTLS ACK -------------------------------|
+</pre><a href="#section-5.9-2" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="implementation-notes">
+<section id="section-6">
+      <h2 id="name-implementation-notes">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-implementation-notes" class="section-name selfRef">Implementation Notes</a>
+      </h2>
+<p id="section-6-1">The following configuration for the SPED stack is <span class="bcp14">RECOMMENDED</span>:<a href="#section-6-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-6-2">
+<li id="section-6-2.1">
+          <p id="section-6-2.1.1">When SPED is active, disable internal DTLS timeouts, and resume them when receiving the first
+STUN Binding Response using a new BoringSSL feature that allows modifying timeouts for
+outstanding flights, <a href="https://boringssl-review.git.corp.google.com/c/boringssl/+/86167">https://boringssl-review.git.corp.google.com/c/boringssl/+/86167</a>.
+OpenSSL has similar APIs which allow even more control. This is not a implementation recommendation,
+DTLS timeouts should be (but not sure any RFC says that) be configured according to the RTT estimate(s)
+gained from ICE. With embedding we do not have an estimate and do caching and resends at the application
+layer with ICE pacing.<a href="#section-6-2.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-6-2.2">
+          <p id="section-6-2.2.1">Limit the size of L2 to 4 elements.
+Point out that this is less than commonly observed (2 ACKs for DTLS12 on each side, 3 (I think) for DTLS13/PQC<a href="#section-6-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-6-2.3">
+          <p id="section-6-2.3.1">When using a PQC cipher suite, force the BoringSSL downward MTU to 900 bytes, which smooths a
+DTLS PQC flight into 2 roughly equal sized DTLS packets, which can fit into a typical network
+MTU even with the STUN embedding overhead.
+We don't do even split and I do not think it is a good idea as it increases number of DTLS packets
+in some cases but never reduces it.<a href="#section-6-2.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ol>
+</section>
+</div>
+<div id="prior-work">
+<section id="section-7">
+      <h2 id="name-prior-work">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-prior-work" class="section-name selfRef">Prior Work</a>
+      </h2>
+<div id="ice-dtls">
+<section id="section-7.1">
+        <h3 id="name-ice-dtls">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-ice-dtls" class="section-name selfRef">ICE-DTLS</a>
+        </h3>
+<p id="section-7.1-1">The <span>[<a href="#I-D.thomson-rtcweb-ice-dtls" class="cite xref">I-D.thomson-rtcweb-ice-dtls</a>]</span> draft from 2012 proposed a similar mechanism to SPED, in
+which a single RTT could be removed from session setup by replacing STUN Request and Response
+messages with DTLS ClientHello and ServerHello messages, rather than piggybacking the DTLS messages
+as SPED does.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<p id="section-7.1-2">The ICE-DTLS mechanism ends up being considerably more complex than SPED, on account of the fact
+that the entirety of ICE functionality needs to be ported over to DTLS, for example consent checks,
+or retained as a complementary approach, for example peer address discovery. Furthermore, since it
+changes the details of connectivity negotiation, it is not backward compatible and therefore must
+be negotiated via SDP <code>ice-options</code>.<a href="#section-7.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="future-work">
+<section id="section-8">
+      <h2 id="name-future-work">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-future-work" class="section-name selfRef">Future Work</a>
+      </h2>
+<p id="section-8-1">Embedding data into STUN requests is a technique that could also be used for early transmission or
+improved reliability of other important data. For example, one could imagine transferring
+key-frames, if small enough, or RTCP or SCTP control messages. However, this has not been
+thoroughly sketched out in this proposal.<a href="#section-8-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-9">
+      <h2 id="name-security-considerations">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<div id="dtls-replay-and-spoofing">
+<section id="section-9.1">
+        <h3 id="name-dtls-replay-and-spoofing">
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-dtls-replay-and-spoofing" class="section-name selfRef">DTLS Replay and Spoofing</a>
+        </h3>
+<p id="section-9.1-1">This specification uses application-layer caching of DTLS packets which means packets can be sent
+multiple times using the same sequence number. For the receiver these are considered replays if
+received multiple times and rejected as described in <span><a href="https://rfc-editor.org/rfc/rfc9147#section-4.5.1" class="relref">Section 4.5.1</a> of [<a href="#RFC9147" class="cite xref">RFC9147</a>]</span>.<a href="#section-9.1-1" class="pilcrow">¶</a></p>
+<p id="section-9.1-2">The embedded DTLS handshake is authenticated by existing ICE logic, i.e. the ICE USERNAME and
+MESSAGE-INTEGRITY mechanisms. Any spoofed ICE packets are rejected accordingly.<a href="#section-9.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="pacing-and-congestion">
+<section id="section-9.2">
+        <h3 id="name-pacing-and-congestion">
+<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-pacing-and-congestion" class="section-name selfRef">Pacing and Congestion</a>
+        </h3>
+<p id="section-9.2-1">The protocol defined in this specification increases the size of the STUN packets that are sent by
+the ICE agent to a peer without knowing if that peer can use the embedded data. Although the
+initial data sent is just the DTLS ClientHello, this packet can be close to a MTU when a PQC
+cipher suite is used. If this is unacceptable, an offer-answer mechanism for SPED can be used to
+address this concern.<a href="#section-9.2-1" class="pilcrow">¶</a></p>
+<p id="section-9.2-2">The STUN requests used for embedding DTLS are already paced as described in
+<span><a href="https://rfc-editor.org/rfc/rfc8445#appendix-B.1" class="relref">Appendix B.1</a> of [<a href="#RFC8445" class="cite xref">RFC8445</a>]</span>, which limits the outgoing bandwidth from this mechanism.
+However, that pacing assumes an ICE check of "less than 120 bytes", which will not be
+the case when a DTLS ClientHello is embedded, especially a PQC one.<a href="#section-9.2-2" class="pilcrow">¶</a></p>
+<p id="section-9.2-3">Solutions to this problem require transmitting the DTLS ClientHello less often, perhaps only
+on certain candidate pairs, and is a subject for further study.<a href="#section-9.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-10">
+      <h2 id="name-iana-considerations">
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<p id="section-10-1">This document defines two new STUN attributes, <code>DTLS-IN-STUN-DATA</code> and <code>DTLS-IN-STUN-ACK</code>. These
+attributes need to be registered with IANA in the "STUN Attributes" registry, following the
+procedures defined in <span>[<a href="#RFC8489" class="cite xref">RFC8489</a>]</span>. Provisional names have been used in this draft and the
+registry.<a href="#section-10-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="sec-combined-references">
+<section id="section-11">
+      <h2 id="name-references">
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<div id="sec-normative-references">
+<section id="section-11.1">
+        <h3 id="name-normative-references">
+<a href="#section-11.1" class="section-number selfRef">11.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+      <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="sec-informative-references">
+<section id="section-11.2">
+        <h3 id="name-informative-references">
+<a href="#section-11.2" class="section-number selfRef">11.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="I-D.thomson-rtcweb-ice-dtls">[I-D.thomson-rtcweb-ice-dtls]</dt>
+        <dd>
+<span class="refAuthor">Thomson, M.</span>, <span class="refTitle">"Using Datagram Transport Layer Security (DTLS) For Interactivity Connectivity Establishment (ICE) Connectivity Checking: ICE-DTLS"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-thomson-rtcweb-ice-dtls-00</span>, <time datetime="2012-03-27" class="refDate">27 March 2012</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-thomson-rtcweb-ice-dtls-00">https://datatracker.ietf.org/doc/html/draft-thomson-rtcweb-ice-dtls-00</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC4568">[RFC4568]</dt>
+        <dd>
+<span class="refAuthor">Andreasen, F.</span>, <span class="refAuthor">Baugher, M.</span>, and <span class="refAuthor">D. Wing</span>, <span class="refTitle">"Session Description Protocol (SDP) Security Descriptions for Media Streams"</span>, <span class="seriesInfo">RFC 4568</span>, <span class="seriesInfo">DOI 10.17487/RFC4568</span>, <time datetime="2006-07" class="refDate">July 2006</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc4568">https://www.rfc-editor.org/rfc/rfc4568</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC5245">[RFC5245]</dt>
+        <dd>
+<span class="refAuthor">Rosenberg, J.</span>, <span class="refTitle">"Interactive Connectivity Establishment (ICE): A Protocol for Network Address Translator (NAT) Traversal for Offer/Answer Protocols"</span>, <span class="seriesInfo">RFC 5245</span>, <span class="seriesInfo">DOI 10.17487/RFC5245</span>, <time datetime="2010-04" class="refDate">April 2010</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5245">https://www.rfc-editor.org/rfc/rfc5245</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC5389">[RFC5389]</dt>
+        <dd>
+<span class="refAuthor">Rosenberg, J.</span>, <span class="refAuthor">Mahy, R.</span>, <span class="refAuthor">Matthews, P.</span>, and <span class="refAuthor">D. Wing</span>, <span class="refTitle">"Session Traversal Utilities for NAT (STUN)"</span>, <span class="seriesInfo">RFC 5389</span>, <span class="seriesInfo">DOI 10.17487/RFC5389</span>, <time datetime="2008-10" class="refDate">October 2008</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5389">https://www.rfc-editor.org/rfc/rfc5389</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC5763">[RFC5763]</dt>
+        <dd>
+<span class="refAuthor">Fischl, J.</span>, <span class="refAuthor">Tschofenig, H.</span>, and <span class="refAuthor">E. Rescorla</span>, <span class="refTitle">"Framework for Establishing a Secure Real-time Transport Protocol (SRTP) Security Context Using Datagram Transport Layer Security (DTLS)"</span>, <span class="seriesInfo">RFC 5763</span>, <span class="seriesInfo">DOI 10.17487/RFC5763</span>, <time datetime="2010-05" class="refDate">May 2010</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5763">https://www.rfc-editor.org/rfc/rfc5763</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC5764">[RFC5764]</dt>
+        <dd>
+<span class="refAuthor">McGrew, D.</span> and <span class="refAuthor">E. Rescorla</span>, <span class="refTitle">"Datagram Transport Layer Security (DTLS) Extension to Establish Keys for the Secure Real-time Transport Protocol (SRTP)"</span>, <span class="seriesInfo">RFC 5764</span>, <span class="seriesInfo">DOI 10.17487/RFC5764</span>, <time datetime="2010-05" class="refDate">May 2010</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5764">https://www.rfc-editor.org/rfc/rfc5764</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC6347">[RFC6347]</dt>
+        <dd>
+<span class="refAuthor">Rescorla, E.</span> and <span class="refAuthor">N. Modadugu</span>, <span class="refTitle">"Datagram Transport Layer Security Version 1.2"</span>, <span class="seriesInfo">RFC 6347</span>, <span class="seriesInfo">DOI 10.17487/RFC6347</span>, <time datetime="2012-01" class="refDate">January 2012</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6347">https://www.rfc-editor.org/rfc/rfc6347</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8445">[RFC8445]</dt>
+        <dd>
+<span class="refAuthor">Keranen, A.</span>, <span class="refAuthor">Holmberg, C.</span>, and <span class="refAuthor">J. Rosenberg</span>, <span class="refTitle">"Interactive Connectivity Establishment (ICE): A Protocol for Network Address Translator (NAT) Traversal"</span>, <span class="seriesInfo">RFC 8445</span>, <span class="seriesInfo">DOI 10.17487/RFC8445</span>, <time datetime="2018-07" class="refDate">July 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8445">https://www.rfc-editor.org/rfc/rfc8445</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8489">[RFC8489]</dt>
+        <dd>
+<span class="refAuthor">Petit-Huguenin, M.</span>, <span class="refAuthor">Salgueiro, G.</span>, <span class="refAuthor">Rosenberg, J.</span>, <span class="refAuthor">Wing, D.</span>, <span class="refAuthor">Mahy, R.</span>, and <span class="refAuthor">P. Matthews</span>, <span class="refTitle">"Session Traversal Utilities for NAT (STUN)"</span>, <span class="seriesInfo">RFC 8489</span>, <span class="seriesInfo">DOI 10.17487/RFC8489</span>, <time datetime="2020-02" class="refDate">February 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8489">https://www.rfc-editor.org/rfc/rfc8489</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8656">[RFC8656]</dt>
+        <dd>
+<span class="refAuthor">Reddy, T., Ed.</span>, <span class="refAuthor">Johnston, A., Ed.</span>, <span class="refAuthor">Matthews, P.</span>, and <span class="refAuthor">J. Rosenberg</span>, <span class="refTitle">"Traversal Using Relays around NAT (TURN): Relay Extensions to Session Traversal Utilities for NAT (STUN)"</span>, <span class="seriesInfo">RFC 8656</span>, <span class="seriesInfo">DOI 10.17487/RFC8656</span>, <time datetime="2020-02" class="refDate">February 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8656">https://www.rfc-editor.org/rfc/rfc8656</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8829">[RFC8829]</dt>
+        <dd>
+<span class="refAuthor">Uberti, J.</span>, <span class="refAuthor">Jennings, C.</span>, and <span class="refAuthor">E. Rescorla, Ed.</span>, <span class="refTitle">"JavaScript Session Establishment Protocol (JSEP)"</span>, <span class="seriesInfo">RFC 8829</span>, <span class="seriesInfo">DOI 10.17487/RFC8829</span>, <time datetime="2021-01" class="refDate">January 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8829">https://www.rfc-editor.org/rfc/rfc8829</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8831">[RFC8831]</dt>
+        <dd>
+<span class="refAuthor">Jesup, R.</span>, <span class="refAuthor">Loreto, S.</span>, and <span class="refAuthor">M. Tüxen</span>, <span class="refTitle">"WebRTC Data Channels"</span>, <span class="seriesInfo">RFC 8831</span>, <span class="seriesInfo">DOI 10.17487/RFC8831</span>, <time datetime="2021-01" class="refDate">January 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8831">https://www.rfc-editor.org/rfc/rfc8831</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9147">[RFC9147]</dt>
+        <dd>
+<span class="refAuthor">Rescorla, E.</span>, <span class="refAuthor">Tschofenig, H.</span>, and <span class="refAuthor">N. Modadugu</span>, <span class="refTitle">"The Datagram Transport Layer Security (DTLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 9147</span>, <span class="seriesInfo">DOI 10.17487/RFC9147</span>, <time datetime="2022-04" class="refDate">April 2022</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9147">https://www.rfc-editor.org/rfc/rfc9147</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9443">[RFC9443]</dt>
+      <dd>
+<span class="refAuthor">Aboba, B.</span>, <span class="refAuthor">Salgueiro, G.</span>, and <span class="refAuthor">C. Perkins</span>, <span class="refTitle">"Multiplexing Scheme Updates for QUIC"</span>, <span class="seriesInfo">RFC 9443</span>, <span class="seriesInfo">DOI 10.17487/RFC9443</span>, <time datetime="2023-07" class="refDate">July 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9443">https://www.rfc-editor.org/rfc/rfc9443</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="appendix-a-benchmark-numbers">
+<section id="appendix-A">
+      <h2 id="name-appendix-a-benchmark-number">
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-appendix-a-benchmark-number" class="section-name selfRef">Appendix A: Benchmark Numbers</a>
+      </h2>
+<p id="appendix-A-1">For the scenario without packet loss, benchmarking is straightforward, and the savings from SPED
+amount to 1 RTT, as expected. However, in packet loss scenarios, the savings can be much larger,
+especially in the worst, p95, cases.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<p id="appendix-A-2">In this benchmark, a 200 ms RTT is used. Packet loss is simulated using the virtual network
+Would this be easier with 100ms?
+mechanism in Google's libwebrtc. Duration is measured as time from start until both peers have
+completed the DTLS handshake.<a href="#appendix-A-2" class="pilcrow">¶</a></p>
+<div id="dtls-13-with-pqc">
+<section id="appendix-A.1">
+        <h3 id="name-dtls-13-with-pqc">
+<a href="#appendix-A.1" class="section-number selfRef">A.1. </a><a href="#name-dtls-13-with-pqc" class="section-name selfRef">DTLS 1.3 with PQC</a>
+        </h3>
+<table class="center" id="table-2">
+          <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">DTLS 1.3 with PQC</th>
+              <th class="text-left" rowspan="1" colspan="1">Loss %</th>
+              <th class="text-left" rowspan="1" colspan="1">p10 (ms)</th>
+              <th class="text-left" rowspan="1" colspan="1">p50</th>
+              <th class="text-left" rowspan="1" colspan="1">average</th>
+              <th class="text-left" rowspan="1" colspan="1">p95</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">947</td>
+              <td class="text-left" rowspan="1" colspan="1">1253</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">656</td>
+              <td class="text-left" rowspan="1" colspan="1">700</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">900</td>
+              <td class="text-left" rowspan="1" colspan="1">1193</td>
+              <td class="text-left" rowspan="1" colspan="1">2170</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">685</td>
+              <td class="text-left" rowspan="1" colspan="1">800</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">25%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">1350</td>
+              <td class="text-left" rowspan="1" colspan="1">2020</td>
+              <td class="text-left" rowspan="1" colspan="1">3080</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">1105</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="dtls-13-without-pqc">
+<section id="appendix-A.2">
+        <h3 id="name-dtls-13-without-pqc">
+<a href="#appendix-A.2" class="section-number selfRef">A.2. </a><a href="#name-dtls-13-without-pqc" class="section-name selfRef">DTLS 1.3 without PQC</a>
+        </h3>
+<p id="appendix-A.2-1">-- huh, why is this lower than PQC? But yes, we accept that PQC costs us a bit because it has upsides.<a href="#appendix-A.2-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-3">
+          <caption><a href="#table-3" class="selfRef">Table 3</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">DTLS 1.3</th>
+              <th class="text-left" rowspan="1" colspan="1">Loss %</th>
+              <th class="text-left" rowspan="1" colspan="1">p10 (ms)</th>
+              <th class="text-left" rowspan="1" colspan="1">p50</th>
+              <th class="text-left" rowspan="1" colspan="1">average</th>
+              <th class="text-left" rowspan="1" colspan="1">p95</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">800</td>
+              <td class="text-left" rowspan="1" colspan="1">1150</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">555</td>
+              <td class="text-left" rowspan="1" colspan="1">600</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">935</td>
+              <td class="text-left" rowspan="1" colspan="1">1200</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">560</td>
+              <td class="text-left" rowspan="1" colspan="1">600</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">25%</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">1150</td>
+              <td class="text-left" rowspan="1" colspan="1">1400</td>
+              <td class="text-left" rowspan="1" colspan="1">2560</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">600</td>
+              <td class="text-left" rowspan="1" colspan="1">620</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="dtls-12">
+<section id="appendix-A.3">
+        <h3 id="name-dtls-12">
+<a href="#appendix-A.3" class="section-number selfRef">A.3. </a><a href="#name-dtls-12" class="section-name selfRef">DTLS 1.2</a>
+        </h3>
+<table class="center" id="table-4">
+          <caption><a href="#table-4" class="selfRef">Table 4</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">DTLS 1.2</th>
+              <th class="text-left" rowspan="1" colspan="1">Loss %</th>
+              <th class="text-left" rowspan="1" colspan="1">p10 (ms)</th>
+              <th class="text-left" rowspan="1" colspan="1">p50</th>
+              <th class="text-left" rowspan="1" colspan="1">average</th>
+              <th class="text-left" rowspan="1" colspan="1">p95</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">916</td>
+              <td class="text-left" rowspan="1" colspan="1">1300</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">695</td>
+              <td class="text-left" rowspan="1" colspan="1">1150</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">900</td>
+              <td class="text-left" rowspan="1" colspan="1">1133</td>
+              <td class="text-left" rowspan="1" colspan="1">2150</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">690</td>
+              <td class="text-left" rowspan="1" colspan="1">760</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">25%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">1350</td>
+              <td class="text-left" rowspan="1" colspan="1">3920</td>
+              <td class="text-left" rowspan="1" colspan="1">8860</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
+              <td class="text-left" rowspan="1" colspan="1">25%</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">862</td>
+              <td class="text-left" rowspan="1" colspan="1">1400</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+</section>
+</div>
+<div id="acknowledgments">
+<section id="appendix-B">
+      <h2 id="name-acknowledgments">
+<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+    </h2>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-C">
+      <h2 id="name-authors-addresses">
+<a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Philipp Hancke</span></div>
+<div dir="auto" class="left"><span class="org">Meta Platforms Inc.</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:philipp.hancke@googlemail.com" class="email">philipp.hancke@googlemail.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Justin Uberti</span></div>
+<div dir="auto" class="left"><span class="org">OpenAI</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:justin@uberti.name" class="email">justin@uberti.name</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Jonas Oreland</span></div>
+<div dir="auto" class="left"><span class="org">Google</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:jonaso@google.com" class="email">jonaso@google.com</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
