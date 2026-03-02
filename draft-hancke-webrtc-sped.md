@@ -113,15 +113,16 @@ as follows:
    subsequent sending of data or media, and indicate the selected candidate pair to the remote ICE
    agent by sending a new STUN Binding Request with the USE-CANDIDATE flag set.
 
-Some endpoints, typically servers, implement a simpler form of ICE known as ICE Lite. When this
+Some endpoints, typically servers, implement a simpler form of ICE known as ICE Lite {{?RFC8445}}. When this
 form of ICE is used, the ICE Lite endpoint omits steps 3 and 5, and Binding Requests only flow in
 one direction, from the full to the lite endpoint.
 
 ### DTLS Overview
 
 In WebRTC, DTLS handshaking normally starts once ICE has identified a valid candidate pair, using
-"client" and "server" roles determined through the a=setup attribute in WebRTC SDP signaling. SPED changes when
-these DTLS packets can be sent, but not the DTLS handshake contents themselves. 
+"client" and "server" roles determined through the `a=setup` attribute in WebRTC SDP signaling
+{{?RFC5763}}. SPED changes when these DTLS packets can be sent, but not the DTLS handshake
+contents themselves.
 
 We define the term "DTLS packet" to mean the unit of DTLS data typically carried in a
 single UDP packet.
@@ -138,7 +139,8 @@ The DTLS flights used during WebRTC session setup are described below. Note that
 ICE has already demonstrated remote consent, DTLS' HelloVerifyRequest is not needed to prevent DoS
 attacks.
 
-Once the DTLS handshake has completed, SRTP key extraction occurs and is used to key the sending of media.
+Once the DTLS handshake has completed, SRTP key extraction occurs and is used to key the sending
+of media {{?RFC5764}}.
 Media cannot be properly decrypted until all handshake messages have been received.
 
 #### DTLS 1.2 Handshake
@@ -225,7 +227,9 @@ bytes to ensure the next attribute, if any, starts on a 4-byte boundary; see {{?
 * This attribute contains acknowledgements of received `DTLS-IN-STUN-DATA` attributes.
 * The attribute can be present in either a STUN Binding Request or Response.
 * The attribute is variable length and contains a list of uint32 entries, where each entry is the
-  computed CRC-32 of a received `DTLS-IN-STUN-DATA` attribute, i.e. a DTLS handshake packet.
+  computed CRC-32 of a received `DTLS-IN-STUN-DATA` attribute value, i.e. a DTLS handshake packet,
+  ignoring padding, using the same CRC-32 algorithm as the STUN FINGERPRINT attribute
+  {{Section 15.5 of ?RFC5389}}.
 * The attribute can be empty, i.e. the length of the list of uint32 values can be 0.
 
 ### MTU Considerations
@@ -245,7 +249,7 @@ is noted in the table below:
 | DTLS-IN-STUN-DATA | 4 | This specification. Overhead for the attribute header |
 | DTLS-IN-STUN-ACK | 4 | This specification. Overhead for the attribute header; TODO: define max size |
 | USERNAME | 16+ | {{Section 7.1.2.3 of ?RFC5245}}. Variable, typically 4 byte header plus 9 bytes for two four-byte username fragments and the colon plus 3 bytes padding. The actual size is known before the DTLS exchange starts, either from the SDP exchange or a peer-reflexive candidate |
-| TURN XOR-PEER-ADDRESS | 24 | Assuming 16 byte IPv6; only applicable when TURN is used |
+| TURN XOR-PEER-ADDRESS | 24 | {{?RFC8656}}. Assuming 16 byte IPv6; only applicable when TURN is used |
 
 Accordingly, the typical 1200 byte DTLS MTU, based on the recommendation in {{?RFC8831}}, MUST be
 reduced by the size of the expected overhead. Applications that use custom STUN attributes, i.e. not in the table above, MUST reduce the
@@ -280,10 +284,10 @@ When using SPED, an ICE agent keeps two lists:
 
 When sending a STUN Binding Request or Response, the ICE agent MUST follow the steps below:
 
-1. Embed any pending ACKs from L2 in the DTLS-IN-STUN-ACK attribute.
+1. Embed any pending ACKs from L2 in a DTLS-IN-STUN-ACK attribute.
 2. If there is a pending DTLS handshake packet in L1 and sufficient space remains in the STUN
-   message, embed one DTLS handshake packet from L1 in that attribute. 
-3. Otherwise, include `DTLS-IN-STUN-DATA` with an empty value simply to indicate SPED support.   
+   message, embed one DTLS handshake packet from L1 into a `DTLS-IN-STUN-DATA` attribute.
+3. Otherwise, include `DTLS-IN-STUN-DATA` with an empty value simply to indicate SPED support.
 
 
 ## Receiving a STUN Binding Request or Response
@@ -309,15 +313,10 @@ ACK mechanism, and the ICE agent MUST add the CRC-32 of the DTLS packet to L2.
 
 ## Termination
 
-The protocol terminates when both peers have completed DTLS handshaking, indicated by successful
-receipt of the final DTLS flight or the associated DTLS ACK packet, depending on DTLS role.
-
-The protocol terminates when the last DTLS handshake flight has been sent, and either:
-
-* L1 has been fully drained.
-* DTLS application, not handshake, packets are decodable.
-
-This ensures that the remote side has received the final flight.
+Implementations SHOULD terminate use of SPED once a valid ICE candidate pair exists and direct
+sending is possible, as this allows transmission of DTLS packets without waiting on an outgoing
+STUN Binding Request. However, implementations MAY continue to send embedded DTLS if desired and
+only terminate once DTLS handshaking is complete.
 
 # Examples
 
@@ -327,7 +326,7 @@ This ensures that the remote side has received the final flight.
 Client                                      Server
   |                                            |
   |--------- SDP Offer ----------------------->|
-  |<-1------ SDP Answer -----------------------|
+  |<-1------ SDP Answer (a=setup:passive) -----|
   |                                            |
   |--------- STUN BindingRequest ------------->|
   |<-2------ STUN BindingResponse -------------|
@@ -341,11 +340,13 @@ Client                                      Server
 
 ## DTLS 1.2 with SPED
 
+With `a=setup:passive` in the SDP answer, the offerer is the DTLS client:
+
 ~~~
 Client                                      Server
   |                                            |
   |--------- SDP Offer ----------------------->|
-  |<-1------ SDP Answer -----------------------|
+  |<-1------ SDP Answer (a=setup:passive)------|
   |                                            |
   |--------- BindingRequest/DTLS F1 ---------->|
   |<-2------ BindingResponse/DTLS F2 ----------|
@@ -355,13 +356,32 @@ Client                                      Server
   |--------- Application data ---------------->|
 ~~~
 
+With `a=setup:active` in the SDP answer, the answerer is the DTLS client:
+
+~~~
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer ----------------------->|
+  |<-1------ SDP Answer (a=setup:active)-------|
+  |                                            |
+  |--------- BindingRequest/{} --------------->|
+  |<-2------ BindingResponse/DTLS F1 ----------|
+  |                                            |
+  |--------- DTLS F2: ServerHello ------------>|
+  |<-3------ DTLS F3: Finished ----------------|
+  |--------- DTLS F4: Finished --------------->|
+  |--------- Application data ---------------->|
+~~~
+
+The flows are similar when the server uses ICE Lite.
+
 ## Vanilla DTLS 1.3
 
 ~~~
 Client                                      Server
   |                                            |
   |--------- SDP Offer ----------------------->|
-  |<-1------ SDP Answer -----------------------|
+  |<-1------ SDP Answer (a=setup:passive) -----|
   |                                            |
   |--------- STUN BindingRequest ------------->|
   |<-2------ STUN BindingResponse -------------|
@@ -375,37 +395,40 @@ Client                                      Server
 
 ## DTLS 1.3 with SPED
 
+With `a=setup:passive` in the SDP answer, the offerer is the DTLS client:
+
 ~~~
 Client                                      Server
   |                                            |
   |--------- SDP Offer ----------------------->|
-  |<-1------ SDP Answer -----------------------|
+  |<-1------ SDP Answer (a=setup:passive)------|
   |                                            |
-  |--------- STUN BindingRequest/DTLS F1 ----->|
-  |<-2------ STUN BindingResponse/DTLS F2------|
-  |                                            |
-  |--------- DTLS F3: Finished --------------->|
-  |--------- Application data ---------------->|
-  |<-------- DTLS ACK -------------------------|
-~~~
-
-## DTLS 1.3 with SPED and ICE-Lite
-
-~~~
-Client                                      Server (ICE Lite)
-  |                                            |
-  |--------- SDP Offer ----------------------->|
-  |<-1------ SDP Answer -----------------------|
-  |                                            |
-  |--------- STUN BindingRequest/DTLS F1 ----->|
-  |<-2------ STUN BindingResponse/DTLS F2------|
+  |--------- BindingRequest/DTLS F1 ---------->|
+  |<-2------ BindingResponse/DTLS F2 ----------|
   |                                            |
   |--------- DTLS F3: Finished --------------->|
   |--------- Application data ---------------->|
   |<-------- DTLS ACK -------------------------|
 ~~~
 
-Because the server is ICE Lite, its SPED-carried DTLS packets are sent only in Binding Responses.
+With `a=setup:active` in the SDP answer, the answerer is the DTLS client, and an additional RTT is incurred:
+
+~~~
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer (a=setup:actpass)------>|
+  |<-1------ SDP Answer (a=setup:active)-------|
+  |                                            |
+  |--------- BindingRequest/{} --------------->|
+  |<-2------ BindingResponse/DTLS F1 ----------|
+  |                                            |
+  |--------- DTLS F2: ServerHello, etc ------->|
+  |<-3------ DTLS F3: Finished ----------------|
+  |--------- Application data ---------------->|
+  |--------- DTLS ACK ------------------------>|
+~~~
+
+Again, the flows are similar when the server uses ICE Lite.
 
 ## DTLS 1.3 with Non-SPED Peer
 
