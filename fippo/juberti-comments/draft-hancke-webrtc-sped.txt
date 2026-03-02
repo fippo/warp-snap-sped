@@ -491,7 +491,7 @@ Table of Contents
    2.  If there is a pending DTLS handshake packet in L1 and sufficient
        space remains in the STUN
 
-   Do we need to say handshake packet here and below?
+   Can we avoid saying handshake packet here and below?
 
    message, embed one DTLS handshake packet from L1 into a DTLS-IN-STUN-
    DATA attribute.  If there are multiple packets they should be be
