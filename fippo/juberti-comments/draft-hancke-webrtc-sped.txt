@@ -346,7 +346,8 @@ Table of Contents
 
    Implementation did not include it (I wrote it in the spec but we
    return nullopt).  Proposal: Fix the implementation to send an empty
-   packet.
+   packet. https://webrtc-review.googlesource.com/c/src/+/452860 (but
+   what about tentative state?)
 
    *  The value portion of this attribute is variable length and
       consists of one DTLS handshake packet from a DTLS flight, as
