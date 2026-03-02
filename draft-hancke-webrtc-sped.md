@@ -97,7 +97,7 @@ The protocol is backward compatible, supports both DTLS 1.2 {{?RFC6347}} and DTL
 
 ### ICE Overview
 
-The ICE protocol is complex, but the core steps taken by each ICE agent (client) can be summarized
+The ICE protocol {{?RFC8445}} is complex, but the core steps taken by each ICE agent (client) can be summarized
 as follows:
 
 1. Enumerate local ICE candidates and send them, out-of-band, to the peer.
@@ -145,7 +145,8 @@ Media cannot be properly decrypted until all handshake messages have been receiv
 
 #### DTLS 1.2 Handshake
 
-The DTLS 1.2 handshake is organized into the following DTLS flights:
+The DTLS 1.2 handshake, as specified in {{Section 4.2 of ?RFC6347}}, is organized into the
+following DTLS flights:
 
 1. The DTLS client sends the ClientHello message.
 2. The DTLS server responds with the ServerHello, Certificate, ServerKeyExchange,
@@ -155,6 +156,9 @@ The DTLS 1.2 handshake is organized into the following DTLS flights:
 4. The DTLS server sends the ChangeCipherSpec and Finished messages.
 
 #### DTLS 1.3 Handshake
+
+The DTLS 1.3 handshake, as specified in {{Section 5 of ?RFC9147}}, is organized into the
+following DTLS flights:
 
 1. The DTLS client sends the ClientHello message.
 2. The DTLS server sends the ServerHello, EncryptedExtensions, CertificateRequest, Certificate,
@@ -197,10 +201,10 @@ CRC-32 in a new STUN attribute in the next STUN Binding Request or STUN Binding 
 
 ### New STUN Attributes
 
-This STUN extension defines the following new IETF-assigned attributes:
+This STUN extension defines the following new IETF-assigned attributes in the comprehension-optional range:
 
-* `0xC070`: `DTLS-IN-STUN-DATA`
-* `0xC071`: `DTLS-IN-STUN-ACK`
+* `TBD1`: `DTLS-IN-STUN-DATA`
+* `TBD2`: `DTLS-IN-STUN-ACK`
 
 These attributes have lengths that are not always multiples of 4. By the rules of STUN, any
 attribute whose length is not a multiple of 4 bytes MUST be immediately followed by 1 to 3 padding
@@ -581,11 +585,18 @@ MESSAGE-INTEGRITY mechanisms. Any spoofed ICE packets are rejected accordingly.
 ## Pacing and Congestion
 
 The protocol defined in this specification increases the size of the STUN packets that are sent by
-the ICE agent to a peer without knowing if that peer can use the embedded data. However, the
-initial data sent is just the DTLS ClientHello, so the increase is fairly nominal.
+the ICE agent to a peer without knowing if that peer can use the embedded data. Although the
+initial data sent is just the DTLS ClientHello, this packet can be close to a MTU when a PQC
+cipher suite is used. If this is unacceptable, an offer-answer mechanism for SPED can be used to
+address this concern.
 
 The STUN requests used for embedding DTLS are already paced as described in
-{{Appendix B.1 of ?RFC8845}} which should prevent issues.
+{{Appendix B.1 of ?RFC8445}}, which limits the outgoing bandwidth from this mechanism.
+However, that pacing assumes an ICE check of "less than 120 bytes", which will not be
+the case when a DTLS ClientHello is embedded, especially a PQC one.
+
+Solutions to this problem require transmitting the DTLS ClientHello less often, perhaps only
+on certain candidate pairs, and is a subject for further study.
 
 # IANA Considerations
 
