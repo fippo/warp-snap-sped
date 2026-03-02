@@ -2339,10 +2339,12 @@ registry.<a href="#section-10-1" class="pilcrow">¶</a></p>
 <p id="appendix-A-1">For the scenario without packet loss, benchmarking is straightforward, and the savings from SPED
 amount to 1 RTT, as expected. However, in packet loss scenarios, the savings can be much larger,
 especially in the worst, p95, cases.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
-<p id="appendix-A-2">In this benchmark, a 200 ms RTT is used. Packet loss is simulated using the virtual network
+<p id="appendix-A-2">This is due to vanilla DTLS using exponential backoff while ICE useѕ periodic checks.
+But saying that explicitly begs the question why not fix DTLS ...<a href="#appendix-A-2" class="pilcrow">¶</a></p>
+<p id="appendix-A-3">In this benchmark, a 200 ms RTT is used. Packet loss is simulated using the virtual network
 Would this be easier with 100ms?
 mechanism in Google's libwebrtc. Duration is measured as time from start until both peers have
-completed the DTLS handshake.<a href="#appendix-A-2" class="pilcrow">¶</a></p>
+completed the DTLS handshake.<a href="#appendix-A-3" class="pilcrow">¶</a></p>
 <div id="dtls-13-with-pqc">
 <section id="appendix-A.1">
         <h3 id="name-dtls-13-with-pqc">

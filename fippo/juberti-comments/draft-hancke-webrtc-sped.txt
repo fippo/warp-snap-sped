@@ -924,6 +924,10 @@ Appendix A.  Appendix A: Benchmark Numbers
    expected.  However, in packet loss scenarios, the savings can be much
    larger, especially in the worst, p95, cases.
 
+   This is due to vanilla DTLS using exponential backoff while ICE useѕ
+   periodic checks.  But saying that explicitly begs the question why
+   not fix DTLS ...
+
    In this benchmark, a 200 ms RTT is used.  Packet loss is simulated
    using the virtual network Would this be easier with 100ms? mechanism
    in Google's libwebrtc.  Duration is measured as time from start until
