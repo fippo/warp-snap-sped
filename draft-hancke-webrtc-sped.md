@@ -28,6 +28,14 @@ author:
   fullname: Philipp Hancke
   organization: Meta Platforms Inc.
   email: philipp.hancke@googlemail.com
+ -
+  fullname: Justin Uberti
+  organization: OpenAI
+  email: justin@uberti.name
+ -
+  fullname: Jonas Oreland
+  organization: Google
+  email: jonaso@google.com
 
 normative:
 
@@ -44,8 +52,6 @@ compatible with existing ICE processing.
 --- middle
 
 # Introduction
-
-## Problem Statement
 
 The current WebRTC connection setup, as outlined in {{?RFC8829}}, incurs a minimum of 4 RTTs with
 DTLS 1.2, or 3 RTTs with DTLS 1.3, before media can be sent. The serialization of ICE and DTLS is
@@ -118,14 +124,16 @@ Once ICE has identified a valid candidate pair, DTLS handshaking can start, usin
 described below for each DTLS version. Note that because ICE has already demonstrated remote
 consent, DTLS' HelloVerifyRequest is not needed to prevent DoS attacks.
 
-DTLS handshake messages are organized into flights, as detailed in {{Section 5.7 of ?RFC9147}}. A
-flight consists of a set of handshake messages that are sent together by a DTLS client. Messages
-are transmitted as one or more DTLS records, and DTLS records are packed into DTLS datagrams,
-which are mapped directly to UDP packets.
+First, we define the term "DTLS packet" to mean the unit of DTLS data typically carried in a
+single UDP packet.
 
-Ideally, a flight, even if it contains multiple messages, can fit into a single DTLS datagram and
-UDP packet. However, if a message is large, for example a large certificate, it can be fragmented
-across multiple DTLS records and datagrams.
+DTLS handshake messages are also organized into "DTLS flights", as detailed in {{Section 5.7 of ?RFC9147}}. A
+DTLS flight consists of a set of handshake messages that are sent together by a DTLS endpoint, and
+those messages are carried in one or more DTLS packets.
+
+Ideally, a flight, even if it contains multiple messages, can fit into a single DTLS packet.
+However, if a message is large, for example a large certificate, it can be fragmented across
+multiple DTLS packets.
 
 The DTLS flights used during WebRTC session setup are described below. Once the handshake has
 completed, SRTP key extraction occurs and is used to key the sending of media. Media cannot be
@@ -149,7 +157,7 @@ The DTLS 1.2 handshake is organized into the following DTLS flights:
    CertificateVerify, and Finished messages.
 3. The DTLS client sends the Certificate, CertificateVerify, and Finished messages.
 
-Note that in DTLS 1.3, the DTLS server sends a DTLS acknowledgement record upon receiving the
+Note that in DTLS 1.3, the DTLS server sends a DTLS acknowledgement packet upon receiving the
 Finished message, but the client does not need to wait for this message to begin sending encrypted
 data.
 
@@ -196,10 +204,10 @@ bytes to ensure the next attribute, if any, starts on a 4-byte boundary; see {{?
 
 #### DTLS-IN-STUN-DATA
 
-* This attribute contains one DTLS handshake record.
+* This attribute contains one DTLS handshake packet.
 * The attribute can be present in either a STUN Binding Request or Response.
-* The value portion of this attribute is variable length and consists of a DTLS handshake flight,
-  as described in {{Section 5.1 of ?RFC9147}} or {{Section 4.2 of ?RFC6347}}.
+* The value portion of this attribute is variable length and consists of one DTLS handshake packet
+  from a DTLS flight, as described in {{Section 5.1 of ?RFC9147}} or {{Section 4.2 of ?RFC6347}}.
 * As noted, if the attribute length is not a multiple of 4, padding must be added.
 * If the value portion of this attribute is empty or the first byte is not DTLS, i.e. between 20
   and 63 inclusive as described in {{Section 3 of ?RFC9443}}, the attribute SHOULD be silently
@@ -210,7 +218,7 @@ bytes to ensure the next attribute, if any, starts on a 4-byte boundary; see {{?
 * This attribute contains acknowledgements of received `DTLS-IN-STUN-DATA` attributes.
 * The attribute can be present in either a STUN Binding Request or Response.
 * The attribute is variable length and contains a list of uint32 entries, where each entry is the
-  computed CRC-32 of a received `DTLS-IN-STUN-DATA` attribute, i.e. a DTLS handshake record.
+  computed CRC-32 of a received `DTLS-IN-STUN-DATA` attribute, i.e. a DTLS handshake packet.
 * The attribute can be empty, i.e. the length of the list of uint32 values can be 0.
 
 ### MTU Considerations
@@ -225,16 +233,16 @@ is noted in the table below:
 | PRIORITY | 8 | {{Section 19.1 of ?RFC5245}} |
 | USE-CANDIDATE | 4 | {{Section 19.1 of ?RFC5245}}; not on first packet but on subsequent packets |
 | MESSAGE-INTEGRITY | 24 | {{Section 15.4 of ?RFC5389}} |
+| MESSAGE-INTEGRITY-SHA256 | 36 | {{Section 14.6 of ?RFC8489}}; only applicable when `ice2` is used {{Section 10 of ?RFC8445}} |
 | FINGERPRINT | 8 | {{Section 15.5 of ?RFC5389}} |
 | DTLS-IN-STUN-DATA | 4 | This specification. Overhead for the attribute header |
 | DTLS-IN-STUN-ACK | 4 | This specification. Overhead for the attribute header; TODO: define max size |
 | USERNAME | 16+ | {{Section 7.1.2.3 of ?RFC5245}}. Variable, typically 4 byte header plus 9 bytes for two four-byte username fragments and the colon plus 3 bytes padding. The actual size is known before the DTLS exchange starts, either from the SDP exchange or a peer-reflexive candidate |
-| TURN XOR-PEER-ADDRESS | 24 | Assuming 16 byte IPv6 |
-| Total | 124+ | |
+| TURN XOR-PEER-ADDRESS | 24 | Assuming 16 byte IPv6; only applicable when TURN is used |
 
 Accordingly, the typical 1200 byte DTLS MTU, based on the recommendation in {{?RFC8831}}, MUST be
-reduced by the size of the expected overhead. Applications that use custom STUN attributes, i.e.
-not in the table above, MUST reduce the DTLS MTU further.
+reduced by the size of the expected overhead. Applications that use custom STUN attributes, i.e. not in the table above, MUST reduce the
+DTLS MTU further.
 
 ### Backwards Compatibility
 
@@ -268,7 +276,7 @@ When sending a STUN Binding Request or Response, the ICE agent MUST follow the s
 1. If there is sufficient space in the STUN message, i.e. it can fit within an MTU, embed any
    pending ACKs from L2, or an empty ACK if there are none.
 2. If there is sufficient space in the STUN message, and the agent wishes to send embedded DTLS
-   messages, for example because no valid ICE pair exists yet, embed one DTLS handshake record from
+   messages, for example because no valid ICE pair exists yet, embed one DTLS handshake packet from
    L1. ICE agents MAY use SPED embedding even after a valid ICE pair exists.
 
 ## Receiving a STUN Binding Request or Response
@@ -286,16 +294,16 @@ When receiving a STUN Binding Request or Response, the ICE agent MUST follow the
 When receiving a STUN Binding Response, there is an implicit acknowledgement of any data sent in
 the associated STUN Binding Request. Accordingly, the ICE agent MUST also follow the steps below:
 
-1. Remove any DTLS records sent in the Binding Request from L1.
+1. Remove any DTLS packets sent in the Binding Request from L1.
 2. Remove any ACKs sent in the Binding Request from L2.
 
 However, if data is included in the STUN Binding Response, this MUST be ACKed using the explicit
-ACK mechanism, and the ICE agent MUST add the CRC-32 of the DTLS record to L2.
+ACK mechanism, and the ICE agent MUST add the CRC-32 of the DTLS packet to L2.
 
-# Termination
+## Termination
 
 The protocol terminates when both peers have completed DTLS handshaking, indicated by successful
-receipt of the final DTLS flight or the associated DTLS ACK message, depending on DTLS role.
+receipt of the final DTLS flight or the associated DTLS ACK packet, depending on DTLS role.
 
 The protocol terminates when the last DTLS handshake flight has been sent, and either:
 
@@ -486,8 +494,8 @@ The following configuration for the SPED stack is RECOMMENDED:
    outstanding flights, <https://boringssl-review.git.corp.google.com/c/boringssl/+/86167>.
 2. Limit the size of L2 to 4 elements.
 3. When using a PQC cipher suite, force the BoringSSL downward MTU to 900 bytes, which smooths a
-   DTLS PQC flight into 2 roughly equal sized datagrams, which can fit into a typical network MTU
-   even with the STUN embedding overhead.
+   DTLS PQC flight into 2 roughly equal sized DTLS packets, which can fit into a typical network
+   MTU even with the STUN embedding overhead.
 
 # Prior Work
 
