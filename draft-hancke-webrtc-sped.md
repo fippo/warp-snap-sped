@@ -1,5 +1,5 @@
 ---
-title: "Embedding DTLS in STUN"
+title: "STUN Protocol for Embedding DTLS (SPED)"
 abbrev: "SPED"
 category: info
 
@@ -9,25 +9,25 @@ number:
 date:
 consensus: true
 v: 3
-area: AREA
-workgroup: Network Working Group
+area: ART
+workgroup: Audio/Video Transport Core Maintenance
 keyword:
  - webrtc
  - stun
  - dtls
 venue:
-  group: WG
+  group: AVTCORE
   type: Working Group
-  mail: tsvwg@ietf.org
-  arch: https://example.com/WG
+  mail: avt@ietf.org
+  arch: https://datatracker.ietf.org/wg/avtcore/
   github: fippo/warp-snap-sped
   latest: https://fippo.github.io/warp-snap-sped/draft-hancke-webrtc-sped-latest.html
 
 author:
  -
-    fullname: Philipp Hancke
-    organization: Meta Platforms Inc.
-    email: philipp.hancke@googlemail.com
+  fullname: Philipp Hancke
+  organization: Meta Platforms Inc.
+  email: philipp.hancke@googlemail.com
 
 normative:
 
@@ -35,334 +35,531 @@ informative:
 
 --- abstract
 
-WebRTC uses the Interactive Connectivity Establishment (ICE) and Datagram Transport Layer Security (DTLS)
-to establish secure connections. This document defines a protocol to embed the DTLS handshake into
-the STUN packets used by ICE which allows parallelizing these sequential handshakes and reduces the number of round trips
-it takes to establish a secure connection.
+WebRTC setup normally serializes ICE and DTLS, adding at least one extra round trip before secure
+media can flow. This document defines the STUN Protocol for Embedding DTLS (SPED), which carries
+DTLS handshake data and acknowledgements inside STUN Binding Requests and Responses. SPED allows
+ICE and DTLS to proceed in parallel, improves setup behavior under loss, and remains backward
+compatible with existing ICE processing.
 
 --- middle
 
 # Introduction
 
-The current WebRTC connection setup, as outlined in {{?RFC8829}}, incurs 4 RTTs before media can be sent and 6 RTTs before the data channel opens. The serialization of ICE and DTLS is a large contributor to that as illustrated below (for DTLS 1.2):
+## Problem Statement
+
+The current WebRTC connection setup, as outlined in {{?RFC8829}}, incurs a minimum of 4 RTTs with
+DTLS 1.2, or 3 RTTs with DTLS 1.3, before media can be sent. The serialization of ICE and DTLS is
+a large contributor to that as illustrated below for DTLS 1.2:
+
+~~~
+Client                                      Server
+  |                                            |
+  |------------- SDP Offer (actpass)---------->|
+  |<-1---------- SDP Answer (passive)----------|
+  |                                            |
+  |<-2---------- ICE/Connectivity Checks ----->|
+  |                                            |
+  |------------- DTLS ClientHello ------------>|
+  |<-3---------- DTLS ServerHello -------------|
+  |------------- DTLS Finished --------------->|
+  |<-4---------- DTLS Finished ----------------|
+  |                                            |
+  |------------- Application data ------------>|
+~~~
+
+In addition, deployment experience has shown connection setup reliability issues in scenarios with
+packet loss, caused by the exponential backoff timer typically used in DTLS implementations.
+
+The protocol defined in this specification, SPED, aims to resolve these concerns by embedding the
+DTLS handshake into STUN, eliminating the delay caused by the serialization of the protocols and
+improving reliability by sending fewer packets as well as simplifying retransmissions. In fact,
+when DTLS 1.3 is used, the protocol can reduce the setup latency to as little as a single
+round-trip, comparable to the latency of the largely deprecated SDES key exchange mechanism
+{{?RFC4568}}.
+
+The protocol is backward compatible, supports both DTLS 1.2 {{?RFC6347}} and DTLS 1.3
+{{?RFC9147}}, and can accommodate all DTLS cipher suites, including post-quantum cryptography
+(PQC) suites that can increase the number of packets sent during DTLS handshaking.
+
+# Conventions and Definitions
+
+{::boilerplate bcp14-tagged}
+
+# Design
+
+## Background
+
+### ICE Overview
+
+The ICE protocol is complex, but the core steps taken by each ICE agent (client) can be summarized
+as follows:
+
+1. Enumerate local ICE candidates and send them, out-of-band, to the peer.
+2. Combine local ICE candidates with the received remote ICE candidates to form ICE candidate
+   pairs.
+3. Evaluate the usability of these ICE candidate pairs by sending STUN Binding Requests. This
+   typically happens in parallel, i.e. an ICE agent may have several binding requests in flight
+   when there are multiple candidate pairs.
+4. When a STUN Binding Request is received, reply with a STUN Binding Response.
+5. When a STUN Binding Response is received, in response to a request, mark the associated ICE
+   candidate pair as valid.
+6. If the ICE agent is in the controlling role, select the "best" ICE candidate pair for
+   subsequent sending of data or media, and indicate the selected candidate pair to the remote ICE
+   agent by sending a new STUN Binding Request with the USE-CANDIDATE flag set.
+
+Some endpoints, typically servers, implement a simpler form of ICE known as ICE Lite. When this
+form of ICE is used, the ICE Lite endpoint omits steps 3 and 5, and Binding Requests only flow in
+one direction, from the full to the lite endpoint.
+
+### DTLS Overview
+
+Once ICE has identified a valid candidate pair, DTLS handshaking can start, using "client" and
+"server" roles determined through out-of-band WebRTC signaling. The handshake contents are as
+described below for each DTLS version. Note that because ICE has already demonstrated remote
+consent, DTLS' HelloVerifyRequest is not needed to prevent DoS attacks.
+
+DTLS handshake messages are organized into flights, as detailed in {{Section 5.7 of ?RFC9147}}. A
+flight consists of a set of handshake messages that are sent together by a DTLS client. Messages
+are transmitted as one or more DTLS records, and DTLS records are packed into DTLS datagrams,
+which are mapped directly to UDP packets.
+
+Ideally, a flight, even if it contains multiple messages, can fit into a single DTLS datagram and
+UDP packet. However, if a message is large, for example a large certificate, it can be fragmented
+across multiple DTLS records and datagrams.
+
+The DTLS flights used during WebRTC session setup are described below. Once the handshake has
+completed, SRTP key extraction occurs and is used to key the sending of media. Media cannot be
+properly decrypted until all handshake messages have been received.
+
+#### DTLS 1.2 Handshake
+
+The DTLS 1.2 handshake is organized into the following DTLS flights:
+
+1. The DTLS client sends the ClientHello message.
+2. The DTLS server responds with the ServerHello, Certificate, ServerKeyExchange,
+   CertificateRequest, and ServerHelloDone messages, packed as noted above.
+3. The DTLS client sends the Certificate, ClientKeyExchange, CertificateVerify,
+   ChangeCipherSpec, and Finished messages.
+4. The DTLS server sends the ChangeCipherSpec and Finished messages.
+
+#### DTLS 1.3 Handshake
+
+1. The DTLS client sends the ClientHello message.
+2. The DTLS server sends the ServerHello, EncryptedExtensions, CertificateRequest, Certificate,
+   CertificateVerify, and Finished messages.
+3. The DTLS client sends the Certificate, CertificateVerify, and Finished messages.
+
+Note that in DTLS 1.3, the DTLS server sends a DTLS acknowledgement record upon receiving the
+Finished message, but the client does not need to wait for this message to begin sending encrypted
+data.
+
+## Goals
+
+The desired properties of this solution are:
+
+* It makes WebRTC setup faster by 1 RTT, by allowing ICE and DTLS to proceed in parallel.
+* It makes WebRTC session setup less susceptible to packet loss.
+* It is strictly an optimization.
+* It reduces the number of packets exchanged during session setup, but the size of the STUN
+  Binding Request or Response increases.
+* In the event of an incompatibility, each client proceeds with ICE and DTLS as usual.
+* It works with all versions of DTLS >= 1.2, and all DTLS cipher suites.
+* It is fully backward compatible with existing ICE processing, including interactions with ICE
+  Lite endpoints, as well as endpoints that demultiplex multiple ICE sessions on the same port.
+
+## SPED Protocol
+
+### Summary
+
+The overall mechanism can be summarized as follows:
+
+1. DTLS is started at the same time as ICE.
+2. If there is no valid ICE candidate pair, DTLS handshake packets are sent by encapsulating them
+   in a new STUN attribute in the next STUN Binding Request or STUN Binding Response.
+3. Once a valid ICE candidate pair exists, the client can continue to send DTLS packets either in
+   embedded form, or as usual over the specified pair.
+
+In addition, to improve the reliability of the DTLS handshake, an explicit acknowledgement
+mechanism is built into SPED. Encapsulated DTLS handshake packets are acknowledged by sending their
+CRC-32 in a new STUN attribute in the next STUN Binding Request or STUN Binding Response.
+
+### New STUN Attributes
+
+This STUN extension defines the following new IETF-assigned attributes:
+
+* `0xC070`: `DTLS-IN-STUN-DATA`
+* `0xC071`: `DTLS-IN-STUN-ACK`
+
+These attributes have lengths that are not always multiples of 4. By the rules of STUN, any
+attribute whose length is not a multiple of 4 bytes MUST be immediately followed by 1 to 3 padding
+bytes to ensure the next attribute, if any, starts on a 4-byte boundary; see {{?RFC5389}}.
+
+#### DTLS-IN-STUN-DATA
+
+* This attribute contains one DTLS handshake record.
+* The attribute can be present in either a STUN Binding Request or Response.
+* The value portion of this attribute is variable length and consists of a DTLS handshake flight,
+  as described in {{Section 5.1 of ?RFC9147}} or {{Section 4.2 of ?RFC6347}}.
+* As noted, if the attribute length is not a multiple of 4, padding must be added.
+* If the value portion of this attribute is empty or the first byte is not DTLS, i.e. between 20
+  and 63 inclusive as described in {{Section 3 of ?RFC9443}}, the attribute SHOULD be silently
+  discarded.
+
+#### DTLS-IN-STUN-ACK
+
+* This attribute contains acknowledgements of received `DTLS-IN-STUN-DATA` attributes.
+* The attribute can be present in either a STUN Binding Request or Response.
+* The attribute is variable length and contains a list of uint32 entries, where each entry is the
+  computed CRC-32 of a received `DTLS-IN-STUN-DATA` attribute, i.e. a DTLS handshake record.
+* The attribute can be empty, i.e. the length of the list of uint32 values can be 0.
+
+### MTU Considerations
+
+When embedding DTLS in STUN, the DTLS MTU MUST take into account the STUN packet overhead, which
+is noted in the table below:
+
+| Attribute | Size | Defined in |
+| --- | --- | --- |
+| STUN header | 20 | {{?RFC5389}} |
+| ICE-CONTROLLED / ICE-CONTROLLING | 12 | {{Section 19.1 of ?RFC5245}} |
+| PRIORITY | 8 | {{Section 19.1 of ?RFC5245}} |
+| USE-CANDIDATE | 4 | {{Section 19.1 of ?RFC5245}}; not on first packet but on subsequent packets |
+| MESSAGE-INTEGRITY | 24 | {{Section 15.4 of ?RFC5389}} |
+| FINGERPRINT | 8 | {{Section 15.5 of ?RFC5389}} |
+| DTLS-IN-STUN-DATA | 4 | This specification. Overhead for the attribute header |
+| DTLS-IN-STUN-ACK | 4 | This specification. Overhead for the attribute header; TODO: define max size |
+| USERNAME | 16+ | {{Section 7.1.2.3 of ?RFC5245}}. Variable, typically 4 byte header plus 9 bytes for two four-byte username fragments and the colon plus 3 bytes padding. The actual size is known before the DTLS exchange starts, either from the SDP exchange or a peer-reflexive candidate |
+| TURN XOR-PEER-ADDRESS | 24 | Assuming 16 byte IPv6 |
+| Total | 124+ | |
+
+Accordingly, the typical 1200 byte DTLS MTU, based on the recommendation in {{?RFC8831}}, MUST be
+reduced by the size of the expected overhead. Applications that use custom STUN attributes, i.e.
+not in the table above, MUST reduce the DTLS MTU further.
+
+### Backwards Compatibility
+
+SPED is fully backwards compatible with existing ICE agents. If the peer ICE agent does not
+support SPED, this can be detected via the lack of the STUN attributes defined above in its ICE
+checks, and upon recognizing this fact the local ICE agent can easily fall back to standard
+unencapsulated DTLS.
+
+Given this straightforward in-band negotiation, this specification does not currently define an
+offer/answer negotiation mechanism or any ICE options.
+
+# Mechanism
+
+The specifics of the SPED algorithm are detailed below.
+
+## Setup
+
+When using SPED, an ICE agent keeps two lists:
+
+1. A list, L1, of pending DTLS handshake packets.
+
+   These packets are created by the DTLS layer. The list is cleared when the DTLS layer creates a
+   new flight, or elements in the list are removed when ACKed by the peer.
+
+2. A list, L2, of pending acknowledgements, as defined above.
+
+## Sending a STUN Binding Request or Response
+
+When sending a STUN Binding Request or Response, the ICE agent MUST follow the steps below:
+
+1. If there is sufficient space in the STUN message, i.e. it can fit within an MTU, embed any
+   pending ACKs from L2, or an empty ACK if there are none.
+2. If there is sufficient space in the STUN message, and the agent wishes to send embedded DTLS
+   messages, for example because no valid ICE pair exists yet, embed one DTLS handshake record from
+   L1. ICE agents MAY use SPED embedding even after a valid ICE pair exists.
+
+## Receiving a STUN Binding Request or Response
+
+When receiving a STUN Binding Request or Response, the ICE agent MUST follow the steps below:
+
+1. If this is the first STUN message received, and neither the `DTLS-IN-STUN-DATA` nor the
+   `DTLS-IN-STUN-ACK` attribute is present, conclude that the peer does not support SPED, and
+   conclude SPED processing.
+2. If the STUN message contains a `DTLS-IN-STUN-ACK` attribute, process the CRC-32 values in the
+   attribute and remove each ACKed DTLS handshake packet from L1.
+3. If the STUN message contains a `DTLS-IN-STUN-DATA` attribute, inject the DTLS handshake into
+   the DTLS layer.
+
+When receiving a STUN Binding Response, there is an implicit acknowledgement of any data sent in
+the associated STUN Binding Request. Accordingly, the ICE agent MUST also follow the steps below:
+
+1. Remove any DTLS records sent in the Binding Request from L1.
+2. Remove any ACKs sent in the Binding Request from L2.
+
+However, if data is included in the STUN Binding Response, this MUST be ACKed using the explicit
+ACK mechanism, and the ICE agent MUST add the CRC-32 of the DTLS record to L2.
+
+# Termination
+
+The protocol terminates when both peers have completed DTLS handshaking, indicated by successful
+receipt of the final DTLS flight or the associated DTLS ACK message, depending on DTLS role.
+
+The protocol terminates when the last DTLS handshake flight has been sent, and either:
+
+* L1 has been fully drained.
+* DTLS application, not handshake, packets are decodable.
+
+This ensures that the remote side has received the final flight.
+
+# Examples
+
+## Vanilla DTLS 1.2
+
+~~~
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer ----------------------->|
+  |<-1------ SDP Answer -----------------------|
+  |                                            |
+  |--------- STUN BindingRequest ------------->|
+  |<-2------ STUN BindingResponse -------------|
+  |                                            |
+  |--------- DTLS F1: ClientHello ------------>|
+  |<-3------ DTLS F2: ServerHello, etc---------|
+  |--------- DTLS F3: Finished, etc ---------->|
+  |<-4------ DTLS F4: Finished, etc -----------|
+  |--------- Application data ---------------->|
+~~~
+
+## DTLS 1.2 with SPED
+
+~~~
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer ----------------------->|
+  |<-1------ SDP Answer -----------------------|
+  |                                            |
+  |--------- BindingRequest/DTLS F1 ---------->|
+  |<-2------ BindingResponse/DTLS F2 ----------|
+  |                                            |
+  |--------- DTLS F3: Finished --------------->|
+  |<-3------ DTLS F4: Finished ----------------|
+  |--------- Application data ---------------->|
+~~~
+
+## Vanilla DTLS 1.3
+
+~~~
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer ----------------------->|
+  |<-1------ SDP Answer -----------------------|
+  |                                            |
+  |--------- STUN BindingRequest ------------->|
+  |<-2------ STUN BindingResponse -------------|
+  |                                            |
+  |--------- DTLS F1: ClientHello ------------>|
+  |<-3------ DTLS F2: ServerHello, etc --------|
+  |--------- DTLS F3: Finished --------------->|
+  |--------- Application data ---------------->|
+  |<-------- DTLS ACK -------------------------|
+~~~
+
+## DTLS 1.3 with SPED
+
+~~~
+Client                                      Server
+  |                                            |
+  |--------- SDP Offer ----------------------->|
+  |<-1------ SDP Answer -----------------------|
+  |                                            |
+  |--------- STUN BindingRequest/DTLS F1 ----->|
+  |<-2------ STUN BindingResponse/DTLS F2------|
+  |                                            |
+  |--------- DTLS F3: Finished --------------->|
+  |--------- Application data ---------------->|
+  |<-------- DTLS ACK -------------------------|
+~~~
+
+## DTLS 1.3 with Non-SPED Peer
+
+~~~
+Client                                      Server
+  |                                            |
+  |--------- BindingRequest/DTLS F1 ---------->|
+  |<-------- BindingResponse/               ---|
+~~~
+
+The absence of either a `DTLS-IN-STUN-DATA` or a `DTLS-IN-STUN-ACK` allows the client to conclude
+that the server does not support SPED.
+
+~~~
+  |--------- DTLS F1: ClientHello ------------>|
+  |<-------- DTLS F2: ServerHello ------------ |
+  |--------- DTLS F3: Finished --------------->|
+  |--------- Application data ---------------->|
+  |<-------- DTLS ACK -------------------------|
+~~~
+
+## DTLS 1.3 with Flight 2 Loss
 
 ~~~
 Client                                       Server
-   |                                            |
-   |------------- SDP Offer (actpass)---------->|
-   |<-1---------- SDP Answer (passive)----------|
-   |                                            |
-   |<-2---------- ICE/Connectivity Checks ----->|
-   |                                            |
-   |------------- DTLS ClientHello ------------>|
-   |<-3---------- DTLS ServerHello -------------|
-   |------------- DTLS Finished --------------->|
-   |<-4---------- DTLS Finished ----------------|
-   |                                            |
-   |------------- Application data ------------>|
+  |                                             |
+  |--------- BindingRequest/DTLS F1 ----------->|
+    <- LOST  BindingResponse/DTLS F2 -----------|
+  |<-------- BindingRequest/DTLS F2 ------------|
+  |--------- BindingResponse/DTLS F3 ---------->|
+  |--------- Application data ----------------->|
+  |<-------- DTLS ACK --------------------------|
 ~~~
 
-In addition, deployment experience has shown reliability issues, caused by packet loss and the exponential backoff timer of DTLS implementation, particularly on connections with a high round-trip time. The underlying ICE layer, in contrast, uses periodic checks without exponential backoff.
-
-The protocol defined in this specification aims to reduce this by embedding the DTLS handshake into STUN which eliminates the delay caused by the serialization of the protocols and enhances reliability with more frequent resends and acknowledgements.
-The protocol is backward compatible with existing mechanisms for demultiplexing multiple ICE sessions on a single port, a common practice for ICE servers.
-The protocol is designed for use with DTLS 1.2 {{?RFC6347}} and DTLS 1.3 {{?RFC9147}}. It can also accommodate post-quantum cryptography (PQC) which can significantly increase the size of DTLS handshake flights and number of packets.
-
-The mechanism described can reduce the number of round-trips for session establishment, in some scenarios to as little as a single round-trip, which is comparable to the latency of the SDES key exchange mechanism {{?RFC4568}}.
-
-# Terminology
-
-**DTLS Flight**: A set of DTLS handshake messages sent by one peer as defined in {{Section 4 of ?RFC9147}}. A flight can consist of one or more messages, which may be split into multiple DTLS records.
-
-**ICE Candidate**: A transport address, consisting of an IP address and port, that is a potential point of contact for communication with a peer.
-
-**ICE candidate pair**: A pair consisting of a local and a remote ice candidate. Initially, it is unknown whether the pair is usable for sending data or not, but this is explored by the ICE agents.
-
-**ICE Agent**: A peer acting according to the ICE protocol. This involves enumerating local ICE candidates and sending them to the peer, and systematically trying ICE Candidate pairs for usability.
-
-**ICE Lite (Agent)**: A peer using a subset of the ICE procedure that does not send STUN binding requests but only replies to them. ICE Lite is typically used on servers.
-
-# Embedding DTLS in STUN
-
-## Example negotiation
-The normal negotiation process serializes DTLS after STUN as shown below for a DTLS 1.3 handshake:
+## DTLS 1.3 with Flight 3 Loss
 
 ~~~
 Client                                       Server
-   |                                            |
-   |------------- SDP Offer (actpass)---------->|
-   |<-1---------- SDP Answer (passive)----------|
-   |                                            |
-   |<-2---------- ICE/Connectivity Checks ----->|
-   |                                            |
-   |------------- DTLS ClientHello ------------>|
-   |<-3---------- DTLS ServerHello/Fin----------|
-   |------------- DTLS Finished --------------->|
-   |------------- Application data ------------>|
+  |                                             |
+  |<-------- BindingRequest/ACK={} -------------|
+  |--------- BindingResponse/F1=ClientHello --->|
+  |<-------- DTLS ServerHello ------------------|
+  |--------- DTLS Finished ------------ LOST -> |
+  |--------- BindingRequest/F3=DTLS Finished--->|
 ~~~
 
-Embedding the DTLS handshake into the STUN Binding Requests reduces the setup time by one RTT:
+Note: The embedding continues until both client and server are known to be writable, but ICE does
+not send any packets it would not otherwise send.
+
+~~~
+  |<-------- DTLS ACK --------------------------|
+  |--------- Application data ----------------->|
+  |<-------- BindingResponse/ACK={F3} ----------|
+~~~
+
+## DTLS 1.3 PQC with Certificate Fragment Loss
+
+The DTLS ClientHello is split into 2 packets.
+The DTLS ServerHello is split into 2 packets.
 
 ~~~
 Client                                       Server
-   |                                            |
-   |------------- SDP Offer (actpass) --------->|
-   |<-1---------- SDP Answer (passive) -------->|
-   |                                            |
-   |----- ICE Check + DTLS ClientHello -------->|
-   |<-2-- ICE Response + DTLS ServerHello/Fin --|
-   |----- DTLS Finished (lost) --------x        |
-   |------------- Application data ------------>|
-   |----- ICE Check + DTLS Finished (resend)--->|
+  |                                             |
+  |--------- BindingRequest/F1=ClientHello/1 -->|
+    <- LOST  BindingResponse/ACK={}          ---|
+  |<-------- BindingRequest/ACK={F1/1} ---------|
 ~~~
 
-## Embedding data, acknowledgements and resends
-
-The protocol defined in this specification embeds DTLS data as a STUN attribute, similar to the DATA attribute defined in {{?RFC5766}}.
-The recipient acknowledges data with this attribute using another STUN attribute containing a list of CRC-32 hashes of the data.
-
-In addition to allowing saving one round-trip time for establishing the connection this has also shown to be useful for dealing
-with packet loss due to the higher frequency of ICE connectvity checks compared to DTLS resends (which commonly use an exponential backoff)
-as well as utilizing that ICE is potentially probing multiple candidate pairs. This is particularly important for fragmented handshake packets,
-such as those used in DTLS-PQC, where only one of many packets in a DTLS flight might be lost and need retransmission.
-
-While some of the semantics defined in this specification are specific to establishing the DTLS connection,
-the concept of using STUN attributes, e.g. on the periodic STUN consent defined in {{?RFC7675}},
-as a transport for embedding data
-
-* whose receipt should be acknowledged
-* should be sent on multiple paths
-* is not time-critical
-
-is applicable on a wider scope and can be specified by defining STUN attribute pairs for data and acknowledgements.
-
-## ICE procedures {#ice}
-To manage delivery of DTLS handshake packets, the ICE agent maintains a list of outbound DTLS packets that have not yet been acknowledged by the peer. Each packet is identified by a CRC-32 hash. Packets are resent until they are acknowledged or removed from the list of outbound packets.
-
-Packets can be sent embedded in STUN messages using the META-DTLS-IN-STUN attribute, or without embedding on a validated ICE candidate pair.
-
-The agent also maintains a list of the CRC-32 hashes of received DTLS handshake packets to send as acknowledgements to the peer.
-
-### Inband discovery and negotiation
-The protocol is using in-band discovery to determine support in addition to the use of ice-options for negotiation using SDP offer/answer described in {{sdp}}.
-This is necessary as the STUN binding requests may reach the offerer before the SDP answer.
-
-Until the DTLS handshake has finished, the ICE agent includes the META-DTLS-IN-STUN-ACKNOWLEDGEMENT and META-DTLS-IN-STUN
-attributes in binding requests and responses as described below.
-
-As a "closing handshake" signaling that this protocol (and the embedded DTLS handshake) has finished, the ICE agent
-
-* stops including the META-DTLS-IN-STUN attribute in STUN messages it sends when receiving a STUN messages that includes an empty META-DTLS-IN-STUN attribute and a META-DTLS-IN-STUN-ACKNOWLEDGMENT attribute.
-* stops including the META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute in STUN messages it sends when receiving a STUN message that includes a
-META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute but no META-DTLS-IN-STUN attribute.
-
-An ICE agent receiving a STUN binding request or response that contains neither a META-DTLS-IN-STUN-ACKNOWLEDGEMENT nor a
-META-DTLS-IN-STUN attribute determines that the peer does not support the protocol defined in this specification
-and stops including of these attributes.
-
-### Receipt acknowledgements
-An ICE agent maintains two lists related to DTLS packet delivery:
-
-* A "pending" list of CRC-32 hashes of all outbound DTLS packets that have not yet been acknowledged.
-* A "received" list of CRC-32 hashes of all unique inbound DTLS packets that it has processed.
-
-When an agent sends a STUN message, it includes the contents of its "received" list in a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute.
-This list MUST be included, even if empty, until the DTLS handshake has completed and the ICE agent receives a STUN binding request
-or response that contains a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute but does not contain a META-DTLS-IN-STUN attribute. This
-acts as a "closing handshake" for the embedding.
-
-When an agent receives a STUN binding request or response containing a META-DTLS-IN-STUN attribute, it calculates the CRC-32 hash of the embedded DTLS packet.
-If this hash is not already in its "received" list, it adds it.
-
-An outbound DTLS packet is considered acknowledged and removed from the "pending" list if either of these conditions is met:
-
-* A STUN message is received from the peer containing a META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute that includes the packet's CRC-32 hash.
-* For a DTLS packet sent embedded in a STUN binding request, a STUN binding success response is received for that request. This serves as an implicit acknowledgement.
-
-The "pending" list is cleared when the DTLS layer signals that
-
-* a new flight is going to be sent.
-* the current flight of packets has timed out and a resend is going to happen.
-
-### Completion of the DTLS handshake
-The DTLS layer MUST notify the ICE agent when the DTLS handshake is complete, its role and what DTLS version was negotiated.
-
-The ICE agent clears the "pending" list of outgoing packets if the DTLS layer
-is acting as a DTLS client and the DTLS version is 1.2.
-
-No DTLS packets are added to the "pending" list after the handshake completes.
-
-### For pairs that are in WAITING state
-When an ICE candidate pair has not received a response, DTLS can not be sent without being embedded as the candidate pair does not have consent
-from the other side. In that state, when sending a STUN binding request the ICE agent embeds
-
-* any pending acknowledgments using the META-DTLS-IN-STUN-ACKNOWLEDGMENT attribute and
-* the next pending DTLS packet (e.g. determined in a round-robin fashion) using the META-DTLS-IN-STUN attribute. If the "pending" list is empty, the attribute MUST be included with a zero-length value.
-
-When receiving a binding request with an META-DTLS-IN-STUN attribute, the ICE agents embeds
-
-* any pending acknowledgments using the META-DTLS-IN-STUN-ACKNOWLEDGMENT attribute and
-* the next pending DTLS packet (e.g. determined in a round-robin fashion) using the META-DTLS-IN-STUN attribute. If the "pending" list is empty, the attribute MUST be included with a zero-length value.
-
-### For pairs in SUCCEEDED state
-When the ICE candidate pair has received a binding response and is in succeeded state, any new DTLS flights SHOULD immediately be sent without being embedded in
-STUN or waiting for the next ICE check. This avoids race conditions where the last part of the DTLS handshake is buffered waiting for the next STUN packet
-while DTLS data is already sent ahead of the final handshake packets.
-
-When the STUN agent is sending a scheduled check as described in {{Section 5.8 of ?RFC5245}} it SHOULD embed
-
-* any pending acknowledgments using the META-DTLS-IN-STUN-ACKNOWLEDGMENT attribute and
-* the next pending DTLS packet (e.g. determined in a round-robin fashion) using the META-DTLS-IN-STUN attribute.
-
-### Resending packets
-Resends should happen with the regularly scheduled ICE checks but MAY be triggered by the receipt of an acknowledgment and determining that a
-packet did not arrive as expected (either because it was lost or it arrived out of order).
-
-### Sending on multiple candidate pairs
-ICE performs checks on multiple candidate pairs in parallel. This implies that embedding a DTLS packet
-can happen in rapid succession without the packet embedded first having a chance to reach the peer and
-the other side will potentially receive many duplicated DTLS packets.
-
-### Lite agents
-Lite ICE agents which are commonly used by servers by definition only respond to binding requests and do not send
-binding requests themselves. Due to the lock-step behavior of DTLS this is not a problem, also Lite ICE Agents
-can send DTLS without embedding once they received a valid binding request from a peer.
-
-## DTLS procedures
-For the protocol described in this specification the DTLS handshake is started before ICE finds a valid pair.
-
-In addition to receiving the DTLS packets after demultiplexing (described in {{Section 7 of ?RFC7983}}),
-the DTLS layer also receives packets from the ICE layer.
-
-### Handling flights consisting of multiple packets
-A single DTLS flight may be too large to fit into a single UDP packet, especially when using Post-Quantum Cryptography (PQC).
-
-Addressing this without re-introducing additional delays is an open question.
-
-### MTU considerations
-Embedding DTLS in STUN requires considerations for reducing the MTU used by the DTLS layer for the fragmentation of the handshake.
-The goal is to fit the DTLS handshake packets into STUN packets with a predefined maximum size.
-
-The following attributes must be taken into account:
-
-|Attribute|Size|Defined in|
-|STUN header|20|{{?RFC8489}}|
-|ICE-CONTROLLED /ICE-CONTROLLING|12|{{Section 7.3.1 of ?RFC8445}}|
-|PRIORITY|8|{{Section 7.3.1 of ?RFC8445}}|
-|USE-CANDIDATE|4|{{Section 7.3.1 of ?RFC8445}}, not on first packet but subsequent packets|
-|MESSAGE-INTEGRITY|24|{{Section 15.4 of ?RFC8489}}|
-|FINGERPRINT|8|{{Section 15.5 of ?RFC8489}}|
-|DTLS-in-STUN|4|This specification. Overhead for the attribute header.|
-|DTLS-in-STUN-ACKNOWLEDGEMENT|20|This specification.|
-|USERNAME|16+|{{Section 7.3.1 of ?RFC8445}}. Variable, typically 4 byte header plus 9 bytes for two four-byte username fragments and the colon plus 3 bytes padding. The actual size is known before the DTLS exchange starts, either from the SDP exchange or a peer-reflexive candidate.|
-|TURN XOR-PEER-ADDRESS|24|Assuming 16 bytes IPv6, see {{?RFC8656}}|
-|Total|124+|
-
-Applications that use additional STUN attributes MUST reduce the DTLS MTU further.
-The reduced MTU should only be used until the DTLS handshake is complete.
-
-# STUN Extensions
-
-## New attributes
-
-This specification extends {{?RFC8489}} and defines two new attributes, META-DTLS-IN-STUN and
-META-DTLS-IN-STUN-ACKNOWLEDGEMENT. These attributes are comprehension-optional.
-
-## META-DTLS-IN-STUN
-The META-DTLS-IN-STUN attribute may be present in binding requests, responses and indications.  The value portion of this attribute is variable length and
-consists of the DTLS handshake flights as described in {{Section 5.1 of RFC9147}} or {{Section 4.2 of ?RFC6347}}.
-
-If the length of this attribute is not a multiple of 4, then padding must be added after this attribute. If the value portion of this attribute is empty
-or the first byte is not DTLS (i.e. between 20 and 63 (inclusive) as described in {{Section 3 of !RFC9443}}) the attribute SHOULD be silently discarded
-
-Once the DTLS handshake is completed this attribute SHOULD be silently discarded.
-
-## META-DTLS-IN-STUN-ACKNOWLEDGEMENT
-TODO(NEEDS CONSENSUS): does this attribute have a maximum length?
-
-The META-DTLS-IN-STUN-ACKNOWLEDGEMENT attribute may be present in binding requests, responses and  indications. The value portion of this attribute is
-variable length and consists of up to four CRC-32 values that are computed for the META-DTLS-IN-STUN values whose receipt the sender acknowledges
-(similar to the STUN FINGERPRINT attribute defined in {{Section 15.5 of ?RFC8489}}.
-
-If the length of the value is not a multiple of four or exceeds 16 bytes this attribute SHOULD be silently discarded.
-The order does not need to match the order in which the packets were received.
-
-The attribute MAY be empty but included in a binding request or binding response to signal support for the protocol defined in this specification.
-This typically happens when the SDP answerer has a "passive" DTLS role and sends binding requests which may arrive at the SDP offerer before the answer.
-It is recommended that this attribute is included before the META-DTLS-IN-STUN attribute.
-
-# SDP Offer/Answer Procedures {#sdp}
-TODO(NEEDS CONSENSUS): is this needed?
-
-The protocol is designed to work with in-band discovery as described above. If negotiating the protocol via the SDP
-offer/answer mechanism using the 'ice-options' attribute is desired, the procedures for that are outlined below.
-
-## Generating the Initial SDP Offer
-If the offering endpoint supports the extension defined in this specification, it includes the "sped" ICE option in the SDP.
-The offerer MUST be prepared to receive the STUN attributes described below even before receiving the SDP answer.
-
-## Generating the SDP Answer
-An answering endpoint not supporting the ice-option described in this document must not include it in its response.
-Otherwise the endpoint includes the "sped" ice-option in its answer and can start using the STUN attributes using the semantics defined in {{ice}}.
-
-## Offerer Processing of the SDP Answer
-If the answer does not include the "sped" ice-option, the offerer SHOULD ignore the STUN attributes defined in this specification
-and MUST NOT send them. Otherwise the offerer includes the STUN attributes using the semantics defined in {{ice}}.
-
-## Modifying the Session
-Subsequent offers and answers MUST include the ice-option in the negotiated SDP with the same value as in the initial negotiation.
-Remote offers MAY renegotiate ice-options only when negotiating a new DTLS association as described in {{Section 5.5 of !RFC8842}}.
-
-# Security Considerations
-
-## DTLS security considerations
-This specification uses application layer caching of DTLS packets which means packets may be sent multiple times using the same
-sequence number. For the receiver these will be considered a replay if received multiple times and rejected as described in {{Section 4.5.1 of ?RFC9147}}.
-
-The embedded DTLS handshake is authenticated by the ICE username and message-integrity.
-
-## Pacing and Congestion
-The protocol defined in this specification increases the size of the STUN packets that are sent by the ICE agent to a peer without
-knowing if that peer consents to receiving the packets. The STUN requests used for embedding DTLS are already paced as described
-in {{Section B.1 of ?RFC8845}} which should prevent issues.
-
-# IANA Considerations
-
-This document defines two new STUN attributes, META-DTLS-IN-STUN and META-DTLS-IN-STUN-ACKNOWLEDGEMENT. These attributes will need to be registered with IANA in the "STUN Attributes" registry, following the procedures defined in {{?RFC8489}}. Provisional names have been used in this draft and the registry.
-
-If an ice-option is considered necessary, the IANA shall register the following ICE option in the "ICE Options" subregistry of the
-"Interactive Connectivity Establishment (ICE) registry", following the procedures defined in {{?RFC6336}}.
-
-**ICE Option**: sped
-
-**Contact**: TODO
-
-**Change controller**: TODO
-
-**Description**: An ICE option of 'sped' indicates support for embedding DTLS in STUN as described in this specification.
+Note: When the server sends `ACK{F1/1}`, it does not yet have a DTLS packet to send since both of
+the packets from the ClientHello have arrived.
+
+~~~
+  |--------- BindingRequest/F1=ClientHello/2 -->|
+  |<-------- BindingResponse/F2=ServerHello/1 --|
+  |<-------- BindingRequest/F2=ServerHello/2 -->|
+  |--------- BindingRequest/F3=DTLS Finished -->|
+  |--------- DTLS Finished -------------------->|
+  |--------- Application data ----------------->|
+  |<-------- DTLS ACK --------------------------|
+~~~
+
+## DTLS 1.3 PQC with Multiple Candidate Pairs and Certificate Fragment Loss
+
+The DTLS ClientHello is split into 2 packets.
+The DTLS ServerHello is split into 2 packets.
+There are two candidate pairs, CP1 and CP2.
+The ICE agent retransmits BindingRequest once.
+
+~~~
+Client                                        Server
+  |                                              |
+CP1  |--------- BindingRequest/F1=ClientHello/1 --->|
+CP1    <- LOST  BindingResponse/ACK={F1/1} ---------|
+CP2  |--------- BindingRequest/F1=ClientHello/2  -->|
+CP2    <- LOST  BindingResponse/F2=ServerHello/1 ---|
+CP1  |--------- BindingRequest/F1=ClientHello/1 --->|
+CP1  |<-------- BindingResponse/F2=ServerHello/1 ---|
+CP2  |--------- BindingRequest/ACK={F2/1} --------->|
+CP2  |<-------- BindingResponse/F2=ServerHello/2 ---|
+  |--------- DTLS Finished ------------------------->|
+  |--------- Application data ---------------------->|
+  |<-------- DTLS ACK -------------------------------|
+~~~
+
+# Implementation Notes
+
+The following configuration for the SPED stack is RECOMMENDED:
+
+1. When SPED is active, disable internal DTLS timeouts, and resume them when receiving the first
+   STUN Binding Response using a new BoringSSL feature that allows modifying timeouts for
+   outstanding flights, <https://boringssl-review.git.corp.google.com/c/boringssl/+/86167>.
+2. Limit the size of L2 to 4 elements.
+3. When using a PQC cipher suite, force the BoringSSL downward MTU to 900 bytes, which smooths a
+   DTLS PQC flight into 2 roughly equal sized datagrams, which can fit into a typical network MTU
+   even with the STUN embedding overhead.
 
 # Prior Work
 
 ## ICE-DTLS
 
-The ICE-DTLS draft from 2012 proposed a similar mechanism to SPED, in which a single RTT could be removed from session setup by
-replacing STUN Request and Response messages with DTLS ClientHello and ServerHello messages (rather than piggybacking the DTLS
-messages as described in this document).
+The {{?I-D.thomson-rtcweb-ice-dtls}} draft from 2012 proposed a similar mechanism to SPED, in
+which a single RTT could be removed from session setup by replacing STUN Request and Response
+messages with DTLS ClientHello and ServerHello messages, rather than piggybacking the DTLS messages
+as SPED does.
 
-The ICE-DTLS mechanism ends up being considerably more complex than the protocol described in this document , on account of the fact
-that the entirety of ICE functionality needs to be ported over to DTLS (eg consent checks) or retained as a complementary approach
-(e.g. peer address discovery). Furthermore, since it changes the details of connectivity negotiation, it is not backward compatible
-and therefore must be negotiated via SDP ice-options.
+The ICE-DTLS mechanism ends up being considerably more complex than SPED, on account of the fact
+that the entirety of ICE functionality needs to be ported over to DTLS, for example consent checks,
+or retained as a complementary approach, for example peer address discovery. Furthermore, since it
+changes the details of connectivity negotiation, it is not backward compatible and therefore must
+be negotiated via SDP `ice-options`.
 
-Embedding DTLS in STUN is, on the other hand, is inherently backward compatible with existing WebRTC implementations.
-It is also more compatible with demultiplexing multiple ICE sessions using different STUN username fragments on the same UDP port.
+# Future Work
+
+Embedding data into STUN requests is a technique that could also be used for early transmission or
+improved reliability of other important data. For example, one could imagine transferring
+key-frames, if small enough, or RTCP or SCTP control messages. However, this has not been
+thoroughly sketched out in this proposal.
+
+# Security Considerations
+
+## DTLS Replay and Spoofing
+
+This specification uses application-layer caching of DTLS packets which means packets can be sent
+multiple times using the same sequence number. For the receiver these are considered replays if
+received multiple times and rejected as described in {{Section 4.5.1 of ?RFC9147}}.
+
+The embedded DTLS handshake is authenticated by existing ICE logic, i.e. the ICE USERNAME and
+MESSAGE-INTEGRITY mechanisms. Any spoofed ICE packets are rejected accordingly.
+
+## Pacing and Congestion
+
+The protocol defined in this specification increases the size of the STUN packets that are sent by
+the ICE agent to a peer without knowing if that peer can use the embedded data. However, the
+initial data sent is just the DTLS ClientHello, so the increase is fairly nominal.
+
+The STUN requests used for embedding DTLS are already paced as described in
+{{Appendix B.1 of ?RFC8845}} which should prevent issues.
+
+# IANA Considerations
+
+This document defines two new STUN attributes, `DTLS-IN-STUN-DATA` and `DTLS-IN-STUN-ACK`. These
+attributes need to be registered with IANA in the "STUN Attributes" registry, following the
+procedures defined in {{?RFC8489}}. Provisional names have been used in this draft and the
+registry.
 
 --- back
 
+# Appendix A: Benchmark Numbers
+
+For the scenario without packet loss, benchmarking is straightforward, and the savings from SPED
+amount to 1 RTT, as expected. However, in packet loss scenarios, the savings can be much larger,
+especially in the worst, p95, cases.
+
+In this benchmark, a 200 ms RTT is used. Packet loss is simulated using the virtual network
+mechanism in Google's libwebrtc. Duration is measured as time from start until both peers have
+completed the DTLS handshake.
+
+| DTLS 1.3 with PQC | Loss % | p10 (ms) | p50 | average | p95 |
+| --- | --- | --- | --- | --- | --- |
+| Vanilla | 0 | 850 | 850 | 850 | 850 |
+| DTLS-in-STUN | 0 | 650 | 650 | 650 | 650 |
+|  |  |  |  |  |  |
+| Vanilla | 5% | 850 | 850 | 947 | 1253 |
+| DTLS-in-STUN | 5% | 650 | 650 | 656 | 700 |
+|  |  |  |  |  |  |
+| Vanilla | 10% | 850 | 900 | 1193 | 2170 |
+| DTLS-in-STUN | 10% | 650 | 650 | 685 | 800 |
+
 # Acknowledgments
 {:numbered="false"}
-
-
-
-
-
