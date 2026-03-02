@@ -613,8 +613,8 @@ registry.
 
 For the scenario without packet loss, benchmarking is straightforward, and the savings from SPED
 amount to 1 RTT, as expected. However, in packet loss scenarios, the savings can be much larger,
-especially in the worst (p95) cases. This is a direct result of using ICE pacing rather than 
-exponential backoff for DTLS retranmissions.
+especially in the worst (p95) cases. This is likely due in part to using ICE pacing rather than
+exponential backoff for DTLS retransmissions.
 
 In this benchmark, a 200 ms RTT is used. Packet loss is simulated using the virtual network
 mechanism in Google's libwebrtc. Duration is measured as time from start until both peers have
