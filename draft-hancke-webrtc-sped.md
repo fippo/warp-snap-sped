@@ -155,6 +155,10 @@ following DTLS flights:
    ChangeCipherSpec, and Finished messages.
 4. The DTLS server sends the ChangeCipherSpec and Finished messages.
 
+Note that DTLS 1.2 does not provide a separate acknowledgement for the server's final
+flight, so determination of handshake completion must be done implicitly, e.g., via
+receipt of application data or expiration of retransmission timers.
+
 #### DTLS 1.3 Handshake
 
 The DTLS 1.3 handshake, as specified in {{Section 5 of ?RFC9147}}, is organized into the
@@ -228,11 +232,14 @@ bytes to ensure the next attribute, if any, starts on a 4-byte boundary; see {{?
 
 #### DTLS-IN-STUN-ACK
 
-* This attribute contains acknowledgements of received `DTLS-IN-STUN-DATA` attributes.
+* This attribute contains acknowledgements of received `DTLS-IN-STUN-DATA` packets in the order
+  they were received.
 * The attribute can be present in either a STUN Binding Request or Response.
 * The attribute is variable length and contains a list of uint32 entries, where each entry is the
   computed CRC-32 of a received `DTLS-IN-STUN-DATA` attribute value, i.e. a DTLS handshake packet,
   ignoring padding.
+* Implementations SHOULD cap the number of uint32 entries included in this attribute. A cap of 4
+  entries is RECOMMENDED, which bounds the attribute size while still covering all known handshake cases.
 * The attribute can be empty, i.e. the length of the list of uint32 values can be 0.
 
 ### MTU Considerations
@@ -250,7 +257,7 @@ is noted in the table below:
 | MESSAGE-INTEGRITY-SHA256 | 36 | {{Section 14.6 of ?RFC8489}}; only applicable when `ice2` is used {{Section 10 of ?RFC8445}} |
 | FINGERPRINT | 8 | {{Section 15.5 of ?RFC5389}} |
 | DTLS-IN-STUN-DATA | 4 | This specification. Overhead for the attribute header |
-| DTLS-IN-STUN-ACK | 4 | This specification. Overhead for the attribute header; TODO: define max size |
+| DTLS-IN-STUN-ACK | 4-20 | This specification. 4 byte attribute header plus 0 to 16 bytes for 0 to 4 CRC-32 values under the RECOMMENDED cap |
 | USERNAME | 16+ | {{Section 7.1.2.3 of ?RFC5245}}. Variable, typically 4 byte header plus 9 bytes for two four-byte username fragments and the colon plus 3 bytes padding. The actual size is known before the DTLS exchange starts, either from the SDP exchange or a peer-reflexive candidate |
 | TURN XOR-PEER-ADDRESS | 24 | {{?RFC8656}}. Assuming 16 byte IPv6; only applicable when TURN is used |
 
@@ -266,7 +273,9 @@ its first authenticated ICE check or response, and upon recognizing this fact th
 can easily fall back to standard unencapsulated DTLS.
 
 Given this straightforward in-band negotiation, this specification does not currently define an
-offer/answer negotiation mechanism or any ICE options.
+offer/answer negotiation mechanism or any ICE options. Note that even if an ICE option were used,
+the offerer would still need to be prepared to handle ICE checks, with or without SPED, that arrive
+before the signaling answer.
 
 # Mechanism
 
@@ -278,10 +287,13 @@ When using SPED, an ICE agent keeps two lists:
 
 1. A list, L1, of pending DTLS handshake packets.
 
-   These packets are created by the DTLS layer. The list is cleared when the DTLS layer creates a
-   new flight, or elements in the list are removed when ACKed by the peer.
+   These packets are created by the DTLS layer. Elements in the list are removed when ACKed by the peer.
+   The list is cleared when the DTLS layer creates a new flight or the DTLS handshake completes.   
 
 2. A list, L2, of pending acknowledgements, as defined above.
+
+   Entries in L2 are created when embedded DTLS packets are received. Entries MAY be sent more
+   than once to improve robustness against STUN loss.
 
 ## Sending a STUN Binding Request or Response
 
@@ -290,6 +302,7 @@ When sending a STUN Binding Request or Response, the ICE agent MUST follow the s
 1. Embed any pending ACKs from L2 in a DTLS-IN-STUN-ACK attribute.
 2. If there is a pending DTLS handshake packet in L1 and sufficient space remains in the STUN
    message, embed one DTLS handshake packet from L1 into a `DTLS-IN-STUN-DATA` attribute.
+   When multiple packets are pending in L1, round-robin selection is RECOMMENDED.
 3. Otherwise, include `DTLS-IN-STUN-DATA` with an empty value simply to indicate SPED support.
 
 
@@ -302,24 +315,15 @@ When receiving a STUN Binding Request or Response, the ICE agent MUST follow the
    conclude SPED processing.
 2. If the STUN message contains a `DTLS-IN-STUN-ACK` attribute, process the CRC-32 values in the
    attribute and remove each ACKed DTLS handshake packet from L1.
-3. If the STUN message contains a non-empty `DTLS-IN-STUN-DATA` attribute, inject the DTLS
-   handshake into the DTLS layer.
-
-When receiving a STUN Binding Response, there is an implicit acknowledgement of any data sent in
-the associated STUN Binding Request. Accordingly, the ICE agent MUST also follow the steps below:
-
-1. Remove any DTLS packets sent in the Binding Request from L1.
-2. Remove any ACKs sent in the Binding Request from L2.
-
-However, if data is included in the STUN Binding Response, this MUST be ACKed using the explicit
-ACK mechanism, and the ICE agent MUST add the CRC-32 of the DTLS packet to L2.
+3. If the STUN message contains a non-empty `DTLS-IN-STUN-DATA` attribute, inject the attribute
+   data into the DTLS layer and add the CRC-32 of the attribute value to L2.
 
 ## Termination
 
-Implementations SHOULD terminate use of SPED once a valid ICE candidate pair exists and direct
-sending is possible, as this allows transmission of DTLS packets without waiting on an outgoing
-STUN Binding Request. However, implementations MAY continue to send embedded DTLS if desired and
-only terminate once DTLS handshaking is complete.
+Once a valid ICE candidate pair exists and direct sending is possible, implementations MAY
+terminate use of SPED and send DTLS directly. Implementations MAY instead continue to send
+embedded DTLS until DTLS handshaking is complete, for example, to continue to use SPED's explicit 
+acknowledgement mechanism.
 
 # Examples
 
@@ -538,15 +542,14 @@ CP2  |<-------- BindingResponse/F2=ServerHello/2 ---|
 
 # Implementation Notes
 
-The following configuration for the SPED stack is RECOMMENDED:
+The following configuration for the SPED stack is RECOMMENDED. Note that this guidance may change
+based on implementation and deployment experience:
 
 1. When SPED is active, disable internal DTLS timeouts, and resume them when receiving the first
-   STUN Binding Response using a new BoringSSL feature that allows modifying timeouts for
-   outstanding flights, <https://boringssl-review.git.corp.google.com/c/boringssl/+/86167>.
-2. Limit the size of L2 to 4 elements.
-3. When using a PQC cipher suite, force the BoringSSL downward MTU to 900 bytes, which smooths a
-   DTLS PQC flight into 2 roughly equal sized DTLS packets, which can fit into a typical network
-   MTU even with the STUN embedding overhead.
+   STUN Binding Response.   
+2. When using a PQC cipher suite, reduce the DTLS MTU as needed so embedded DTLS packets still fit
+   within the expected path MTU. Experiments with an MTU near 900 bytes have been promising, but
+   the best fragmentation strategy requires more study.
 
 # Prior Work
 
@@ -606,26 +609,64 @@ registry.
 
 --- back
 
-# Appendix A: Benchmark Numbers
+# Benchmark Numbers
 
 For the scenario without packet loss, benchmarking is straightforward, and the savings from SPED
 amount to 1 RTT, as expected. However, in packet loss scenarios, the savings can be much larger,
-especially in the worst, p95, cases.
+especially in the worst (p95) cases. This is a direct result of using ICE pacing rather than 
+exponential backoff for DTLS retranmissions.
 
 In this benchmark, a 200 ms RTT is used. Packet loss is simulated using the virtual network
 mechanism in Google's libwebrtc. Duration is measured as time from start until both peers have
 completed the DTLS handshake.
 
+## DTLS 1.3 with PQC
+
 | DTLS 1.3 with PQC | Loss % | p10 (ms) | p50 | average | p95 |
 | --- | --- | --- | --- | --- | --- |
 | Vanilla | 0 | 850 | 850 | 850 | 850 |
-| DTLS-in-STUN | 0 | 650 | 650 | 650 | 650 |
+| SPED | 0 | 650 | 650 | 650 | 650 |
 |  |  |  |  |  |  |
 | Vanilla | 5% | 850 | 850 | 947 | 1253 |
-| DTLS-in-STUN | 5% | 650 | 650 | 656 | 700 |
+| SPED | 5% | 650 | 650 | 656 | 700 |
 |  |  |  |  |  |  |
 | Vanilla | 10% | 850 | 900 | 1193 | 2170 |
-| DTLS-in-STUN | 10% | 650 | 650 | 685 | 800 |
+| SPED | 10% | 650 | 650 | 685 | 800 |
+|  |  |  |  |  |  |
+| Vanilla | 25% | 850 | 1350 | 2020 | 3080 |
+| SPED | 25% | 650 | 750 | 850 | 1105 |
+
+## DTLS 1.3
+
+| DTLS 1.3 | Loss % | p10 (ms) | p50 | average | p95 |
+| --- | --- | --- | --- | --- | --- |
+| Vanilla | 0 | 750 | 750 | 750 | 750 |
+| SPED | 0 | 550 | 550 | 550 | 550 |
+|  |  |  |  |  |  |
+| Vanilla | 5% | 750 | 750 | 800 | 1150 |
+| SPED | 5% | 550 | 550 | 555 | 600 |
+|  |  |  |  |  |  |
+| Vanilla | 10% | 750 | 750 | 935 | 1200 |
+| SPED | 10% | 550 | 550 | 560 | 600 |
+|  |  |  |  |  |  |
+| Vanilla | 25% | 750 | 1150 | 1400 | 2560 |
+| SPED | 25% | 550 | 600 | 620 | 750 |
+
+## DTLS 1.2
+
+| DTLS 1.2 | Loss % | p10 (ms) | p50 | average | p95 |
+| --- | --- | --- | --- | --- | --- |
+| Vanilla | 0 | 850 | 850 | 850 | 850 |
+| SPED | 0 | 650 | 650 | 650 | 650 |
+|  |  |  |  |  |  |
+| Vanilla | 5% | 850 | 850 | 916 | 1300 |
+| SPED | 5% | 650 | 650 | 695 | 1150 |
+|  |  |  |  |  |  |
+| Vanilla | 10% | 850 | 900 | 1133 | 2150 |
+| SPED | 10% | 650 | 650 | 690 | 760 |
+|  |  |  |  |  |  |
+| Vanilla | 25% | 850 | 1350 | 3920 | 8860 |
+| SPED | 25% | 750 | 750 | 862 | 1400 |
 
 # Acknowledgments
 {:numbered="false"}
