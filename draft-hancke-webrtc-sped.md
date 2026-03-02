@@ -232,8 +232,7 @@ bytes to ensure the next attribute, if any, starts on a 4-byte boundary; see {{?
 * The attribute can be present in either a STUN Binding Request or Response.
 * The attribute is variable length and contains a list of uint32 entries, where each entry is the
   computed CRC-32 of a received `DTLS-IN-STUN-DATA` attribute value, i.e. a DTLS handshake packet,
-  ignoring padding, using the same CRC-32 algorithm as the STUN FINGERPRINT attribute
-  {{Section 15.5 of ?RFC5389}}.
+  ignoring padding.
 * The attribute can be empty, i.e. the length of the list of uint32 values can be 0.
 
 ### MTU Considerations
