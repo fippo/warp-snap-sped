@@ -119,12 +119,11 @@ one direction, from the full to the lite endpoint.
 
 ### DTLS Overview
 
-Once ICE has identified a valid candidate pair, DTLS handshaking can start, using "client" and
-"server" roles determined through out-of-band WebRTC signaling. The handshake contents are as
-described below for each DTLS version. Note that because ICE has already demonstrated remote
-consent, DTLS' HelloVerifyRequest is not needed to prevent DoS attacks.
+In WebRTC, DTLS handshaking normally starts once ICE has identified a valid candidate pair, using
+"client" and "server" roles determined through the a=setup attribute in WebRTC SDP signaling. SPED changes when
+these DTLS packets can be sent, but not the DTLS handshake contents themselves. 
 
-First, we define the term "DTLS packet" to mean the unit of DTLS data typically carried in a
+We define the term "DTLS packet" to mean the unit of DTLS data typically carried in a
 single UDP packet.
 
 DTLS handshake messages are also organized into "DTLS flights", as detailed in {{Section 5.7 of ?RFC9147}}. A
@@ -135,9 +134,12 @@ Ideally, a flight, even if it contains multiple messages, can fit into a single 
 However, if a message is large, for example a large certificate, it can be fragmented across
 multiple DTLS packets.
 
-The DTLS flights used during WebRTC session setup are described below. Once the handshake has
-completed, SRTP key extraction occurs and is used to key the sending of media. Media cannot be
-properly decrypted until all handshake messages have been received.
+The DTLS flights used during WebRTC session setup are described below. Note that because
+ICE has already demonstrated remote consent, DTLS' HelloVerifyRequest is not needed to prevent DoS
+attacks.
+
+Once the DTLS handshake has completed, SRTP key extraction occurs and is used to key the sending of media.
+Media cannot be properly decrypted until all handshake messages have been received.
 
 #### DTLS 1.2 Handshake
 
@@ -204,13 +206,18 @@ bytes to ensure the next attribute, if any, starts on a 4-byte boundary; see {{?
 
 #### DTLS-IN-STUN-DATA
 
-* This attribute contains one DTLS handshake packet.
-* The attribute can be present in either a STUN Binding Request or Response.
+* This attribute contains one DTLS handshake packet, or is empty to indicate SPED support when no
+  DTLS packet is being embedded.
+* While SPED is active, this attribute MUST be present in every STUN Binding Request or Response
+  sent by a SPED-capable agent.
 * The value portion of this attribute is variable length and consists of one DTLS handshake packet
   from a DTLS flight, as described in {{Section 5.1 of ?RFC9147}} or {{Section 4.2 of ?RFC6347}}.
 * As noted, if the attribute length is not a multiple of 4, padding must be added.
-* If the value portion of this attribute is empty or the first byte is not DTLS, i.e. between 20
-  and 63 inclusive as described in {{Section 3 of ?RFC9443}}, the attribute SHOULD be silently
+* If the value portion of this attribute is empty, it indicates SPED support and that no DTLS
+  packet is being embedded in that STUN message. An empty value MUST NOT be injected into the DTLS
+  layer.
+* If the value portion of this attribute is non-empty but the first byte is not DTLS, i.e. between
+  20 and 63 inclusive as described in {{Section 3 of ?RFC9443}}, the attribute SHOULD be silently
   discarded.
 
 #### DTLS-IN-STUN-ACK
@@ -247,9 +254,9 @@ DTLS MTU further.
 ### Backwards Compatibility
 
 SPED is fully backwards compatible with existing ICE agents. If the peer ICE agent does not
-support SPED, this can be detected via the lack of the STUN attributes defined above in its ICE
-checks, and upon recognizing this fact the local ICE agent can easily fall back to standard
-unencapsulated DTLS.
+support SPED, this can be detected via the lack of the mandatory `DTLS-IN-STUN-DATA` attribute in
+its first authenticated ICE check or response, and upon recognizing this fact the local ICE agent
+can easily fall back to standard unencapsulated DTLS.
 
 Given this straightforward in-band negotiation, this specification does not currently define an
 offer/answer negotiation mechanism or any ICE options.
@@ -273,23 +280,23 @@ When using SPED, an ICE agent keeps two lists:
 
 When sending a STUN Binding Request or Response, the ICE agent MUST follow the steps below:
 
-1. If there is sufficient space in the STUN message, i.e. it can fit within an MTU, embed any
-   pending ACKs from L2, or an empty ACK if there are none.
-2. If there is sufficient space in the STUN message, and the agent wishes to send embedded DTLS
-   messages, for example because no valid ICE pair exists yet, embed one DTLS handshake packet from
-   L1. ICE agents MAY use SPED embedding even after a valid ICE pair exists.
+1. Embed any pending ACKs from L2 in the DTLS-IN-STUN-ACK attribute.
+2. If there is a pending DTLS handshake packet in L1 and sufficient space remains in the STUN
+   message, embed one DTLS handshake packet from L1 in that attribute. 
+3. Otherwise, include `DTLS-IN-STUN-DATA` with an empty value simply to indicate SPED support.   
+
 
 ## Receiving a STUN Binding Request or Response
 
 When receiving a STUN Binding Request or Response, the ICE agent MUST follow the steps below:
 
-1. If this is the first STUN message received, and neither the `DTLS-IN-STUN-DATA` nor the
-   `DTLS-IN-STUN-ACK` attribute is present, conclude that the peer does not support SPED, and
+1. If this is the first authenticated STUN message received from the peer, and the
+   `DTLS-IN-STUN-DATA` attribute is not present, conclude that the peer does not support SPED, and
    conclude SPED processing.
 2. If the STUN message contains a `DTLS-IN-STUN-ACK` attribute, process the CRC-32 values in the
    attribute and remove each ACKed DTLS handshake packet from L1.
-3. If the STUN message contains a `DTLS-IN-STUN-DATA` attribute, inject the DTLS handshake into
-   the DTLS layer.
+3. If the STUN message contains a non-empty `DTLS-IN-STUN-DATA` attribute, inject the DTLS
+   handshake into the DTLS layer.
 
 When receiving a STUN Binding Response, there is an implicit acknowledgement of any data sent in
 the associated STUN Binding Request. Accordingly, the ICE agent MUST also follow the steps below:
@@ -382,6 +389,24 @@ Client                                      Server
   |<-------- DTLS ACK -------------------------|
 ~~~
 
+## DTLS 1.3 with SPED and ICE-Lite
+
+~~~
+Client                                      Server (ICE Lite)
+  |                                            |
+  |--------- SDP Offer ----------------------->|
+  |<-1------ SDP Answer -----------------------|
+  |                                            |
+  |--------- STUN BindingRequest/DTLS F1 ----->|
+  |<-2------ STUN BindingResponse/DTLS F2------|
+  |                                            |
+  |--------- DTLS F3: Finished --------------->|
+  |--------- Application data ---------------->|
+  |<-------- DTLS ACK -------------------------|
+~~~
+
+Because the server is ICE Lite, its SPED-carried DTLS packets are sent only in Binding Responses.
+
 ## DTLS 1.3 with Non-SPED Peer
 
 ~~~
@@ -391,8 +416,8 @@ Client                                      Server
   |<-------- BindingResponse/               ---|
 ~~~
 
-The absence of either a `DTLS-IN-STUN-DATA` or a `DTLS-IN-STUN-ACK` allows the client to conclude
-that the server does not support SPED.
+The absence of a `DTLS-IN-STUN-DATA` attribute allows the client to conclude that the server does
+not support SPED.
 
 ~~~
   |--------- DTLS F1: ClientHello ------------>|
