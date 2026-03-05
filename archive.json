@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-03-03T02:28:55.276775+00:00",
+  "timestamp": "2026-03-05T02:25:12.469409+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -86,7 +86,7 @@
       "labels": [],
       "body": "It would be nice to eliminate extra roundtrip needed to open DataChannel. Please define new optional SCTP parameter to embed DCEP DATA_CHANNEL_OPEN message in SCTP INIT, and DCEP DATA_CHANNEL_ACK in SCTP INIT_ACK. One generic parameter like DCEP_MESSAGE would be enough to handle both DCEP messages.",
       "createdAt": "2026-01-12T16:42:23Z",
-      "updatedAt": "2026-03-02T12:05:33Z",
+      "updatedAt": "2026-03-04T06:52:36Z",
       "closedAt": null,
       "comments": [
         {
@@ -102,6 +102,13 @@
           "body": "one can do https://datatracker.ietf.org/doc/rfc8864/ but browsers never wanted to: https://github.com/w3c/webrtc-extensions/issues/102",
           "createdAt": "2026-03-02T12:05:33Z",
           "updatedAt": "2026-03-02T12:05:33Z"
+        },
+        {
+          "author": "juberti-oai",
+          "authorAssociation": "NONE",
+          "body": "could also add as a WHIP URL parameter",
+          "createdAt": "2026-03-04T06:52:36Z",
+          "updatedAt": "2026-03-04T06:52:36Z"
         }
       ]
     }
