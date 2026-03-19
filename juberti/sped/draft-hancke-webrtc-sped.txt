@@ -5,10 +5,10 @@
 Audio/Video Transport Core Maintenance                         P. Hancke
 Internet-Draft                                       Meta Platforms Inc.
 Intended status: Informational                                 J. Uberti
-Expires: 3 September 2026                                         OpenAI
+Expires: 20 September 2026                                        OpenAI
                                                               J. Oreland
                                                                   Google
-                                                            2 March 2026
+                                                           19 March 2026
 
 
                 STUN Protocol for Embedding DTLS (SPED)
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 September 2026.
+   This Internet-Draft will expire on 20 September 2026.
 
 Copyright Notice
 
@@ -113,7 +113,10 @@ Table of Contents
    11. References
      11.1.  Normative References
      11.2.  Informative References
-   Appendix A.  Appendix A: Benchmark Numbers
+   Appendix A.  Benchmark Numbers
+     A.1.  DTLS 1.3 with PQC
+     A.2.  DTLS 1.3
+     A.3.  DTLS 1.2
    Acknowledgments
    Authors' Addresses
 
@@ -247,6 +250,11 @@ Table of Contents
 
    4.  The DTLS server sends the ChangeCipherSpec and Finished messages.
 
+   Note that DTLS 1.2 does not provide a separate acknowledgement for
+   the server's final flight, so determination of handshake completion
+   must be done implicitly, e.g., via receipt of application data or
+   expiration of retransmission timers.
+
 3.1.2.2.  DTLS 1.3 Handshake
 
    The DTLS 1.3 handshake, as specified in Section 5 of [RFC9147], is
@@ -353,7 +361,7 @@ Table of Contents
 3.3.2.2.  DTLS-IN-STUN-ACK
 
    *  This attribute contains acknowledgements of received DTLS-IN-STUN-
-      DATA attributes.
+      DATA packets in the order they were received.
 
    *  The attribute can be present in either a STUN Binding Request or
       Response.
@@ -362,6 +370,11 @@ Table of Contents
       entries, where each entry is the computed CRC-32 of a received
       DTLS-IN-STUN-DATA attribute value, i.e. a DTLS handshake packet,
       ignoring padding.
+
+   *  Implementations SHOULD cap the number of uint32 entries included
+      in this attribute.  A cap of 4 entries is RECOMMENDED, which
+      bounds the attribute size while still covering all known handshake
+      cases.
 
    *  The attribute can be empty, i.e. the length of the list of uint32
       values can be 0.
@@ -396,9 +409,11 @@ Table of Contents
     | DTLS-IN-STUN-DATA        | 4    | This specification.  Overhead |
     |                          |      | for the attribute header      |
     +--------------------------+------+-------------------------------+
-    | DTLS-IN-STUN-ACK         | 4    | This specification.  Overhead |
-    |                          |      | for the attribute header;     |
-    |                          |      | TODO: define max size         |
+    | DTLS-IN-STUN-ACK         | 4-20 | This specification. 4 byte    |
+    |                          |      | attribute header plus 0 to 16 |
+    |                          |      | bytes for 0 to 4 CRC-32       |
+    |                          |      | values under the RECOMMENDED  |
+    |                          |      | cap                           |
     +--------------------------+------+-------------------------------+
     | USERNAME                 | 16+  | Section 7.1.2.3 of [RFC5245]. |
     |                          |      | Variable, typically 4 byte    |
@@ -434,7 +449,9 @@ Table of Contents
 
    Given this straightforward in-band negotiation, this specification
    does not currently define an offer/answer negotiation mechanism or
-   any ICE options.
+   any ICE options.  Note that even if an ICE option were used, the
+   offerer would still need to be prepared to handle ICE checks, with or
+   without SPED, that arrive before the signaling answer.
 
 4.  Mechanism
 
@@ -446,11 +463,16 @@ Table of Contents
 
    1.  A list, L1, of pending DTLS handshake packets.
 
-       These packets are created by the DTLS layer.  The list is cleared
-       when the DTLS layer creates a new flight, or elements in the list
-       are removed when ACKed by the peer.
+       These packets are created by the DTLS layer.  Elements in the
+       list are removed when ACKed by the peer.  The list is cleared
+       when the DTLS layer creates a new flight or the DTLS handshake
+       completes.
 
    2.  A list, L2, of pending acknowledgements, as defined above.
+
+       Entries in L2 are created when embedded DTLS packets are
+       received.  Entries MAY be sent more than once to improve
+       robustness against STUN loss.
 
 4.2.  Sending a STUN Binding Request or Response
 
@@ -461,7 +483,8 @@ Table of Contents
 
    2.  If there is a pending DTLS handshake packet in L1 and sufficient
        space remains in the STUN message, embed one DTLS handshake
-       packet from L1 into a DTLS-IN-STUN-DATA attribute.
+       packet from L1 into a DTLS-IN-STUN-DATA attribute.  When multiple
+       packets are pending in L1, round-robin selection is RECOMMENDED.
 
    3.  Otherwise, include DTLS-IN-STUN-DATA with an empty value simply
        to indicate SPED support.
@@ -481,29 +504,16 @@ Table of Contents
        DTLS handshake packet from L1.
 
    3.  If the STUN message contains a non-empty DTLS-IN-STUN-DATA
-       attribute, inject the DTLS handshake into the DTLS layer.
-
-   When receiving a STUN Binding Response, there is an implicit
-   acknowledgement of any data sent in the associated STUN Binding
-   Request.  Accordingly, the ICE agent MUST also follow the steps
-   below:
-
-   1.  Remove any DTLS packets sent in the Binding Request from L1.
-
-   2.  Remove any ACKs sent in the Binding Request from L2.
-
-   However, if data is included in the STUN Binding Response, this MUST
-   be ACKed using the explicit ACK mechanism, and the ICE agent MUST add
-   the CRC-32 of the DTLS packet to L2.
+       attribute, inject the attribute data into the DTLS layer and add
+       the CRC-32 of the attribute value to L2.
 
 4.4.  Termination
 
-   Implementations SHOULD terminate use of SPED once a valid ICE
-   candidate pair exists and direct sending is possible, as this allows
-   transmission of DTLS packets without waiting on an outgoing STUN
-   Binding Request.  However, implementations MAY continue to send
-   embedded DTLS if desired and only terminate once DTLS handshaking is
-   complete.
+   Once a valid ICE candidate pair exists and direct sending is
+   possible, implementations MAY terminate use of SPED and send DTLS
+   directly.  Implementations MAY instead continue to send embedded DTLS
+   until DTLS handshaking is complete, for example, to continue to use
+   SPED's explicit acknowledgement mechanism.
 
 5.  Examples
 
@@ -700,21 +710,17 @@ Table of Contents
 
 6.  Implementation Notes
 
-   The following configuration for the SPED stack is RECOMMENDED:
+   The following configuration for the SPED stack is RECOMMENDED.  Note
+   that this guidance may change based on implementation and deployment
+   experience:
 
    1.  When SPED is active, disable internal DTLS timeouts, and resume
-       them when receiving the first STUN Binding Response using a new
-       BoringSSL feature that allows modifying timeouts for outstanding
-       flights, https://boringssl-review.git.corp.google.com/c/
-       boringssl/+/86167 (https://boringssl-
-       review.git.corp.google.com/c/boringssl/+/86167).
+       them when receiving the first STUN Binding Response.
 
-   2.  Limit the size of L2 to 4 elements.
-
-   3.  When using a PQC cipher suite, force the BoringSSL downward MTU
-       to 900 bytes, which smooths a DTLS PQC flight into 2 roughly
-       equal sized DTLS packets, which can fit into a typical network
-       MTU even with the STUN embedding overhead.
+   2.  When using a PQC cipher suite, reduce the DTLS MTU as needed so
+       embedded DTLS packets still fit within the expected path MTU.
+       Experiments with an MTU near 900 bytes have been promising, but
+       the best fragmentation strategy requires more study.
 
 7.  Prior Work
 
@@ -873,37 +879,100 @@ Table of Contents
               Scheme Updates for QUIC", RFC 9443, DOI 10.17487/RFC9443,
               July 2023, <https://www.rfc-editor.org/rfc/rfc9443>.
 
-Appendix A.  Appendix A: Benchmark Numbers
+Appendix A.  Benchmark Numbers
 
    For the scenario without packet loss, benchmarking is
    straightforward, and the savings from SPED amount to 1 RTT, as
    expected.  However, in packet loss scenarios, the savings can be much
-   larger, especially in the worst, p95, cases.
+   larger, especially in the worst (p95) cases.  This is likely due in
+   part to using ICE pacing rather than exponential backoff for DTLS
+   retransmissions.
 
    In this benchmark, a 200 ms RTT is used.  Packet loss is simulated
    using the virtual network mechanism in Google's libwebrtc.  Duration
    is measured as time from start until both peers have completed the
    DTLS handshake.
 
-     +===================+========+==========+=====+=========+======+
-     | DTLS 1.3 with PQC | Loss % | p10 (ms) | p50 | average | p95  |
-     +===================+========+==========+=====+=========+======+
-     | Vanilla           | 0      | 850      | 850 | 850     | 850  |
-     +-------------------+--------+----------+-----+---------+------+
-     | DTLS-in-STUN      | 0      | 650      | 650 | 650     | 650  |
-     +-------------------+--------+----------+-----+---------+------+
-     +-------------------+--------+----------+-----+---------+------+
-     | Vanilla           | 5%     | 850      | 850 | 947     | 1253 |
-     +-------------------+--------+----------+-----+---------+------+
-     | DTLS-in-STUN      | 5%     | 650      | 650 | 656     | 700  |
-     +-------------------+--------+----------+-----+---------+------+
-     +-------------------+--------+----------+-----+---------+------+
-     | Vanilla           | 10%    | 850      | 900 | 1193    | 2170 |
-     +-------------------+--------+----------+-----+---------+------+
-     | DTLS-in-STUN      | 10%    | 650      | 650 | 685     | 800  |
-     +-------------------+--------+----------+-----+---------+------+
+A.1.  DTLS 1.3 with PQC
 
-                                 Table 2
+     +===================+========+==========+======+=========+======+
+     | DTLS 1.3 with PQC | Loss % | p10 (ms) | p50  | average | p95  |
+     +===================+========+==========+======+=========+======+
+     | Vanilla           | 0      | 850      | 850  | 850     | 850  |
+     +-------------------+--------+----------+------+---------+------+
+     | SPED              | 0      | 650      | 650  | 650     | 650  |
+     +-------------------+--------+----------+------+---------+------+
+     +-------------------+--------+----------+------+---------+------+
+     | Vanilla           | 5%     | 850      | 850  | 947     | 1253 |
+     +-------------------+--------+----------+------+---------+------+
+     | SPED              | 5%     | 650      | 650  | 656     | 700  |
+     +-------------------+--------+----------+------+---------+------+
+     +-------------------+--------+----------+------+---------+------+
+     | Vanilla           | 10%    | 850      | 900  | 1193    | 2170 |
+     +-------------------+--------+----------+------+---------+------+
+     | SPED              | 10%    | 650      | 650  | 685     | 800  |
+     +-------------------+--------+----------+------+---------+------+
+     +-------------------+--------+----------+------+---------+------+
+     | Vanilla           | 25%    | 850      | 1350 | 2020    | 3080 |
+     +-------------------+--------+----------+------+---------+------+
+     | SPED              | 25%    | 650      | 750  | 850     | 1105 |
+     +-------------------+--------+----------+------+---------+------+
+
+                                  Table 2
+
+A.2.  DTLS 1.3
+
+         +==========+========+==========+======+=========+======+
+         | DTLS 1.3 | Loss % | p10 (ms) | p50  | average | p95  |
+         +==========+========+==========+======+=========+======+
+         | Vanilla  | 0      | 750      | 750  | 750     | 750  |
+         +----------+--------+----------+------+---------+------+
+         | SPED     | 0      | 550      | 550  | 550     | 550  |
+         +----------+--------+----------+------+---------+------+
+         +----------+--------+----------+------+---------+------+
+         | Vanilla  | 5%     | 750      | 750  | 800     | 1150 |
+         +----------+--------+----------+------+---------+------+
+         | SPED     | 5%     | 550      | 550  | 555     | 600  |
+         +----------+--------+----------+------+---------+------+
+         +----------+--------+----------+------+---------+------+
+         | Vanilla  | 10%    | 750      | 750  | 935     | 1200 |
+         +----------+--------+----------+------+---------+------+
+         | SPED     | 10%    | 550      | 550  | 560     | 600  |
+         +----------+--------+----------+------+---------+------+
+         +----------+--------+----------+------+---------+------+
+         | Vanilla  | 25%    | 750      | 1150 | 1400    | 2560 |
+         +----------+--------+----------+------+---------+------+
+         | SPED     | 25%    | 550      | 600  | 620     | 750  |
+         +----------+--------+----------+------+---------+------+
+
+                                 Table 3
+
+A.3.  DTLS 1.2
+
+         +==========+========+==========+======+=========+======+
+         | DTLS 1.2 | Loss % | p10 (ms) | p50  | average | p95  |
+         +==========+========+==========+======+=========+======+
+         | Vanilla  | 0      | 850      | 850  | 850     | 850  |
+         +----------+--------+----------+------+---------+------+
+         | SPED     | 0      | 650      | 650  | 650     | 650  |
+         +----------+--------+----------+------+---------+------+
+         +----------+--------+----------+------+---------+------+
+         | Vanilla  | 5%     | 850      | 850  | 916     | 1300 |
+         +----------+--------+----------+------+---------+------+
+         | SPED     | 5%     | 650      | 650  | 695     | 1150 |
+         +----------+--------+----------+------+---------+------+
+         +----------+--------+----------+------+---------+------+
+         | Vanilla  | 10%    | 850      | 900  | 1133    | 2150 |
+         +----------+--------+----------+------+---------+------+
+         | SPED     | 10%    | 650      | 650  | 690     | 760  |
+         +----------+--------+----------+------+---------+------+
+         +----------+--------+----------+------+---------+------+
+         | Vanilla  | 25%    | 850      | 1350 | 3920    | 8860 |
+         +----------+--------+----------+------+---------+------+
+         | SPED     | 25%    | 750      | 750  | 862     | 1400 |
+         +----------+--------+----------+------+---------+------+
+
+                                 Table 4
 
 Acknowledgments
 

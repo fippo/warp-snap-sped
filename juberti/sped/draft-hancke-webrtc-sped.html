@@ -15,24 +15,24 @@ DTLS handshake data and acknowledgements inside STUN Binding Requests and Respon
 ICE and DTLS to proceed in parallel, improves setup behavior under loss, and remains backward
 compatible with existing ICE processing. 
     " name="description">
-<meta content="xml2rfc 3.31.0" name="generator">
+<meta content="xml2rfc 3.32.0" name="generator">
 <meta content="webrtc" name="keyword">
 <meta content="stun" name="keyword">
 <meta content="dtls" name="keyword">
 <meta content="draft-hancke-webrtc-sped-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.31.0
+  xml2rfc 3.32.0
     Python 3.12.12
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.0.2
-    platformdirs 4.5.1
+    platformdirs 4.9.4
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.32.5
-    wcwidth 0.3.0
+    wcwidth 0.6.0
 -->
 <link href="draft-hancke-webrtc-sped.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1057,7 +1057,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Hancke, et al.</td>
-<td class="center">Expires 3 September 2026</td>
+<td class="center">Expires 20 September 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1070,12 +1070,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-hancke-webrtc-sped-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-03-02" class="published">2 March 2026</time>
+<time datetime="2026-03-19" class="published">19 March 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-09-03">3 September 2026</time></dd>
+<dd class="expires"><time datetime="2026-09-20">20 September 2026</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1137,7 +1137,7 @@ compatible with existing ICE processing.<a href="#section-abstract-1" class="pil
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 3 September 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 20 September 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1297,7 +1297,18 @@ compatible with existing ICE processing.<a href="#section-abstract-1" class="pil
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
-            <p id="section-toc.1-1.12.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-appendix-a-benchmark-number" class="internal xref">Appendix A: Benchmark Numbers</a></p>
+            <p id="section-toc.1-1.12.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-benchmark-numbers" class="internal xref">Benchmark Numbers</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.1">
+                <p id="section-toc.1-1.12.2.1.1"><a href="#appendix-A.1" class="auto internal xref">A.1</a>.  <a href="#name-dtls-13-with-pqc" class="internal xref">DTLS 1.3 with PQC</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.2">
+                <p id="section-toc.1-1.12.2.2.1"><a href="#appendix-A.2" class="auto internal xref">A.2</a>.  <a href="#name-dtls-13" class="internal xref">DTLS 1.3</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.3">
+                <p id="section-toc.1-1.12.2.3.1"><a href="#appendix-A.3" class="auto internal xref">A.3</a>.  <a href="#name-dtls-12" class="internal xref">DTLS 1.2</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
             <p id="section-toc.1-1.13.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
@@ -1452,6 +1463,9 @@ ChangeCipherSpec, and Finished messages.<a href="#section-3.1.2.1-2.3.1" class="
                 <p id="section-3.1.2.1-2.4.1">The DTLS server sends the ChangeCipherSpec and Finished messages.<a href="#section-3.1.2.1-2.4.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
+<p id="section-3.1.2.1-3">Note that DTLS 1.2 does not provide a separate acknowledgement for the server's final
+flight, so determination of handshake completion must be done implicitly, e.g., via
+receipt of application data or expiration of retransmission timers.<a href="#section-3.1.2.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="dtls-13-handshake">
@@ -1602,7 +1616,8 @@ discarded.<a href="#section-3.3.2.1-1.6.1" class="pilcrow">¶</a></p>
             </h5>
 <ul class="normal">
 <li class="normal" id="section-3.3.2.2-1.1">
-                <p id="section-3.3.2.2-1.1.1">This attribute contains acknowledgements of received <code>DTLS-IN-STUN-DATA</code> attributes.<a href="#section-3.3.2.2-1.1.1" class="pilcrow">¶</a></p>
+                <p id="section-3.3.2.2-1.1.1">This attribute contains acknowledgements of received <code>DTLS-IN-STUN-DATA</code> packets in the order
+they were received.<a href="#section-3.3.2.2-1.1.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-3.3.2.2-1.2">
                 <p id="section-3.3.2.2-1.2.1">The attribute can be present in either a STUN Binding Request or Response.<a href="#section-3.3.2.2-1.2.1" class="pilcrow">¶</a></p>
@@ -1613,7 +1628,11 @@ computed CRC-32 of a received <code>DTLS-IN-STUN-DATA</code> attribute value, i.
 ignoring padding.<a href="#section-3.3.2.2-1.3.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-3.3.2.2-1.4">
-                <p id="section-3.3.2.2-1.4.1">The attribute can be empty, i.e. the length of the list of uint32 values can be 0.<a href="#section-3.3.2.2-1.4.1" class="pilcrow">¶</a></p>
+                <p id="section-3.3.2.2-1.4.1">Implementations <span class="bcp14">SHOULD</span> cap the number of uint32 entries included in this attribute. A cap of 4
+entries is <span class="bcp14">RECOMMENDED</span>, which bounds the attribute size while still covering all known handshake cases.<a href="#section-3.3.2.2-1.4.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-3.3.2.2-1.5">
+                <p id="section-3.3.2.2-1.5.1">The attribute can be empty, i.e. the length of the list of uint32 values can be 0.<a href="#section-3.3.2.2-1.5.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
 </section>
@@ -1692,8 +1711,8 @@ is noted in the table below:<a href="#section-3.3.3-1" class="pilcrow">¶</a></p
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">DTLS-IN-STUN-ACK</td>
-                <td class="text-left" rowspan="1" colspan="1">4</td>
-                <td class="text-left" rowspan="1" colspan="1">This specification. Overhead for the attribute header; TODO: define max size</td>
+                <td class="text-left" rowspan="1" colspan="1">4-20</td>
+                <td class="text-left" rowspan="1" colspan="1">This specification. 4 byte attribute header plus 0 to 16 bytes for 0 to 4 CRC-32 values under the <span class="bcp14">RECOMMENDED</span> cap</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">USERNAME</td>
@@ -1724,7 +1743,9 @@ support SPED, this can be detected via the lack of the mandatory <code>DTLS-IN-S
 its first authenticated ICE check or response, and upon recognizing this fact the local ICE agent
 can easily fall back to standard unencapsulated DTLS.<a href="#section-3.3.4-1" class="pilcrow">¶</a></p>
 <p id="section-3.3.4-2">Given this straightforward in-band negotiation, this specification does not currently define an
-offer/answer negotiation mechanism or any ICE options.<a href="#section-3.3.4-2" class="pilcrow">¶</a></p>
+offer/answer negotiation mechanism or any ICE options. Note that even if an ICE option were used,
+the offerer would still need to be prepared to handle ICE checks, with or without SPED, that arrive
+before the signaling answer.<a href="#section-3.3.4-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1747,11 +1768,14 @@ offer/answer negotiation mechanism or any ICE options.<a href="#section-3.3.4-2"
 <li id="section-4.1-2.1">
             <p id="section-4.1-2.1.1">A list, L1, of pending DTLS handshake packets.<a href="#section-4.1-2.1.1" class="pilcrow">¶</a></p>
 <p id="section-4.1-2.1.2">
-These packets are created by the DTLS layer. The list is cleared when the DTLS layer creates a
-new flight, or elements in the list are removed when ACKed by the peer.<a href="#section-4.1-2.1.2" class="pilcrow">¶</a></p>
+These packets are created by the DTLS layer. Elements in the list are removed when ACKed by the peer.
+The list is cleared when the DTLS layer creates a new flight or the DTLS handshake completes.<a href="#section-4.1-2.1.2" class="pilcrow">¶</a></p>
 </li>
           <li id="section-4.1-2.2">
             <p id="section-4.1-2.2.1">A list, L2, of pending acknowledgements, as defined above.<a href="#section-4.1-2.2.1" class="pilcrow">¶</a></p>
+<p id="section-4.1-2.2.2">
+Entries in L2 are created when embedded DTLS packets are received. Entries <span class="bcp14">MAY</span> be sent more
+than once to improve robustness against STUN loss.<a href="#section-4.1-2.2.2" class="pilcrow">¶</a></p>
 </li>
         </ol>
 </section>
@@ -1768,7 +1792,8 @@ new flight, or elements in the list are removed when ACKed by the peer.<a href="
 </li>
           <li id="section-4.2-2.2">
             <p id="section-4.2-2.2.1">If there is a pending DTLS handshake packet in L1 and sufficient space remains in the STUN
-message, embed one DTLS handshake packet from L1 into a <code>DTLS-IN-STUN-DATA</code> attribute.<a href="#section-4.2-2.2.1" class="pilcrow">¶</a></p>
+message, embed one DTLS handshake packet from L1 into a <code>DTLS-IN-STUN-DATA</code> attribute.
+When multiple packets are pending in L1, round-robin selection is <span class="bcp14">RECOMMENDED</span>.<a href="#section-4.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-4.2-2.3">
             <p id="section-4.2-2.3.1">Otherwise, include <code>DTLS-IN-STUN-DATA</code> with an empty value simply to indicate SPED support.<a href="#section-4.2-2.3.1" class="pilcrow">¶</a></p>
@@ -1793,22 +1818,10 @@ conclude SPED processing.<a href="#section-4.3-2.1.1" class="pilcrow">¶</a></p>
 attribute and remove each ACKed DTLS handshake packet from L1.<a href="#section-4.3-2.2.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-4.3-2.3">
-            <p id="section-4.3-2.3.1">If the STUN message contains a non-empty <code>DTLS-IN-STUN-DATA</code> attribute, inject the DTLS
-handshake into the DTLS layer.<a href="#section-4.3-2.3.1" class="pilcrow">¶</a></p>
+            <p id="section-4.3-2.3.1">If the STUN message contains a non-empty <code>DTLS-IN-STUN-DATA</code> attribute, inject the attribute
+data into the DTLS layer and add the CRC-32 of the attribute value to L2.<a href="#section-4.3-2.3.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
-<p id="section-4.3-3">When receiving a STUN Binding Response, there is an implicit acknowledgement of any data sent in
-the associated STUN Binding Request. Accordingly, the ICE agent <span class="bcp14">MUST</span> also follow the steps below:<a href="#section-4.3-3" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-4.3-4">
-<li id="section-4.3-4.1">
-            <p id="section-4.3-4.1.1">Remove any DTLS packets sent in the Binding Request from L1.<a href="#section-4.3-4.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-4.3-4.2">
-            <p id="section-4.3-4.2.1">Remove any ACKs sent in the Binding Request from L2.<a href="#section-4.3-4.2.1" class="pilcrow">¶</a></p>
-</li>
-        </ol>
-<p id="section-4.3-5">However, if data is included in the STUN Binding Response, this <span class="bcp14">MUST</span> be ACKed using the explicit
-ACK mechanism, and the ICE agent <span class="bcp14">MUST</span> add the CRC-32 of the DTLS packet to L2.<a href="#section-4.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="termination">
@@ -1816,10 +1829,10 @@ ACK mechanism, and the ICE agent <span class="bcp14">MUST</span> add the CRC-32 
         <h3 id="name-termination">
 <a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-termination" class="section-name selfRef">Termination</a>
         </h3>
-<p id="section-4.4-1">Implementations <span class="bcp14">SHOULD</span> terminate use of SPED once a valid ICE candidate pair exists and direct
-sending is possible, as this allows transmission of DTLS packets without waiting on an outgoing
-STUN Binding Request. However, implementations <span class="bcp14">MAY</span> continue to send embedded DTLS if desired and
-only terminate once DTLS handshaking is complete.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
+<p id="section-4.4-1">Once a valid ICE candidate pair exists and direct sending is possible, implementations <span class="bcp14">MAY</span>
+terminate use of SPED and send DTLS directly. Implementations <span class="bcp14">MAY</span> instead continue to send
+embedded DTLS until DTLS handshaking is complete, for example, to continue to use SPED's explicit
+acknowledgement mechanism.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2097,20 +2110,17 @@ CP2  |&lt;-------- BindingResponse/F2=ServerHello/2 ---|
       <h2 id="name-implementation-notes">
 <a href="#section-6" class="section-number selfRef">6. </a><a href="#name-implementation-notes" class="section-name selfRef">Implementation Notes</a>
       </h2>
-<p id="section-6-1">The following configuration for the SPED stack is <span class="bcp14">RECOMMENDED</span>:<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-1">The following configuration for the SPED stack is <span class="bcp14">RECOMMENDED</span>. Note that this guidance may change
+based on implementation and deployment experience:<a href="#section-6-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-6-2">
 <li id="section-6-2.1">
           <p id="section-6-2.1.1">When SPED is active, disable internal DTLS timeouts, and resume them when receiving the first
-STUN Binding Response using a new BoringSSL feature that allows modifying timeouts for
-outstanding flights, <a href="https://boringssl-review.git.corp.google.com/c/boringssl/+/86167">https://boringssl-review.git.corp.google.com/c/boringssl/+/86167</a>.<a href="#section-6-2.1.1" class="pilcrow">¶</a></p>
+STUN Binding Response.<a href="#section-6-2.1.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-6-2.2">
-          <p id="section-6-2.2.1">Limit the size of L2 to 4 elements.<a href="#section-6-2.2.1" class="pilcrow">¶</a></p>
-</li>
-        <li id="section-6-2.3">
-          <p id="section-6-2.3.1">When using a PQC cipher suite, force the BoringSSL downward MTU to 900 bytes, which smooths a
-DTLS PQC flight into 2 roughly equal sized DTLS packets, which can fit into a typical network
-MTU even with the STUN embedding overhead.<a href="#section-6-2.3.1" class="pilcrow">¶</a></p>
+          <p id="section-6-2.2.1">When using a PQC cipher suite, reduce the DTLS MTU as needed so embedded DTLS packets still fit
+within the expected path MTU. Experiments with an MTU near 900 bytes have been promising, but
+the best fragmentation strategy requires more study.<a href="#section-6-2.2.1" class="pilcrow">¶</a></p>
 </li>
       </ol>
 </section>
@@ -2286,96 +2296,348 @@ registry.<a href="#section-10-1" class="pilcrow">¶</a></p>
 </div>
 </section>
 </div>
-<div id="appendix-a-benchmark-numbers">
+<div id="benchmark-numbers">
 <section id="appendix-A">
-      <h2 id="name-appendix-a-benchmark-number">
-<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-appendix-a-benchmark-number" class="section-name selfRef">Appendix A: Benchmark Numbers</a>
+      <h2 id="name-benchmark-numbers">
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-benchmark-numbers" class="section-name selfRef">Benchmark Numbers</a>
       </h2>
 <p id="appendix-A-1">For the scenario without packet loss, benchmarking is straightforward, and the savings from SPED
 amount to 1 RTT, as expected. However, in packet loss scenarios, the savings can be much larger,
-especially in the worst, p95, cases.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+especially in the worst (p95) cases. This is likely due in part to using ICE pacing rather than
+exponential backoff for DTLS retransmissions.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
 <p id="appendix-A-2">In this benchmark, a 200 ms RTT is used. Packet loss is simulated using the virtual network
 mechanism in Google's libwebrtc. Duration is measured as time from start until both peers have
 completed the DTLS handshake.<a href="#appendix-A-2" class="pilcrow">¶</a></p>
+<div id="dtls-13-with-pqc">
+<section id="appendix-A.1">
+        <h3 id="name-dtls-13-with-pqc">
+<a href="#appendix-A.1" class="section-number selfRef">A.1. </a><a href="#name-dtls-13-with-pqc" class="section-name selfRef">DTLS 1.3 with PQC</a>
+        </h3>
 <table class="center" id="table-2">
-        <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
+          <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
 <thead>
-          <tr>
-            <th class="text-left" rowspan="1" colspan="1">DTLS 1.3 with PQC</th>
-            <th class="text-left" rowspan="1" colspan="1">Loss %</th>
-            <th class="text-left" rowspan="1" colspan="1">p10 (ms)</th>
-            <th class="text-left" rowspan="1" colspan="1">p50</th>
-            <th class="text-left" rowspan="1" colspan="1">average</th>
-            <th class="text-left" rowspan="1" colspan="1">p95</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
-            <td class="text-left" rowspan="1" colspan="1">0</td>
-            <td class="text-left" rowspan="1" colspan="1">850</td>
-            <td class="text-left" rowspan="1" colspan="1">850</td>
-            <td class="text-left" rowspan="1" colspan="1">850</td>
-            <td class="text-left" rowspan="1" colspan="1">850</td>
-          </tr>
-          <tr>
-            <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
-            <td class="text-left" rowspan="1" colspan="1">0</td>
-            <td class="text-left" rowspan="1" colspan="1">650</td>
-            <td class="text-left" rowspan="1" colspan="1">650</td>
-            <td class="text-left" rowspan="1" colspan="1">650</td>
-            <td class="text-left" rowspan="1" colspan="1">650</td>
-          </tr>
-          <tr>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-          </tr>
-          <tr>
-            <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
-            <td class="text-left" rowspan="1" colspan="1">5%</td>
-            <td class="text-left" rowspan="1" colspan="1">850</td>
-            <td class="text-left" rowspan="1" colspan="1">850</td>
-            <td class="text-left" rowspan="1" colspan="1">947</td>
-            <td class="text-left" rowspan="1" colspan="1">1253</td>
-          </tr>
-          <tr>
-            <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
-            <td class="text-left" rowspan="1" colspan="1">5%</td>
-            <td class="text-left" rowspan="1" colspan="1">650</td>
-            <td class="text-left" rowspan="1" colspan="1">650</td>
-            <td class="text-left" rowspan="1" colspan="1">656</td>
-            <td class="text-left" rowspan="1" colspan="1">700</td>
-          </tr>
-          <tr>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-            <td class="text-left" rowspan="1" colspan="1"> </td>
-          </tr>
-          <tr>
-            <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
-            <td class="text-left" rowspan="1" colspan="1">10%</td>
-            <td class="text-left" rowspan="1" colspan="1">850</td>
-            <td class="text-left" rowspan="1" colspan="1">900</td>
-            <td class="text-left" rowspan="1" colspan="1">1193</td>
-            <td class="text-left" rowspan="1" colspan="1">2170</td>
-          </tr>
-          <tr>
-            <td class="text-left" rowspan="1" colspan="1">DTLS-in-STUN</td>
-            <td class="text-left" rowspan="1" colspan="1">10%</td>
-            <td class="text-left" rowspan="1" colspan="1">650</td>
-            <td class="text-left" rowspan="1" colspan="1">650</td>
-            <td class="text-left" rowspan="1" colspan="1">685</td>
-            <td class="text-left" rowspan="1" colspan="1">800</td>
-          </tr>
-        </tbody>
-      </table>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">DTLS 1.3 with PQC</th>
+              <th class="text-left" rowspan="1" colspan="1">Loss %</th>
+              <th class="text-left" rowspan="1" colspan="1">p10 (ms)</th>
+              <th class="text-left" rowspan="1" colspan="1">p50</th>
+              <th class="text-left" rowspan="1" colspan="1">average</th>
+              <th class="text-left" rowspan="1" colspan="1">p95</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">947</td>
+              <td class="text-left" rowspan="1" colspan="1">1253</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">656</td>
+              <td class="text-left" rowspan="1" colspan="1">700</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">900</td>
+              <td class="text-left" rowspan="1" colspan="1">1193</td>
+              <td class="text-left" rowspan="1" colspan="1">2170</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">685</td>
+              <td class="text-left" rowspan="1" colspan="1">800</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">25%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">1350</td>
+              <td class="text-left" rowspan="1" colspan="1">2020</td>
+              <td class="text-left" rowspan="1" colspan="1">3080</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">25%</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">1105</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="dtls-13">
+<section id="appendix-A.2">
+        <h3 id="name-dtls-13">
+<a href="#appendix-A.2" class="section-number selfRef">A.2. </a><a href="#name-dtls-13" class="section-name selfRef">DTLS 1.3</a>
+        </h3>
+<table class="center" id="table-3">
+          <caption><a href="#table-3" class="selfRef">Table 3</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">DTLS 1.3</th>
+              <th class="text-left" rowspan="1" colspan="1">Loss %</th>
+              <th class="text-left" rowspan="1" colspan="1">p10 (ms)</th>
+              <th class="text-left" rowspan="1" colspan="1">p50</th>
+              <th class="text-left" rowspan="1" colspan="1">average</th>
+              <th class="text-left" rowspan="1" colspan="1">p95</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">800</td>
+              <td class="text-left" rowspan="1" colspan="1">1150</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">555</td>
+              <td class="text-left" rowspan="1" colspan="1">600</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">935</td>
+              <td class="text-left" rowspan="1" colspan="1">1200</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">560</td>
+              <td class="text-left" rowspan="1" colspan="1">600</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">25%</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">1150</td>
+              <td class="text-left" rowspan="1" colspan="1">1400</td>
+              <td class="text-left" rowspan="1" colspan="1">2560</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">25%</td>
+              <td class="text-left" rowspan="1" colspan="1">550</td>
+              <td class="text-left" rowspan="1" colspan="1">600</td>
+              <td class="text-left" rowspan="1" colspan="1">620</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="dtls-12">
+<section id="appendix-A.3">
+        <h3 id="name-dtls-12">
+<a href="#appendix-A.3" class="section-number selfRef">A.3. </a><a href="#name-dtls-12" class="section-name selfRef">DTLS 1.2</a>
+        </h3>
+<table class="center" id="table-4">
+          <caption><a href="#table-4" class="selfRef">Table 4</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">DTLS 1.2</th>
+              <th class="text-left" rowspan="1" colspan="1">Loss %</th>
+              <th class="text-left" rowspan="1" colspan="1">p10 (ms)</th>
+              <th class="text-left" rowspan="1" colspan="1">p50</th>
+              <th class="text-left" rowspan="1" colspan="1">average</th>
+              <th class="text-left" rowspan="1" colspan="1">p95</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">916</td>
+              <td class="text-left" rowspan="1" colspan="1">1300</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">5%</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">695</td>
+              <td class="text-left" rowspan="1" colspan="1">1150</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">900</td>
+              <td class="text-left" rowspan="1" colspan="1">1133</td>
+              <td class="text-left" rowspan="1" colspan="1">2150</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">10%</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">650</td>
+              <td class="text-left" rowspan="1" colspan="1">690</td>
+              <td class="text-left" rowspan="1" colspan="1">760</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Vanilla</td>
+              <td class="text-left" rowspan="1" colspan="1">25%</td>
+              <td class="text-left" rowspan="1" colspan="1">850</td>
+              <td class="text-left" rowspan="1" colspan="1">1350</td>
+              <td class="text-left" rowspan="1" colspan="1">3920</td>
+              <td class="text-left" rowspan="1" colspan="1">8860</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">SPED</td>
+              <td class="text-left" rowspan="1" colspan="1">25%</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">750</td>
+              <td class="text-left" rowspan="1" colspan="1">862</td>
+              <td class="text-left" rowspan="1" colspan="1">1400</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
 </section>
 </div>
 <div id="acknowledgments">
