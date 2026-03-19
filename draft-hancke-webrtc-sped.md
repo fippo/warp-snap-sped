@@ -288,7 +288,7 @@ When using SPED, an ICE agent keeps two lists:
 1. A list, L1, of pending DTLS handshake packets.
 
    These packets are created by the DTLS layer. Elements in the list are removed when ACKed by the peer.
-   The list is cleared when the DTLS layer creates a new flight or the DTLS handshake completes.   
+   The list is cleared when the DTLS layer creates a new flight or the DTLS handshake completes.
 
 2. A list, L2, of pending acknowledgements, as defined above.
 
@@ -322,7 +322,7 @@ When receiving a STUN Binding Request or Response, the ICE agent MUST follow the
 
 Once a valid ICE candidate pair exists and direct sending is possible, implementations MAY
 terminate use of SPED and send DTLS directly. Implementations MAY instead continue to send
-embedded DTLS until DTLS handshaking is complete, for example, to continue to use SPED's explicit 
+embedded DTLS until DTLS handshaking is complete, for example, to continue to use SPED's explicit
 acknowledgement mechanism.
 
 # Examples
@@ -546,7 +546,7 @@ The following configuration for the SPED stack is RECOMMENDED. Note that this gu
 based on implementation and deployment experience:
 
 1. When SPED is active, disable internal DTLS timeouts, and resume them when receiving the first
-   STUN Binding Response.   
+   STUN Binding Response.
 2. When using a PQC cipher suite, reduce the DTLS MTU as needed so embedded DTLS packets still fit
    within the expected path MTU. Experiments with an MTU near 900 bytes have been promising, but
    the best fragmentation strategy requires more study.
