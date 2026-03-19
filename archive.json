@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-03-12T02:26:50.293041+00:00",
+  "timestamp": "2026-03-19T02:32:56.542004+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -53,7 +53,7 @@
     {
       "number": 4,
       "id": "I_kwDOPBQjh87iSReK",
-      "title": "Spec needs to specify what happens when \"this results in an error\".",
+      "title": "SNAP: Spec needs to specify what happens when \"this results in an error\".",
       "url": "https://github.com/fippo/warp-snap-sped/issues/4",
       "state": "OPEN",
       "author": "alvestrand",
@@ -62,7 +62,7 @@
       "labels": [],
       "body": "In section 5, a number of sections have \"this results in an error\", but no information about what happens when an error happens.\n\nThe general principle of SDP is \"if you don't understand it, ignore it\" - this could, for instance, happen if a future version of this spec extended the SCTP INIT encoding so that old parsers didn't understand that it was a valid INIT chunk.\n\nSuggestion:\n\nAdd an overall description of error handling to section 5.1:\n\nIf the result of processing an \"a=sctp-init\" attribute results in an error, the implementation MUST ignore the attribute, ignore any \"a=sctp-init\" attributes that occur later in the session, and stop generating \"a=sctp-init\" attributes. This ensures that incompatible implementations of this spec or any future version of it will fall back to not using a=sctp-init.\n\n\n\n",
       "createdAt": "2026-01-09T10:37:29Z",
-      "updatedAt": "2026-03-02T07:39:36Z",
+      "updatedAt": "2026-03-17T20:23:32Z",
       "closedAt": null,
       "comments": [
         {
@@ -141,7 +141,7 @@
     {
       "number": 7,
       "id": "I_kwDOPBQjh87xbMph",
-      "title": "Warning text needed.",
+      "title": "SNAP: Warning text for verification of sctp-init",
       "url": "https://github.com/fippo/warp-snap-sped/issues/7",
       "state": "OPEN",
       "author": "steely-glint",
@@ -150,7 +150,111 @@
       "labels": [],
       "body": "The text should make clear that the SCTP layer needs to verify that the base64 contains an Init chunk and nothing else. Specifically it should not just blindly feed the un-base64'd block into the SCTP state machine.\n\nIn the P2P use case the offer isn't seen as trusted until after the DTLS fingerprint has been verified so this chunk should not be consumed until after the certificate exchange has succeeded.",
       "createdAt": "2026-03-10T09:11:31Z",
-      "updatedAt": "2026-03-10T09:11:31Z",
+      "updatedAt": "2026-03-17T20:23:11Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 8,
+      "id": "I_kwDOPBQjh87zzvj3",
+      "title": "SPED: the data rate when using PQC seems way too high, especially with multiple candidate pairs.",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/8",
+      "state": "OPEN",
+      "author": "juberti",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "If we're resending PQC packets across all candidate pairs every 10ms, that could be 100 * ~1KB = 800Kbps of traffic on the wire at startup, which is likely to cause problems on slow networks:\n\nSolution ideas:\nPick \"most likely to work\" candidate pair (e.g., relay-relay) and send on that pair. Can this be determined reliably in all situations? Not all architectures will have \"relay\" candidates, and \"relay\" candidates typically will have the lowest PRIORITY. \nOr, simply send on the first N pairs using normal ICE prioritization, where N is capped to stay under the RFC 8445 guidance? If none of the N succeed, we can just wait until we get a successful ICE check, as in \"vanilla\" webrtc.\nOr, perhaps a fusion of these approaches?\n\nSee https://datatracker.ietf.org/doc/html/rfc8445#appendix-B.1 for discussion of how much bandwidth is acceptable to use (14600 unacked bytes on the wire)",
+      "createdAt": "2026-03-17T18:36:29Z",
+      "updatedAt": "2026-03-17T20:39:28Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This would be implementation guidance vs normative behavior.",
+          "createdAt": "2026-03-17T20:39:28Z",
+          "updatedAt": "2026-03-17T20:39:28Z"
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "id": "I_kwDOPBQjh87z16Mi",
+      "title": "SPED: how should we do capability discovery (DATA vs ACK)?",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/9",
+      "state": "OPEN",
+      "author": "juberti",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "@fippo proposal:\n- DATA (possibly empty) and ACK (possibly empty): SPED is active\n- ACK only: we're in the closing state\n- No attribs: we're done\n",
+      "createdAt": "2026-03-17T20:24:54Z",
+      "updatedAt": "2026-03-17T20:24:54Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 10,
+      "id": "I_kwDOPBQjh87z17-t",
+      "title": "SPED: how should we signal termination of the mechanism?",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/10",
+      "state": "OPEN",
+      "author": "juberti",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "@fippo proposal:\nExplicit closing handshake with no DATA attribute and just ACKs. This tells the remote side that handshake is done, regardless of DTLS version.\n\nClosing handshake is triggered by:\nDTLS 1.3 client: sent F3, got SPED ACK for F3\nDTLS 1.3 server: got F3 (handshake complete on server)\nDTLS 1.2 client: sent F3, got F4 (handshake complete on client)\nDTLS 1.2 server: sent F4, got SPED ACK for F4\n",
+      "createdAt": "2026-03-17T20:26:16Z",
+      "updatedAt": "2026-03-17T20:26:16Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 11,
+      "id": "I_kwDOPBQjh87z1_J8",
+      "title": "SPED: when do things get removed from L2 (acks of ACKs)?",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/11",
+      "state": "OPEN",
+      "author": "juberti",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "In earlier drafts of the document these were removed via implicit acking, but IIUC that wasn't implemented, and this mechanism also doesn't work for acks sent in binding responses.\n\n@juberti proposal: just remove ACKs for Flight N when Flight N+1 is sent (as there's no need to ack old flights)\nhttps://webrtc-review.googlesource.com/c/src/+/386780 - old CL",
+      "createdAt": "2026-03-17T20:28:37Z",
+      "updatedAt": "2026-03-17T20:28:37Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 12,
+      "id": "I_kwDOPBQjh87z2I4V",
+      "title": "SPED: guidance on active vs passive setup?",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/12",
+      "state": "OPEN",
+      "author": "juberti",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Generally it seems that an answer with `a=setup:passive` is better in client-server scenarios since DTLS F1 can ride with the first binding request.\n\nMight be worth doing some tests in the simulator to verify these intuitions.\n\n",
+      "createdAt": "2026-03-17T20:35:00Z",
+      "updatedAt": "2026-03-17T20:35:00Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 13,
+      "id": "I_kwDOPBQjh87z2M75",
+      "title": "SPED: direct send vs embedding once we have a valid pair",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/13",
+      "state": "OPEN",
+      "author": "juberti",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "There are some advantages to sending directly vs embedding, e.g.:\n- allows larger MTUs\n- allows multi-packet sends, ie PQC, even in ICE Lite\n- avoids delay from ICE scheduling\n\nIf we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n\nThis would be implementation guidance vs normative behavior.\n",
+      "createdAt": "2026-03-17T20:38:07Z",
+      "updatedAt": "2026-03-17T20:38:07Z",
       "closedAt": null,
       "comments": []
     }
@@ -204,24 +308,26 @@
       "id": "PR_kwDOPBQjh864bWAc",
       "title": "embedding DTLS in STUN",
       "url": "https://github.com/fippo/warp-snap-sped/pull/2",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "fippo",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "acronym not finalized :joy: ",
       "createdAt": "2025-12-11T19:42:51Z",
-      "updatedAt": "2026-02-28T11:32:12Z",
+      "updatedAt": "2026-03-17T20:41:42Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "ad9ccb10725cd77d606ddb6d4fab4ed324191177",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "sped",
       "headRefOid": "5d192c8b687794e1156e51d87e9d8ebc1b25d2c8",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-03-17T20:41:38Z",
+      "mergedAt": "2026-03-17T20:41:38Z",
+      "mergedBy": "fippo",
+      "mergeCommit": {
+        "oid": "69d235b218de4be1fee937a71dd9d86d363237b2"
+      },
       "comments": [],
       "reviews": []
     },
@@ -273,6 +379,32 @@
           ]
         }
       ]
+    },
+    {
+      "number": 14,
+      "id": "PR_kwDOPBQjh87LWSMS",
+      "title": "Juberti/sped",
+      "url": "https://github.com/fippo/warp-snap-sped/pull/14",
+      "state": "OPEN",
+      "author": "fippo",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-03-17T20:42:11Z",
+      "updatedAt": "2026-03-19T01:30:00Z",
+      "baseRepository": "fippo/warp-snap-sped",
+      "baseRefName": "main",
+      "baseRefOid": "69d235b218de4be1fee937a71dd9d86d363237b2",
+      "headRepository": "fippo/warp-snap-sped",
+      "headRefName": "juberti/sped",
+      "headRefOid": "f94b50f6394f726b5b787ce1051f74535043c5e2",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
