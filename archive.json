@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-03-19T02:32:56.542004+00:00",
+  "timestamp": "2026-03-22T02:33:44.126477+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -385,24 +385,26 @@
       "id": "PR_kwDOPBQjh87LWSMS",
       "title": "Juberti/sped",
       "url": "https://github.com/fippo/warp-snap-sped/pull/14",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "fippo",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2026-03-17T20:42:11Z",
-      "updatedAt": "2026-03-19T01:30:00Z",
+      "updatedAt": "2026-03-19T05:24:55Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "69d235b218de4be1fee937a71dd9d86d363237b2",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "juberti/sped",
       "headRefOid": "f94b50f6394f726b5b787ce1051f74535043c5e2",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-03-19T05:24:52Z",
+      "mergedAt": "2026-03-19T05:24:52Z",
+      "mergedBy": "fippo",
+      "mergeCommit": {
+        "oid": "d2980f82d455cefcccaa1c8e23db8ec0f04bf6f5"
+      },
       "comments": [],
       "reviews": []
     }
