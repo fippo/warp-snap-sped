@@ -235,6 +235,7 @@ Subsequent offers and answers MUST include the "a=sctp-init" line in the negotia
 initial negotiation.
 
 Remote offers MAY negotiate a new "a=sctp-init" line in conjunction with either
+
 * a new SCTP association as described in {{Section 9.3 of ?RFC8841}}
 * or a new DTLS association as described in {{Section 5.5 of ?RFC8842}}.
 
