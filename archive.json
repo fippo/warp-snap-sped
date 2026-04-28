@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-03-22T02:33:44.126477+00:00",
+  "timestamp": "2026-04-28T03:30:34.810204+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -406,6 +406,40 @@
         "oid": "d2980f82d455cefcccaa1c8e23db8ec0f04bf6f5"
       },
       "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 15,
+      "id": "PR_kwDOPBQjh87V4Q_B",
+      "title": "snap: fix markup in modifying the session section",
+      "url": "https://github.com/fippo/warp-snap-sped/pull/15",
+      "state": "OPEN",
+      "author": "fippo",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-04-27T08:15:24Z",
+      "updatedAt": "2026-04-27T08:17:21Z",
+      "baseRepository": "fippo/warp-snap-sped",
+      "baseRefName": "main",
+      "baseRefOid": "d2980f82d455cefcccaa1c8e23db8ec0f04bf6f5",
+      "headRepository": "fippo/warp-snap-sped",
+      "headRefName": "snap-cosmetic",
+      "headRefOid": "28dbb87617d885b5222355de15f36f31ec2eee0a",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "<img width=\"630\" height=\"252\" alt=\"image\" src=\"https://github.com/user-attachments/assets/eea43751-b1ca-4dbb-bcb4-5fc8b83934db\" />\r\nbetter",
+          "createdAt": "2026-04-27T08:17:21Z",
+          "updatedAt": "2026-04-27T08:17:21Z"
+        }
+      ],
       "reviews": []
     }
   ]
