@@ -14,20 +14,20 @@ The standard SCTP connection establishment requires a handshake that introduces 
 accelerate the datachannel establishment by embedding the SCTP initialization parameters within the Session Description Protocol
 (SDP) offer/answer exchange. This reduces the time required to open a data channel by up to two network round-trip times. 
     " name="description">
-<meta content="xml2rfc 3.32.0" name="generator">
+<meta content="xml2rfc 3.33.0" name="generator">
 <meta content="sctp" name="keyword">
 <meta content="webrtc" name="keyword">
 <meta content="sdp" name="keyword">
 <meta content="draft-hancke-tsvwg-snap-00" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.32.0
-    Python 3.12.12
+  xml2rfc 3.33.0
+    Python 3.12.13
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.0.2
-    platformdirs 4.9.4
+    platformdirs 4.9.6
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.32.5
@@ -1461,10 +1461,16 @@ If the series of bytes is not a valid SCTP INIT chunk this results in an error.<
         </h3>
 <p id="section-5.6-1">Subsequent offers and answers <span class="bcp14">MUST</span> include the "a=sctp-init" line in the negotiated SDP with the same value as in the
 initial negotiation.<a href="#section-5.6-1" class="pilcrow">¶</a></p>
-<p id="section-5.6-2">Remote offers <span class="bcp14">MAY</span> negotiate a new "a=sctp-init" line in conjunction with either
-* a new SCTP association as described in <span><a href="https://rfc-editor.org/rfc/rfc8841#section-9.3" class="relref">Section 9.3</a> of [<a href="#RFC8841" class="cite xref">RFC8841</a>]</span>
-* or a new DTLS association as described in <span><a href="https://rfc-editor.org/rfc/rfc8842#section-5.5" class="relref">Section 5.5</a> of [<a href="#RFC8842" class="cite xref">RFC8842</a>]</span>.<a href="#section-5.6-2" class="pilcrow">¶</a></p>
-<p id="section-5.6-3">Attempting to add an sctp-init attribute to an existing SCTP association results in an error.<a href="#section-5.6-3" class="pilcrow">¶</a></p>
+<p id="section-5.6-2">Remote offers <span class="bcp14">MAY</span> negotiate a new "a=sctp-init" line in conjunction with either<a href="#section-5.6-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.6-3.1">
+            <p id="section-5.6-3.1.1">a new SCTP association as described in <span><a href="https://rfc-editor.org/rfc/rfc8841#section-9.3" class="relref">Section 9.3</a> of [<a href="#RFC8841" class="cite xref">RFC8841</a>]</span><a href="#section-5.6-3.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.6-3.2">
+            <p id="section-5.6-3.2.1">or a new DTLS association as described in <span><a href="https://rfc-editor.org/rfc/rfc8842#section-5.5" class="relref">Section 5.5</a> of [<a href="#RFC8842" class="cite xref">RFC8842</a>]</span>.<a href="#section-5.6-3.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-5.6-4">Attempting to add an sctp-init attribute to an existing SCTP association results in an error.<a href="#section-5.6-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>

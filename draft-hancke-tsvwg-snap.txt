@@ -310,9 +310,12 @@ Table of Contents
    the negotiated SDP with the same value as in the initial negotiation.
 
    Remote offers MAY negotiate a new "a=sctp-init" line in conjunction
-   with either * a new SCTP association as described in Section 9.3 of
-   [RFC8841] * or a new DTLS association as described in Section 5.5 of
-   [RFC8842].
+   with either
+
+   *  a new SCTP association as described in Section 9.3 of [RFC8841]
+
+   *  or a new DTLS association as described in Section 5.5 of
+      [RFC8842].
 
    Attempting to add an sctp-init attribute to an existing SCTP
    association results in an error.

@@ -5,10 +5,10 @@
 Audio/Video Transport Core Maintenance                         P. Hancke
 Internet-Draft                                       Meta Platforms Inc.
 Intended status: Informational                                 J. Uberti
-Expires: 20 September 2026                                        OpenAI
+Expires: 1 November 2026                                          OpenAI
                                                               J. Oreland
                                                                   Google
-                                                           19 March 2026
+                                                           30 April 2026
 
 
                 STUN Protocol for Embedding DTLS (SPED)
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 September 2026.
+   This Internet-Draft will expire on 1 November 2026.
 
 Copyright Notice
 
