@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-04-28T03:30:34.810204+00:00",
+  "timestamp": "2026-04-30T03:29:55.315281+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -190,9 +190,38 @@
       "labels": [],
       "body": "@fippo proposal:\n- DATA (possibly empty) and ACK (possibly empty): SPED is active\n- ACK only: we're in the closing state\n- No attribs: we're done\n",
       "createdAt": "2026-03-17T20:24:54Z",
-      "updatedAt": "2026-03-17T20:24:54Z",
+      "updatedAt": "2026-04-29T06:48:23Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "1) Is this is *capability discovery* then  \"closing state\" does not make sense, or ?\n\n2) The google libwebrtc c++ implementation requires an peer to always send either\nand DATA or ACK. If it has no DATA/ACK to send it shall send an empty ACK.\n\nI see no good reason to change this behavior.",
+          "createdAt": "2026-04-28T14:54:31Z",
+          "updatedAt": "2026-04-28T14:54:31Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Let's see what we decide on closing state and we can come back to this. This seems like a mostly cosmetic choice.",
+          "createdAt": "2026-04-28T17:00:39Z",
+          "updatedAt": "2026-04-28T17:00:39Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Discussed with @jonasore and the plan here is to add a new `ice-option` to prenegotiate support. The receiver will still need to handle peers that send ICE checks with or without embedding.",
+          "createdAt": "2026-04-28T17:17:59Z",
+          "updatedAt": "2026-04-28T17:17:59Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "so back to what I [added a year ago](https://webrtc-review.googlesource.com/c/src/+/386820) , most recent version is [in this CL](https://webrtc-review.googlesource.com/c/src/+/428980). Text from https://github.com/fippo/warp-snap-sped/pull/2/changes (SDP Offer/Answer Procedures) should work.\n\nThe *sender* will need to handle them but since it announces support that is ok.",
+          "createdAt": "2026-04-29T06:48:23Z",
+          "updatedAt": "2026-04-29T06:48:23Z"
+        }
+      ]
     },
     {
       "number": 10,
@@ -206,9 +235,31 @@
       "labels": [],
       "body": "@fippo proposal:\nExplicit closing handshake with no DATA attribute and just ACKs. This tells the remote side that handshake is done, regardless of DTLS version.\n\nClosing handshake is triggered by:\nDTLS 1.3 client: sent F3, got SPED ACK for F3\nDTLS 1.3 server: got F3 (handshake complete on server)\nDTLS 1.2 client: sent F3, got F4 (handshake complete on client)\nDTLS 1.2 server: sent F4, got SPED ACK for F4\n",
       "createdAt": "2026-03-17T20:26:16Z",
-      "updatedAt": "2026-03-17T20:26:16Z",
+      "updatedAt": "2026-04-28T17:29:17Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "I think there is no need for a closing handshake.\nThe goal of the feature is to accelerate the DTLS handshake.\nWhen the DTLS handshake is completed on both peers.\nThe feature has nothing to do...and will hence do nothing.\n",
+          "createdAt": "2026-04-28T15:11:27Z",
+          "updatedAt": "2026-04-28T15:11:27Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "The closing handshake has been part of the initial design and had been implemented for over a year.\n* For DTLS 1.2 it allowed the DTLS server to know whether the DTLS client had received flight 4.\n* With ACKs it meant that a side done that had completed the handshake could indicate this state to the sender.",
+          "createdAt": "2026-04-28T15:17:34Z",
+          "updatedAt": "2026-04-28T15:52:29Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Is this needed in DTLS 1.3 though? If not we could just make this an optional feature to be used with DTLS 1.2, and keep the 1.3 path simple.",
+          "createdAt": "2026-04-28T17:29:17Z",
+          "updatedAt": "2026-04-28T17:29:17Z"
+        }
+      ]
     },
     {
       "number": 11,
@@ -222,9 +273,31 @@
       "labels": [],
       "body": "In earlier drafts of the document these were removed via implicit acking, but IIUC that wasn't implemented, and this mechanism also doesn't work for acks sent in binding responses.\n\n@juberti proposal: just remove ACKs for Flight N when Flight N+1 is sent (as there's no need to ack old flights)\nhttps://webrtc-review.googlesource.com/c/src/+/386780 - old CL",
       "createdAt": "2026-03-17T20:28:37Z",
-      "updatedAt": "2026-03-17T20:28:37Z",
+      "updatedAt": "2026-04-29T13:54:06Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "1) I think we should keep the implicit ACK,\nwhich is implemented in the receiver side in google libwertc c++.\nI.e. if removed from the spec, this is an incompatible change.\n\n2) For an ice-lite agent that never gets a STUN_BINDING_CONF\nthe current implementation does FIFO of fixed size.\nI think that is fine.\n\n3) If a peer can conclude (regardless of method) that the other peer has received a handshake packet...\nit obviously does not need to ACK those packets.\n",
+          "createdAt": "2026-04-28T15:02:03Z",
+          "updatedAt": "2026-04-28T15:02:03Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "The implicit ACK doesn't make a lot of sense to me given that we have this explicit ACK mechanism and the number of packets that need to be acked is small. IOW, might as well just pick one mechanism and use it.\n\nThis also allows for implementations where ICE and DTLS are decoupled.",
+          "createdAt": "2026-04-28T17:28:11Z",
+          "updatedAt": "2026-04-28T17:28:11Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "The implicit ack means that an implementer may choose to never send any ACK at all,\nand the protocol would still add value.",
+          "createdAt": "2026-04-29T13:54:05Z",
+          "updatedAt": "2026-04-29T13:54:05Z"
+        }
+      ]
     },
     {
       "number": 12,
@@ -254,9 +327,62 @@
       "labels": [],
       "body": "There are some advantages to sending directly vs embedding, e.g.:\n- allows larger MTUs\n- allows multi-packet sends, ie PQC, even in ICE Lite\n- avoids delay from ICE scheduling\n\nIf we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n\nThis would be implementation guidance vs normative behavior.\n",
       "createdAt": "2026-03-17T20:38:07Z",
-      "updatedAt": "2026-03-17T20:38:07Z",
+      "updatedAt": "2026-04-29T13:52:21Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "Not really sure what the question is, but:\nthe L2 list that a peer keep shall contain DTLS handshake packets received, regardless if they\nwere received embedded or without embedding (direct?).",
+          "createdAt": "2026-04-28T14:57:31Z",
+          "updatedAt": "2026-04-28T14:57:31Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think we need to give some guidance on whether implementations should send directly once a direct send path (selected pair) is available. My preference would be to recommend using the direct send path where possible.",
+          "createdAt": "2026-04-28T17:03:00Z",
+          "updatedAt": "2026-04-28T17:03:00Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@jonasore mentioned that implementations should send over the direct send path (unencapsulated, or \"naked\"), in addition to the STUN paths. This seems reasonable (modulo the bandwidth concerns in #8) and resolves the concerns raised in the OP.\n\nIn spec text, this probably turns into something like\n\n> Implementations MUST send handshake messages over the selected pair, once present, but MAY also transmit the same messages using STUN embedding.",
+          "createdAt": "2026-04-28T17:26:24Z",
+          "updatedAt": "2026-04-28T17:26:24Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "I think it would make sense to say\n\nImplementations MUST send handshake messages over the selected pair, once present,\nbut MAY also transmit the same messages using STUN embedding on *other* pairs.\n\n",
+          "createdAt": "2026-04-29T13:52:21Z",
+          "updatedAt": "2026-04-29T13:52:21Z"
+        }
+      ]
+    },
+    {
+      "number": 16,
+      "id": "I_kwDOPBQjh88AAAABAzpzng",
+      "title": "SPED: To signal in ICE options or not?",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/16",
+      "state": "OPEN",
+      "author": "alvestrand",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "This has been a discussion item for many months, but doesn't seem to have made it to an issue.\nThe advantages of an SDP ICE option are:\n- It allows to be certain that the other end supports the mechanism\n- By varying the token value, it is easy to support \"pre-spec-release\" versions of the mechanism even if attribute IDs are the same between versions\n- It doesn't exercise the mechanism for throwing away \"comprehension optional\" attributes in ICE\n\nThe disadvantages are:\n- It clutters up SDP\n- It ties deployment of the mechanism to SDP-based applications (but dependency on fingerprint does that anyway)\n\nThoughts?\n\n",
+      "createdAt": "2026-04-29T08:52:39Z",
+      "updatedAt": "2026-04-29T13:19:49Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "+1",
+          "createdAt": "2026-04-29T13:19:49Z",
+          "updatedAt": "2026-04-29T13:19:49Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -420,7 +546,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2026-04-27T08:15:24Z",
-      "updatedAt": "2026-04-27T08:17:21Z",
+      "updatedAt": "2026-04-29T20:44:15Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "d2980f82d455cefcccaa1c8e23db8ec0f04bf6f5",
@@ -440,7 +566,21 @@
           "updatedAt": "2026-04-27T08:17:21Z"
         }
       ],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOPBQjh876X91J",
+          "commit": {
+            "abbreviatedOid": "28dbb87"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-04-29T20:44:15Z",
+          "updatedAt": "2026-04-29T20:44:15Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
