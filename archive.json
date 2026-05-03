@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-04-30T03:29:55.315281+00:00",
+  "timestamp": "2026-05-03T03:32:24.849639+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -372,7 +372,7 @@
       "labels": [],
       "body": "This has been a discussion item for many months, but doesn't seem to have made it to an issue.\nThe advantages of an SDP ICE option are:\n- It allows to be certain that the other end supports the mechanism\n- By varying the token value, it is easy to support \"pre-spec-release\" versions of the mechanism even if attribute IDs are the same between versions\n- It doesn't exercise the mechanism for throwing away \"comprehension optional\" attributes in ICE\n\nThe disadvantages are:\n- It clutters up SDP\n- It ties deployment of the mechanism to SDP-based applications (but dependency on fingerprint does that anyway)\n\nThoughts?\n\n",
       "createdAt": "2026-04-29T08:52:39Z",
-      "updatedAt": "2026-04-29T13:19:49Z",
+      "updatedAt": "2026-04-30T04:41:42Z",
       "closedAt": null,
       "comments": [
         {
@@ -381,6 +381,13 @@
           "body": "+1",
           "createdAt": "2026-04-29T13:19:49Z",
           "updatedAt": "2026-04-29T13:19:49Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "my recollection from https://webrtc-review.googlesource.com/c/src/+/428980 and its precedessor:\n* ice-option is useful for the answerer who can make decisions based on the SDP\n* ice-option is less useful for the offerer, in particular it does need to be prepared to discover peer support from remote STUN packets. Using an ice-option lets us use comprehension-required attributes though. A \"full ice\" answerer acting as DTLS server will need to include an empty attribute to signal \"I support this, do not turn this off\" in any binding request it sends arriving at the  offerer before the SDP answer. See also #9 \n* we need interpretation whether ice-options are declarative or negotiate. Existing ones are declarative (i.e. added in answers without looking at the offer) but https://www.rfc-editor.org/rfc/rfc8839#section-5.6 suggests that is not the right interpretation.\n* Non-spec stuff in token-value...\n\nOld text can be found in https://github.com/fippo/warp-snap-sped/pull/2/changes, https://fippo.github.io/warp-snap-sped/sped/draft-hancke-webrtc-sped.html#name-sdp-offer-answer-procedures shows it (I don't understand how this works but ... it does)",
+          "createdAt": "2026-04-30T04:41:42Z",
+          "updatedAt": "2026-04-30T04:41:42Z"
         }
       ]
     }
@@ -539,24 +546,26 @@
       "id": "PR_kwDOPBQjh87V4Q_B",
       "title": "snap: fix markup in modifying the session section",
       "url": "https://github.com/fippo/warp-snap-sped/pull/15",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "fippo",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2026-04-27T08:15:24Z",
-      "updatedAt": "2026-04-29T20:44:15Z",
+      "updatedAt": "2026-04-30T04:22:59Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "d2980f82d455cefcccaa1c8e23db8ec0f04bf6f5",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "snap-cosmetic",
       "headRefOid": "28dbb87617d885b5222355de15f36f31ec2eee0a",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-04-30T04:22:56Z",
+      "mergedAt": "2026-04-30T04:22:56Z",
+      "mergedBy": "fippo",
+      "mergeCommit": {
+        "oid": "80c08518f6e5d785f99d69e99f762177b6a65e61"
+      },
       "comments": [
         {
           "author": "fippo",
