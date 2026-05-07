@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-03T03:32:24.849639+00:00",
+  "timestamp": "2026-05-07T03:28:17.404011+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -47,6 +47,11 @@
       "name": "wontfix",
       "description": "This will not be worked on",
       "color": "ffffff"
+    },
+    {
+      "name": "editor-ready",
+      "description": "Consensus exists, just needs to be added to the draft",
+      "color": "1cca57"
     }
   ],
   "issues": [
@@ -187,10 +192,12 @@
       "author": "juberti",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "editor-ready"
+      ],
       "body": "@fippo proposal:\n- DATA (possibly empty) and ACK (possibly empty): SPED is active\n- ACK only: we're in the closing state\n- No attribs: we're done\n",
       "createdAt": "2026-03-17T20:24:54Z",
-      "updatedAt": "2026-04-29T06:48:23Z",
+      "updatedAt": "2026-05-06T03:57:06Z",
       "closedAt": null,
       "comments": [
         {
@@ -220,6 +227,20 @@
           "body": "so back to what I [added a year ago](https://webrtc-review.googlesource.com/c/src/+/386820) , most recent version is [in this CL](https://webrtc-review.googlesource.com/c/src/+/428980). Text from https://github.com/fippo/warp-snap-sped/pull/2/changes (SDP Offer/Answer Procedures) should work.\n\nThe *sender* will need to handle them but since it announces support that is ok.",
           "createdAt": "2026-04-29T06:48:23Z",
           "updatedAt": "2026-04-29T06:48:23Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Seems like we have consensus here to remove the in-band mechanism.",
+          "createdAt": "2026-05-06T00:14:32Z",
+          "updatedAt": "2026-05-06T00:14:32Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "we still need in-band determination for prflx so most of the text in \"Inband discovery and negotiation\" needs to stay.",
+          "createdAt": "2026-05-06T03:57:06Z",
+          "updatedAt": "2026-05-06T03:57:06Z"
         }
       ]
     },
@@ -235,7 +256,7 @@
       "labels": [],
       "body": "@fippo proposal:\nExplicit closing handshake with no DATA attribute and just ACKs. This tells the remote side that handshake is done, regardless of DTLS version.\n\nClosing handshake is triggered by:\nDTLS 1.3 client: sent F3, got SPED ACK for F3\nDTLS 1.3 server: got F3 (handshake complete on server)\nDTLS 1.2 client: sent F3, got F4 (handshake complete on client)\nDTLS 1.2 server: sent F4, got SPED ACK for F4\n",
       "createdAt": "2026-03-17T20:26:16Z",
-      "updatedAt": "2026-04-28T17:29:17Z",
+      "updatedAt": "2026-05-06T03:42:32Z",
       "closedAt": null,
       "comments": [
         {
@@ -258,6 +279,20 @@
           "body": "Is this needed in DTLS 1.3 though? If not we could just make this an optional feature to be used with DTLS 1.2, and keep the 1.3 path simple.",
           "createdAt": "2026-04-28T17:29:17Z",
           "updatedAt": "2026-04-28T17:29:17Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@fippo wdyt about ^?",
+          "createdAt": "2026-05-06T00:13:54Z",
+          "updatedAt": "2026-05-06T00:13:54Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "this should be independent of the protocol-version - which is only known after negotiation finishes.",
+          "createdAt": "2026-05-06T03:42:32Z",
+          "updatedAt": "2026-05-06T03:42:32Z"
         }
       ]
     },
@@ -311,9 +346,17 @@
       "labels": [],
       "body": "Generally it seems that an answer with `a=setup:passive` is better in client-server scenarios since DTLS F1 can ride with the first binding request.\n\nMight be worth doing some tests in the simulator to verify these intuitions.\n\n",
       "createdAt": "2026-03-17T20:35:00Z",
-      "updatedAt": "2026-03-17T20:35:00Z",
+      "updatedAt": "2026-05-06T00:13:35Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "In a client-server scenario, passive saves 0.5 RTT with SPED, and costs 0.5 RTT without SPED. We should mention this in the SPED document.",
+          "createdAt": "2026-05-06T00:13:35Z",
+          "updatedAt": "2026-05-06T00:13:35Z"
+        }
+      ]
     },
     {
       "number": 13,
@@ -324,10 +367,12 @@
       "author": "juberti",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "editor-ready"
+      ],
       "body": "There are some advantages to sending directly vs embedding, e.g.:\n- allows larger MTUs\n- allows multi-packet sends, ie PQC, even in ICE Lite\n- avoids delay from ICE scheduling\n\nIf we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n\nThis would be implementation guidance vs normative behavior.\n",
       "createdAt": "2026-03-17T20:38:07Z",
-      "updatedAt": "2026-04-29T13:52:21Z",
+      "updatedAt": "2026-05-06T00:12:39Z",
       "closedAt": null,
       "comments": [
         {
@@ -357,6 +402,13 @@
           "body": "I think it would make sense to say\n\nImplementations MUST send handshake messages over the selected pair, once present,\nbut MAY also transmit the same messages using STUN embedding on *other* pairs.\n\n",
           "createdAt": "2026-04-29T13:52:21Z",
           "updatedAt": "2026-04-29T13:52:21Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Agreed, that was my original intent, thanks for clarifying.",
+          "createdAt": "2026-05-06T00:10:45Z",
+          "updatedAt": "2026-05-06T00:10:45Z"
         }
       ]
     },
@@ -372,7 +424,7 @@
       "labels": [],
       "body": "This has been a discussion item for many months, but doesn't seem to have made it to an issue.\nThe advantages of an SDP ICE option are:\n- It allows to be certain that the other end supports the mechanism\n- By varying the token value, it is easy to support \"pre-spec-release\" versions of the mechanism even if attribute IDs are the same between versions\n- It doesn't exercise the mechanism for throwing away \"comprehension optional\" attributes in ICE\n\nThe disadvantages are:\n- It clutters up SDP\n- It ties deployment of the mechanism to SDP-based applications (but dependency on fingerprint does that anyway)\n\nThoughts?\n\n",
       "createdAt": "2026-04-29T08:52:39Z",
-      "updatedAt": "2026-04-30T04:41:42Z",
+      "updatedAt": "2026-05-06T03:41:16Z",
       "closedAt": null,
       "comments": [
         {
@@ -388,6 +440,41 @@
           "body": "my recollection from https://webrtc-review.googlesource.com/c/src/+/428980 and its precedessor:\n* ice-option is useful for the answerer who can make decisions based on the SDP\n* ice-option is less useful for the offerer, in particular it does need to be prepared to discover peer support from remote STUN packets. Using an ice-option lets us use comprehension-required attributes though. A \"full ice\" answerer acting as DTLS server will need to include an empty attribute to signal \"I support this, do not turn this off\" in any binding request it sends arriving at the  offerer before the SDP answer. See also #9 \n* we need interpretation whether ice-options are declarative or negotiate. Existing ones are declarative (i.e. added in answers without looking at the offer) but https://www.rfc-editor.org/rfc/rfc8839#section-5.6 suggests that is not the right interpretation.\n* Non-spec stuff in token-value...\n\nOld text can be found in https://github.com/fippo/warp-snap-sped/pull/2/changes, https://fippo.github.io/warp-snap-sped/sped/draft-hancke-webrtc-sped.html#name-sdp-offer-answer-procedures shows it (I don't understand how this works but ... it does)",
           "createdAt": "2026-04-30T04:41:42Z",
           "updatedAt": "2026-04-30T04:41:42Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "RFC 8839 indicates that it's up to the extension spec to define exactly how signaling should work. I think the \"negotiate\" approach (ie answerer only adds the option if the offerer has already signaled it and answerer wants to use it) is the most sensible one.",
+          "createdAt": "2026-05-05T17:24:32Z",
+          "updatedAt": "2026-05-05T17:24:32Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Jonas feels that we should keep the options in the comp-optional range because use of SPED is always optional, and making the attribs required just makes life more complicated.",
+          "createdAt": "2026-05-05T17:26:02Z",
+          "updatedAt": "2026-05-05T17:26:02Z"
+        },
+        {
+          "author": "alvestrand",
+          "authorAssociation": "NONE",
+          "body": "I agree with comprehension-optional. If there was ever a mistake that led to a comp-required attribute being fired at someone who didn't understand it, the result would be a total loss of the message. Comp-optional just means the feature doesn't work.\n\n(See fippo's recent work on message-integrity-sha256, where this work was not finished - it's a comp-required attribute).\n",
+          "createdAt": "2026-05-05T21:12:44Z",
+          "updatedAt": "2026-05-05T21:12:44Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I agree as well. There's no need to use 420 errors to detect support, and ignoring the embedded data or acks is always permissible.",
+          "createdAt": "2026-05-06T00:09:40Z",
+          "updatedAt": "2026-05-06T00:09:40Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "comp-required is actually quite tricky even with ice-options. If a binding request arrives before the answer (and creates a prflx candidate) and trigger \"looks like peer supports x\" and the subsequent answer contradicts that ... thankfully an edge case that is not relevant in practice.\n\nNo change required, comprehension-optional was and is fine.",
+          "createdAt": "2026-05-06T03:41:16Z",
+          "updatedAt": "2026-05-06T03:41:16Z"
         }
       ]
     }
