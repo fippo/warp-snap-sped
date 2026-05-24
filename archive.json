@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-07T03:28:17.404011+00:00",
+  "timestamp": "2026-05-24T03:54:23.083476+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -372,7 +372,7 @@
       ],
       "body": "There are some advantages to sending directly vs embedding, e.g.:\n- allows larger MTUs\n- allows multi-packet sends, ie PQC, even in ICE Lite\n- avoids delay from ICE scheduling\n\nIf we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n\nThis would be implementation guidance vs normative behavior.\n",
       "createdAt": "2026-03-17T20:38:07Z",
-      "updatedAt": "2026-05-06T00:12:39Z",
+      "updatedAt": "2026-05-23T13:16:08Z",
       "closedAt": null,
       "comments": [
         {
@@ -409,6 +409,13 @@
           "body": "Agreed, that was my original intent, thanks for clarifying.",
           "createdAt": "2026-05-06T00:10:45Z",
           "updatedAt": "2026-05-06T00:10:45Z"
+        },
+        {
+          "author": "Sum1cares",
+          "authorAssociation": "NONE",
+          "body": "> There are some advantages to sending directly vs embedding, e.g.:\n> - allows larger MTUs\n> - allows multi-packet sends, ie PQC, even in ICE Lite\n> - avoids delay from ICE scheduling\n> \n> If we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n> \n> This would be implementation guidance vs normative behavior.\n> \n\n",
+          "createdAt": "2026-05-23T13:16:08Z",
+          "updatedAt": "2026-05-23T13:16:08Z"
         }
       ]
     },
@@ -424,7 +431,7 @@
       "labels": [],
       "body": "This has been a discussion item for many months, but doesn't seem to have made it to an issue.\nThe advantages of an SDP ICE option are:\n- It allows to be certain that the other end supports the mechanism\n- By varying the token value, it is easy to support \"pre-spec-release\" versions of the mechanism even if attribute IDs are the same between versions\n- It doesn't exercise the mechanism for throwing away \"comprehension optional\" attributes in ICE\n\nThe disadvantages are:\n- It clutters up SDP\n- It ties deployment of the mechanism to SDP-based applications (but dependency on fingerprint does that anyway)\n\nThoughts?\n\n",
       "createdAt": "2026-04-29T08:52:39Z",
-      "updatedAt": "2026-05-06T03:41:16Z",
+      "updatedAt": "2026-05-23T13:30:26Z",
       "closedAt": null,
       "comments": [
         {
@@ -535,7 +542,7 @@
       "labels": [],
       "body": "acronym not finalized :joy: ",
       "createdAt": "2025-12-11T19:42:51Z",
-      "updatedAt": "2026-03-17T20:41:42Z",
+      "updatedAt": "2026-05-23T13:12:01Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "ad9ccb10725cd77d606ddb6d4fab4ed324191177",
@@ -549,7 +556,60 @@
         "oid": "69d235b218de4be1fee937a71dd9d86d363237b2"
       },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOPBQjh88AAAABA1NYvg",
+          "commit": {
+            "abbreviatedOid": "5d192c8"
+          },
+          "author": "Sum1cares",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-05-23T13:10:46Z",
+          "updatedAt": "2026-05-23T13:10:47Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABA1NfwA",
+          "commit": {
+            "abbreviatedOid": "5d192c8"
+          },
+          "author": "Sum1cares",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-05-23T13:11:22Z",
+          "updatedAt": "2026-05-23T13:11:22Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABA1NihQ",
+          "commit": {
+            "abbreviatedOid": "5d192c8"
+          },
+          "author": "Sum1cares",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-05-23T13:11:37Z",
+          "updatedAt": "2026-05-23T13:11:37Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABA1Nn1Q",
+          "commit": {
+            "abbreviatedOid": "5d192c8"
+          },
+          "author": "Sum1cares",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-05-23T13:12:01Z",
+          "updatedAt": "2026-05-23T13:12:01Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 3,
@@ -612,7 +672,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2026-03-17T20:42:11Z",
-      "updatedAt": "2026-03-19T05:24:55Z",
+      "updatedAt": "2026-05-23T13:12:55Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "69d235b218de4be1fee937a71dd9d86d363237b2",
@@ -626,7 +686,34 @@
         "oid": "d2980f82d455cefcccaa1c8e23db8ec0f04bf6f5"
       },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOPBQjh88AAAABA1Ns0g",
+          "commit": {
+            "abbreviatedOid": "f94b50f"
+          },
+          "author": "Sum1cares",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-05-23T13:12:26Z",
+          "updatedAt": "2026-05-23T13:12:26Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABA1Ny4g",
+          "commit": {
+            "abbreviatedOid": "f94b50f"
+          },
+          "author": "Sum1cares",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-05-23T13:12:55Z",
+          "updatedAt": "2026-05-23T13:12:55Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 15,
