@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-24T03:54:23.083476+00:00",
+  "timestamp": "2026-05-28T03:53:43.185224+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -168,10 +168,12 @@
       "author": "juberti",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "editor-ready"
+      ],
       "body": "If we're resending PQC packets across all candidate pairs every 10ms, that could be 100 * ~1KB = 800Kbps of traffic on the wire at startup, which is likely to cause problems on slow networks:\n\nSolution ideas:\nPick \"most likely to work\" candidate pair (e.g., relay-relay) and send on that pair. Can this be determined reliably in all situations? Not all architectures will have \"relay\" candidates, and \"relay\" candidates typically will have the lowest PRIORITY. \nOr, simply send on the first N pairs using normal ICE prioritization, where N is capped to stay under the RFC 8445 guidance? If none of the N succeed, we can just wait until we get a successful ICE check, as in \"vanilla\" webrtc.\nOr, perhaps a fusion of these approaches?\n\nSee https://datatracker.ietf.org/doc/html/rfc8445#appendix-B.1 for discussion of how much bandwidth is acceptable to use (14600 unacked bytes on the wire)",
       "createdAt": "2026-03-17T18:36:29Z",
-      "updatedAt": "2026-03-17T20:39:28Z",
+      "updatedAt": "2026-05-26T16:54:57Z",
       "closedAt": null,
       "comments": [
         {
@@ -180,6 +182,13 @@
           "body": "This would be implementation guidance vs normative behavior.",
           "createdAt": "2026-03-17T20:39:28Z",
           "updatedAt": "2026-03-17T20:39:28Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think I have enough context to take a shot at this.",
+          "createdAt": "2026-05-26T16:54:52Z",
+          "updatedAt": "2026-05-26T16:54:52Z"
         }
       ]
     },
@@ -343,10 +352,12 @@
       "author": "juberti",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "editor-ready"
+      ],
       "body": "Generally it seems that an answer with `a=setup:passive` is better in client-server scenarios since DTLS F1 can ride with the first binding request.\n\nMight be worth doing some tests in the simulator to verify these intuitions.\n\n",
       "createdAt": "2026-03-17T20:35:00Z",
-      "updatedAt": "2026-05-06T00:13:35Z",
+      "updatedAt": "2026-05-26T16:53:39Z",
       "closedAt": null,
       "comments": [
         {
@@ -372,7 +383,7 @@
       ],
       "body": "There are some advantages to sending directly vs embedding, e.g.:\n- allows larger MTUs\n- allows multi-packet sends, ie PQC, even in ICE Lite\n- avoids delay from ICE scheduling\n\nIf we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n\nThis would be implementation guidance vs normative behavior.\n",
       "createdAt": "2026-03-17T20:38:07Z",
-      "updatedAt": "2026-05-23T13:16:08Z",
+      "updatedAt": "2026-05-26T16:49:20Z",
       "closedAt": null,
       "comments": [
         {
@@ -416,6 +427,20 @@
           "body": "> There are some advantages to sending directly vs embedding, e.g.:\n> - allows larger MTUs\n> - allows multi-packet sends, ie PQC, even in ICE Lite\n> - avoids delay from ICE scheduling\n> \n> If we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n> \n> This would be implementation guidance vs normative behavior.\n> \n\n",
           "createdAt": "2026-05-23T13:16:08Z",
           "updatedAt": "2026-05-23T13:16:08Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "> If we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n\nyes (this is also what is implemented)",
+          "createdAt": "2026-05-26T12:26:55Z",
+          "updatedAt": "2026-05-26T12:26:55Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think you're replying to a bot...",
+          "createdAt": "2026-05-26T16:49:20Z",
+          "updatedAt": "2026-05-26T16:49:20Z"
         }
       ]
     },
@@ -431,7 +456,7 @@
       "labels": [],
       "body": "This has been a discussion item for many months, but doesn't seem to have made it to an issue.\nThe advantages of an SDP ICE option are:\n- It allows to be certain that the other end supports the mechanism\n- By varying the token value, it is easy to support \"pre-spec-release\" versions of the mechanism even if attribute IDs are the same between versions\n- It doesn't exercise the mechanism for throwing away \"comprehension optional\" attributes in ICE\n\nThe disadvantages are:\n- It clutters up SDP\n- It ties deployment of the mechanism to SDP-based applications (but dependency on fingerprint does that anyway)\n\nThoughts?\n\n",
       "createdAt": "2026-04-29T08:52:39Z",
-      "updatedAt": "2026-05-23T13:30:26Z",
+      "updatedAt": "2026-05-26T18:45:49Z",
       "closedAt": null,
       "comments": [
         {
@@ -482,6 +507,62 @@
           "body": "comp-required is actually quite tricky even with ice-options. If a binding request arrives before the answer (and creates a prflx candidate) and trigger \"looks like peer supports x\" and the subsequent answer contradicts that ... thankfully an edge case that is not relevant in practice.\n\nNo change required, comprehension-optional was and is fine.",
           "createdAt": "2026-05-06T03:41:16Z",
           "updatedAt": "2026-05-06T03:41:16Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "1) I added an goog variant ICE option,\nthis sort of nullifies the need to inband detection.\n\n2) I can not get all the tests to work properly with inband detection (i.e. not relying on the sdp)\n\"work properly\" == \"no extra latency\".\nso I think i'll simply remove these...and say that sdp is the way.\n\nI.e. if you announce support via sdp, and you in fact *don't* support\nthen \"using\" sped will be one timeout slower.\n\nI think this is fine.\nComments ?\n\n",
+          "createdAt": "2026-05-26T12:25:20Z",
+          "updatedAt": "2026-05-26T12:25:20Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "The ice-option (which [had an implementation for over a year](https://webrtc-review.googlesource.com/c/src/+/386820) by now) does not nullify the need for inband detection since there is a still that race between the STUN packet (which ends up as a prflx candidate) and the SDP.\n\nOne can not even use different semantics with the same attributes due to that. The ice-option does allow the receiver to learn the senders supported dialects and pick different attribute ids though.",
+          "createdAt": "2026-05-26T12:30:28Z",
+          "updatedAt": "2026-05-26T12:30:28Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "when creating an offer withj ice-option set,\r\n\r\na) one must prepared to receive an embedded attribute/ack before receiving\r\nthe sdp-answer.\r\n\r\nb) but if one receives an stun ping w/o an embedded attribute/ack, that\r\ndoes not mean the feature must be disabled, in that sense it is nullified.\r\nif getting an embedded attribute/ack before answer, then one knows that\r\npeer support it otherwise on need to wait for the answer\r\n\r\n/Jonas\r\n\r\nOn Tue, May 26, 2026 at 5:30\u202fAM Philipp Hancke ***@***.***>\r\nwrote:\r\n\r\n> *fippo* left a comment (fippo/warp-snap-sped#16)\r\n> <https://github.com/fippo/warp-snap-sped/issues/16#issuecomment-4544050886>\r\n>\r\n> The ice-option (which had an implementation for over a year\r\n> <https://webrtc-review.googlesource.com/c/src/+/386820> by now) does not\r\n> nullify the need for inband detection since there is a still that race\r\n> between the STUN packet (which ends up as a prflx candidate) and the SDP.\r\n>\r\n> One can not even use different semantics with the same attributes due to\r\n> that. The ice-option does allow the receiver to learn the senders supported\r\n> dialects and pick different attribute ids though.\r\n>\r\n> \u2014\r\n> Reply to this email directly, view it on GitHub\r\n> <https://github.com/fippo/warp-snap-sped/issues/16?email_source=notifications&email_token=AC5KGUA5BW5ZA57EXVEROHD44WE77A5CNFSNUABFM5UWIORPF5TWS5BNNB2WEL2JONZXKZKDN5WW2ZLOOQXTINJUGQYDKMBYHA3KM4TFMFZW63VHMNXW23LFNZ2KKZLWMVXHJLDGN5XXIZLSL5RWY2LDNM#issuecomment-4544050886>,\r\n> or unsubscribe\r\n> <https://github.com/notifications/unsubscribe-auth/AC5KGUCCESZTMKXNOTJCA5T44WE77AVCNFSM6AAAAACYKOXB46VHI2DSMVQWIX3LMV43OSLTON2WKQ3PNVWWK3TUHM2DKNBUGA2TAOBYGY>\r\n> .\r\n> Triage notifications on the go with GitHub Mobile for iOS\r\n> <https://apps.apple.com/app/apple-store/id1477376905?ct=notification-email&mt=8&pt=524675>\r\n> or Android\r\n> <https://play.google.com/store/apps/details?id=com.github.android&referrer=utm_campaign%3Dnotification-email%26utm_medium%3Demail%26utm_source%3Dgithub>.\r\n>\r\n> You are receiving this because you commented.Message ID:\r\n> ***@***.***>\r\n>\r\n",
+          "createdAt": "2026-05-26T15:30:48Z",
+          "updatedAt": "2026-05-26T15:30:48Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "but a stun ping w/o an embedded attribute *is* inband signaling of \"no support\" then?",
+          "createdAt": "2026-05-26T15:38:08Z",
+          "updatedAt": "2026-05-26T15:38:08Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "no,\r\n\r\nif we use SDP...\r\n- a stun ping w/o an embedded attribute/ack means nothing\r\n- a stun ping w/ an embedded attribute/ack means support\r\n\r\n/Jonas\r\n\r\n\r\nOn Tue, May 26, 2026 at 8:38\u202fAM Philipp Hancke ***@***.***>\r\nwrote:\r\n\r\n> *fippo* left a comment (fippo/warp-snap-sped#16)\r\n> <https://github.com/fippo/warp-snap-sped/issues/16#issuecomment-4545717616>\r\n>\r\n> but a stun ping w/o an embedded attribute *is* inband signaling of \"no\r\n> support\" then?\r\n>\r\n> \u2014\r\n> Reply to this email directly, view it on GitHub\r\n> <https://github.com/fippo/warp-snap-sped/issues/16?email_source=notifications&email_token=AC5KGUFNCZMW7Q32MUDJBVL44W27PA5CNFSNUABFM5UWIORPF5TWS5BNNB2WEL2JONZXKZKDN5WW2ZLOOQXTINJUGU3TCNZWGE3KM4TFMFZW63VHMNXW23LFNZ2KKZLWMVXHJLDGN5XXIZLSL5RWY2LDNM#issuecomment-4545717616>,\r\n> or unsubscribe\r\n> <https://github.com/notifications/unsubscribe-auth/AC5KGUAZ2CT6J6ZPQMBD4ZT44W27PAVCNFSM6AAAAACYKOXB46VHI2DSMVQWIX3LMV43OSLTON2WKQ3PNVWWK3TUHM2DKNBVG4YTONRRGY>\r\n> .\r\n> Triage notifications on the go with GitHub Mobile for iOS\r\n> <https://apps.apple.com/app/apple-store/id1477376905?ct=notification-email&mt=8&pt=524675>\r\n> or Android\r\n> <https://play.google.com/store/apps/details?id=com.github.android&referrer=utm_campaign%3Dnotification-email%26utm_medium%3Demail%26utm_source%3Dgithub>.\r\n>\r\n> You are receiving this because you commented.Message ID:\r\n> ***@***.***>\r\n>\r\n",
+          "createdAt": "2026-05-26T15:53:02Z",
+          "updatedAt": "2026-05-26T15:53:02Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "agree with @jonasore ",
+          "createdAt": "2026-05-26T16:50:42Z",
+          "updatedAt": "2026-05-26T16:50:42Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "We agree on (a). If the offerer receives a ping with an embedded attribute/ack and that means support and subsequent pings can use the feature that *is* inband discovery?\n\nWhat is the use-case for (b)? Why would the answerer not send attributes but send the ice-option?",
+          "createdAt": "2026-05-26T17:54:09Z",
+          "updatedAt": "2026-05-26T17:54:09Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "cause it is a DTLS SERVER ?\r\ni.e. it doesn't have any packets to send...\r\n\r\nand if we have SDP, we don't need to it send anything (special)\r\n\r\n/Jonas\r\n\r\nOn Tue, May 26, 2026 at 10:54\u202fAM Philipp Hancke ***@***.***>\r\nwrote:\r\n\r\n> *fippo* left a comment (fippo/warp-snap-sped#16)\r\n> <https://github.com/fippo/warp-snap-sped/issues/16#issuecomment-4547122741>\r\n>\r\n> We agree on (a). If the offerer receives a ping with an embedded\r\n> attribute/ack and that means support and subsequent pings can use the\r\n> feature that *is* inband discovery?\r\n>\r\n> What is the use-case for (b)? Why would the answerer not send attributes\r\n> but send the ice-option?\r\n>\r\n> \u2014\r\n> Reply to this email directly, view it on GitHub\r\n> <https://github.com/fippo/warp-snap-sped/issues/16?email_source=notifications&email_token=AC5KGUB2KLGKIH47EC5W43D44XK5ZA5CNFSNUABFM5UWIORPF5TWS5BNNB2WEL2JONZXKZKDN5WW2ZLOOQXTINJUG4YTEMRXGQY2M4TFMFZW63VHNVSW45DJN5XKKZLWMVXHJLDGN5XXIZLSL5RWY2LDNM#issuecomment-4547122741>,\r\n> or unsubscribe\r\n> <https://github.com/notifications/unsubscribe-auth/AC5KGUGFEZL5DTJWGVPN5AL44XK5ZAVCNFSM6AAAAACYKOXB46VHI2DSMVQWIX3LMV43OSLTON2WKQ3PNVWWK3TUHM2DKNBXGEZDENZUGE>\r\n> .\r\n> Triage notifications on the go with GitHub Mobile for iOS\r\n> <https://apps.apple.com/app/apple-store/id1477376905?ct=notification-email&mt=8&pt=524675>\r\n> or Android\r\n> <https://play.google.com/store/apps/details?id=com.github.android&referrer=utm_campaign%3Dnotification-email%26utm_medium%3Demail%26utm_source%3Dgithub>.\r\n>\r\n> You are receiving this because you were mentioned.Message ID:\r\n> ***@***.***>\r\n>\r\n",
+          "createdAt": "2026-05-26T18:45:49Z",
+          "updatedAt": "2026-05-26T18:45:49Z"
         }
       ]
     }
