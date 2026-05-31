@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-28T03:53:43.185224+00:00",
+  "timestamp": "2026-05-31T04:06:41.403491+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -151,13 +151,30 @@
       "state": "OPEN",
       "author": "steely-glint",
       "authorAssociation": "NONE",
-      "assignees": [],
+      "assignees": [
+        "fippo"
+      ],
       "labels": [],
       "body": "The text should make clear that the SCTP layer needs to verify that the base64 contains an Init chunk and nothing else. Specifically it should not just blindly feed the un-base64'd block into the SCTP state machine.\n\nIn the P2P use case the offer isn't seen as trusted until after the DTLS fingerprint has been verified so this chunk should not be consumed until after the certificate exchange has succeeded.",
       "createdAt": "2026-03-10T09:11:31Z",
-      "updatedAt": "2026-03-17T20:23:11Z",
+      "updatedAt": "2026-05-29T09:33:48Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "Text that excludes additional data and confines this to a single chunk seems like a good idea.\n\nConsuming only after the DTLS handshake (which is what the libWebRTC implementation is doing) does not improve much as a potential attacker controls both the fingerprint of the self-signed certificate and the SCTP init?\n\nThe attack surface is different from a \"normal\" attacker that goes via the network in the sense that it is now possible to do the same thing in Javascript.",
+          "createdAt": "2026-05-29T08:06:17Z",
+          "updatedAt": "2026-05-29T09:19:04Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "Actually this is somewhat tricky, see also #4.\n\nIf we get a malformed sctp-init (or one with additional data), do we expect SetRemoteDescription to fail (which is my expectation for base64) or once the sctp layer starts after establishing DTLS (which would result in an abort?)",
+          "createdAt": "2026-05-29T09:33:48Z",
+          "updatedAt": "2026-05-29T09:33:48Z"
+        }
+      ]
     },
     {
       "number": 8,
@@ -565,6 +582,22 @@
           "updatedAt": "2026-05-26T18:45:49Z"
         }
       ]
+    },
+    {
+      "number": 17,
+      "id": "I_kwDOPBQjh88AAAABD3Xy5w",
+      "title": "Possible optimisation - answerer sends INIT ACK",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/17",
+      "state": "OPEN",
+      "author": "steely-glint",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Had you considered having the answerer put an INIT ACK into the SDP instead of a second INIT? ",
+      "createdAt": "2026-05-30T12:19:00Z",
+      "updatedAt": "2026-05-30T12:19:00Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
