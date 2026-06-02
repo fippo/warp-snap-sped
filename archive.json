@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-31T04:06:41.403491+00:00",
+  "timestamp": "2026-06-02T04:14:16.752445+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -334,7 +334,7 @@
       "labels": [],
       "body": "In earlier drafts of the document these were removed via implicit acking, but IIUC that wasn't implemented, and this mechanism also doesn't work for acks sent in binding responses.\n\n@juberti proposal: just remove ACKs for Flight N when Flight N+1 is sent (as there's no need to ack old flights)\nhttps://webrtc-review.googlesource.com/c/src/+/386780 - old CL",
       "createdAt": "2026-03-17T20:28:37Z",
-      "updatedAt": "2026-04-29T13:54:06Z",
+      "updatedAt": "2026-06-01T07:18:20Z",
       "closedAt": null,
       "comments": [
         {
@@ -357,6 +357,13 @@
           "body": "The implicit ack means that an implementer may choose to never send any ACK at all,\nand the protocol would still add value.",
           "createdAt": "2026-04-29T13:54:05Z",
           "updatedAt": "2026-04-29T13:54:05Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "implicit ack complicates thing if one were to separate the STUN and DTLS processing entities (see the openai blog post).\nTechnically this a a breaking change for libwebrtc but unlike the other changes this is already a no-op at least when talking to libWebRTC which always sends the ack explicitly.\n\nWhy would an implementer chose not to ack? That makes a lite server slightly easier but does there is no upside other than that?",
+          "createdAt": "2026-06-01T07:07:39Z",
+          "updatedAt": "2026-06-01T07:18:20Z"
         }
       ]
     },
@@ -400,7 +407,7 @@
       ],
       "body": "There are some advantages to sending directly vs embedding, e.g.:\n- allows larger MTUs\n- allows multi-packet sends, ie PQC, even in ICE Lite\n- avoids delay from ICE scheduling\n\nIf we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n\nThis would be implementation guidance vs normative behavior.\n",
       "createdAt": "2026-03-17T20:38:07Z",
-      "updatedAt": "2026-05-26T16:49:20Z",
+      "updatedAt": "2026-06-01T06:59:58Z",
       "closedAt": null,
       "comments": [
         {
@@ -439,13 +446,6 @@
           "updatedAt": "2026-05-06T00:10:45Z"
         },
         {
-          "author": "Sum1cares",
-          "authorAssociation": "NONE",
-          "body": "> There are some advantages to sending directly vs embedding, e.g.:\n> - allows larger MTUs\n> - allows multi-packet sends, ie PQC, even in ICE Lite\n> - avoids delay from ICE scheduling\n> \n> If we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n> \n> This would be implementation guidance vs normative behavior.\n> \n\n",
-          "createdAt": "2026-05-23T13:16:08Z",
-          "updatedAt": "2026-05-23T13:16:08Z"
-        },
-        {
           "author": "jonasore",
           "authorAssociation": "NONE",
           "body": "> If we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n\nyes (this is also what is implemented)",
@@ -473,7 +473,7 @@
       "labels": [],
       "body": "This has been a discussion item for many months, but doesn't seem to have made it to an issue.\nThe advantages of an SDP ICE option are:\n- It allows to be certain that the other end supports the mechanism\n- By varying the token value, it is easy to support \"pre-spec-release\" versions of the mechanism even if attribute IDs are the same between versions\n- It doesn't exercise the mechanism for throwing away \"comprehension optional\" attributes in ICE\n\nThe disadvantages are:\n- It clutters up SDP\n- It ties deployment of the mechanism to SDP-based applications (but dependency on fingerprint does that anyway)\n\nThoughts?\n\n",
       "createdAt": "2026-04-29T08:52:39Z",
-      "updatedAt": "2026-05-26T18:45:49Z",
+      "updatedAt": "2026-06-01T07:01:50Z",
       "closedAt": null,
       "comments": [
         {
@@ -580,6 +580,20 @@
           "body": "cause it is a DTLS SERVER ?\r\ni.e. it doesn't have any packets to send...\r\n\r\nand if we have SDP, we don't need to it send anything (special)\r\n\r\n/Jonas\r\n\r\nOn Tue, May 26, 2026 at 10:54\u202fAM Philipp Hancke ***@***.***>\r\nwrote:\r\n\r\n> *fippo* left a comment (fippo/warp-snap-sped#16)\r\n> <https://github.com/fippo/warp-snap-sped/issues/16#issuecomment-4547122741>\r\n>\r\n> We agree on (a). If the offerer receives a ping with an embedded\r\n> attribute/ack and that means support and subsequent pings can use the\r\n> feature that *is* inband discovery?\r\n>\r\n> What is the use-case for (b)? Why would the answerer not send attributes\r\n> but send the ice-option?\r\n>\r\n> \u2014\r\n> Reply to this email directly, view it on GitHub\r\n> <https://github.com/fippo/warp-snap-sped/issues/16?email_source=notifications&email_token=AC5KGUB2KLGKIH47EC5W43D44XK5ZA5CNFSNUABFM5UWIORPF5TWS5BNNB2WEL2JONZXKZKDN5WW2ZLOOQXTINJUG4YTEMRXGQY2M4TFMFZW63VHNVSW45DJN5XKKZLWMVXHJLDGN5XXIZLSL5RWY2LDNM#issuecomment-4547122741>,\r\n> or unsubscribe\r\n> <https://github.com/notifications/unsubscribe-auth/AC5KGUGFEZL5DTJWGVPN5AL44XK5ZAVCNFSM6AAAAACYKOXB46VHI2DSMVQWIX3LMV43OSLTON2WKQ3PNVWWK3TUHM2DKNBXGEZDENZUGE>\r\n> .\r\n> Triage notifications on the go with GitHub Mobile for iOS\r\n> <https://apps.apple.com/app/apple-store/id1477376905?ct=notification-email&mt=8&pt=524675>\r\n> or Android\r\n> <https://play.google.com/store/apps/details?id=com.github.android&referrer=utm_campaign%3Dnotification-email%26utm_medium%3Demail%26utm_source%3Dgithub>.\r\n>\r\n> You are receiving this because you were mentioned.Message ID:\r\n> ***@***.***>\r\n>\r\n",
           "createdAt": "2026-05-26T18:45:49Z",
           "updatedAt": "2026-05-26T18:45:49Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Agreed. If the answerer is a server and using ICE Lite, it might not send any STUN checks at all, and even the responses might omit DATA entirely because it wants to send everything over the direct path.",
+          "createdAt": "2026-06-01T02:35:03Z",
+          "updatedAt": "2026-06-01T02:35:03Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "if it doesn't have any packets to send it could (and did) still send an empty attribute which acts as a inband \"I support this\".",
+          "createdAt": "2026-06-01T07:01:50Z",
+          "updatedAt": "2026-06-01T07:01:50Z"
         }
       ]
     },
@@ -595,9 +609,87 @@
       "labels": [],
       "body": "Had you considered having the answerer put an INIT ACK into the SDP instead of a second INIT? ",
       "createdAt": "2026-05-30T12:19:00Z",
-      "updatedAt": "2026-05-30T12:19:00Z",
+      "updatedAt": "2026-06-01T16:23:10Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "After some offline discussion:\nWebRTC uses the active SCTP role on both ends as defined in https://www.rfc-editor.org/info/rfc8841/#section-9.3\nSo both sides send their init on the wire as soon as they can (but it seems to work without this?).\nThe data contained in the init-ack is equivalent from what I can see.\n\nI'd say that using the INIT chunk from both ends is more consistent with that behavior and it creates less of a headache with role changes as you can just use the initial value again, even if your SDP O/A role now changed. And we need one, not two SDP attributes",
+          "createdAt": "2026-06-01T09:04:47Z",
+          "updatedAt": "2026-06-01T09:04:47Z"
+        },
+        {
+          "author": "steely-glint",
+          "authorAssociation": "NONE",
+          "body": "What would sending a second init mean (in the context of a subsequent O/A round) ? I assume that for compatibility with current behaviour the SCTP association and the dependent data channels stay alive (unless you remove the m=application section). In which case I think we should explicitly require that subsequent O/As ignore any a=sctp-init . \n\nIf that's the case then the first one could contain an init or an init-ack and it wouldn't matter much.\n",
+          "createdAt": "2026-06-01T09:52:59Z",
+          "updatedAt": "2026-06-01T09:52:59Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "The scenario I want to avoid, with participants A and B:\n```\nA: offer with sctp-init A\nB: answer with init-ack B\nB: reoffer with init B or init-ack B?\n```\nThings shouldn't change mid-session, similar to how sctp-port should not change. Technically B using a init with the equivalent value does not change that but simply using init avoids this:\n```\nA: offer with sctp-init A\nB: answer with init B\nB: reoffer with init B\nA: answer with init A\n```\nThis is the current \"don't change it\" from https://fippo.github.io/warp-snap-sped/draft-hancke-tsvwg-snap.html#name-modifying-the-session\n",
+          "createdAt": "2026-06-01T10:43:07Z",
+          "updatedAt": "2026-06-01T10:45:12Z"
+        },
+        {
+          "author": "steely-glint",
+          "authorAssociation": "NONE",
+          "body": "Ok, but if all subsequent a=sctp-inits are ignored (As I think they must be) then it doesn't matter what B sends the second time - it can replay it's own init-ack if it likes.\n\nThe advantage of sending init-ack in the first round Answer SDP is that it saves us 0.5 x rtt - the association could start the moment the DTLS handshake completes.",
+          "createdAt": "2026-06-01T10:58:57Z",
+          "updatedAt": "2026-06-01T10:58:57Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "That is already the case - the answerers init contains basically the same information as the answerers init-ack would.\n\n(like fingerprints or ice-ufrag, subsequent O/A needs to carry the same information and no change in that means no action needs to be taken)",
+          "createdAt": "2026-06-01T11:02:49Z",
+          "updatedAt": "2026-06-01T11:02:49Z"
+        },
+        {
+          "author": "steely-glint",
+          "authorAssociation": "NONE",
+          "body": "You can't just pass the init into the SCTP stack and hope it gets treated as an init-ack - it won't, the type is different and - you'll have to magic up an init-ac from the init data and inject that - which (from my reading of https://www.rfc-editor.org/info/rfc9260/#name-init-chunk-received-in-cook  ) will break the state machine. This opens a can of worms...",
+          "createdAt": "2026-06-01T11:10:52Z",
+          "updatedAt": "2026-06-01T11:10:52Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "no but if your stack supports both sides being active you end up with the same result.\nSo the offerer treats the sctp-init from the answer as if it was received over the network.\nAnd if it comes from that path it can skip (because it has all the information it needs) the init-ack, cookie and cookie-ack.",
+          "createdAt": "2026-06-01T11:21:19Z",
+          "updatedAt": "2026-06-01T11:21:19Z"
+        },
+        {
+          "author": "steely-glint",
+          "authorAssociation": "NONE",
+          "body": "The 'both sides active' thing doesn't mean much. - All SCTP stacks are supposed to deal correctly with overlapping INITs from both sides. The mechanism resolves it down to a single association on each side. \n\nYour point about using an answerer's INIT to jump the state machine  all the way to  ESTABLISHED without messing with the cookie is interesting.\n\nCurrent SCTP implementations  shouldn't actually use/trust the values in the INIT.  Instead they encode them into a COOKIE and send that in an init ack, then wait for a cookie echo, extract the params from that (ensuring a full handshake before any resource allocation) - What you are proposing is that both sides immediately trust the other's INIT and treat the data as if it had been carried in a state Cookie exchange.\n\nThe additional advantage of this is that the cookie can be big, so it is great to be rid of it.\n\nThese are a big changes that allow meddling signalling boxes and javascript to change the P2P behaviour of the endpoints in ways they could not before. \n\nPerhaps a=sctp-establish is a less confusing attribute name?\n\n\n",
+          "createdAt": "2026-06-01T12:56:49Z",
+          "updatedAt": "2026-06-01T13:00:30Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "The cookie is a security mechanism to avoid on-the-path attackers which can't happen due to DTLS.\n\nSignaling can meddle with things now but it can already do an active MITM attack anyway (by meddling with the fingerprint) so this does not open up new holes (\ud83e\udd1e)",
+          "createdAt": "2026-06-01T14:01:16Z",
+          "updatedAt": "2026-06-01T14:01:16Z"
+        },
+        {
+          "author": "steely-glint",
+          "authorAssociation": "NONE",
+          "body": "> The cookie is a security mechanism to avoid on-the-path attackers which can't happen due to DTLS.\n> \nAgreed. - But we are proposing quite a big code change.\n\n> Signaling can meddle with things now but it can already do an active MITM attack anyway (by meddling with the fingerprint) so this does not open up new holes (\ud83e\udd1e)\n\nFortunately that isn't quite true - if you have established ToFU (via an out of band channel) and have the peer's fingerprint stored in indexDB you can tell and reject the SDP. \nSo it does introduce new potential holes I fear.\n\n",
+          "createdAt": "2026-06-01T16:12:44Z",
+          "updatedAt": "2026-06-01T16:14:40Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "Let me ask differently: you have a udp (or tcp) channel that is integrity protected by DTLS so an attacker from the network can not fiddle with it. The DTLS certificates are part of the SDP.\n\nOther than stripping optional features from the sctp-init, what can an attacker that controls JS do?",
+          "createdAt": "2026-06-01T16:23:09Z",
+          "updatedAt": "2026-06-01T16:23:09Z"
+        }
+      ]
     }
   ],
   "pulls": [
