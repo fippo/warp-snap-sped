@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-02T04:14:16.752445+00:00",
+  "timestamp": "2026-06-04T04:18:56.948774+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -190,7 +190,7 @@
       ],
       "body": "If we're resending PQC packets across all candidate pairs every 10ms, that could be 100 * ~1KB = 800Kbps of traffic on the wire at startup, which is likely to cause problems on slow networks:\n\nSolution ideas:\nPick \"most likely to work\" candidate pair (e.g., relay-relay) and send on that pair. Can this be determined reliably in all situations? Not all architectures will have \"relay\" candidates, and \"relay\" candidates typically will have the lowest PRIORITY. \nOr, simply send on the first N pairs using normal ICE prioritization, where N is capped to stay under the RFC 8445 guidance? If none of the N succeed, we can just wait until we get a successful ICE check, as in \"vanilla\" webrtc.\nOr, perhaps a fusion of these approaches?\n\nSee https://datatracker.ietf.org/doc/html/rfc8445#appendix-B.1 for discussion of how much bandwidth is acceptable to use (14600 unacked bytes on the wire)",
       "createdAt": "2026-03-17T18:36:29Z",
-      "updatedAt": "2026-05-26T16:54:57Z",
+      "updatedAt": "2026-06-02T17:21:27Z",
       "closedAt": null,
       "comments": [
         {
@@ -206,6 +206,13 @@
           "body": "I think I have enough context to take a shot at this.",
           "createdAt": "2026-05-26T16:54:52Z",
           "updatedAt": "2026-05-26T16:54:52Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@jonasore mentions that libwebrtc has an option to prioritize relay candidates higher initially, which would address the concern noted in the original post. IOW, following the ICE prioritization and embedding DTLS on the first few checks seems like the right strategy.",
+          "createdAt": "2026-06-02T17:21:27Z",
+          "updatedAt": "2026-06-02T17:21:27Z"
         }
       ]
     },
@@ -223,7 +230,7 @@
       ],
       "body": "@fippo proposal:\n- DATA (possibly empty) and ACK (possibly empty): SPED is active\n- ACK only: we're in the closing state\n- No attribs: we're done\n",
       "createdAt": "2026-03-17T20:24:54Z",
-      "updatedAt": "2026-05-06T03:57:06Z",
+      "updatedAt": "2026-06-02T17:04:02Z",
       "closedAt": null,
       "comments": [
         {
@@ -267,6 +274,13 @@
           "body": "we still need in-band determination for prflx so most of the text in \"Inband discovery and negotiation\" needs to stay.",
           "createdAt": "2026-05-06T03:57:06Z",
           "updatedAt": "2026-05-06T03:57:06Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "we need in-band awareness for the offerer, but not really \"detection\" per se.",
+          "createdAt": "2026-06-02T17:04:02Z",
+          "updatedAt": "2026-06-02T17:04:02Z"
         }
       ]
     },
@@ -609,7 +623,7 @@
       "labels": [],
       "body": "Had you considered having the answerer put an INIT ACK into the SDP instead of a second INIT? ",
       "createdAt": "2026-05-30T12:19:00Z",
-      "updatedAt": "2026-06-01T16:23:10Z",
+      "updatedAt": "2026-06-03T07:19:59Z",
       "closedAt": null,
       "comments": [
         {
@@ -688,6 +702,20 @@
           "body": "Let me ask differently: you have a udp (or tcp) channel that is integrity protected by DTLS so an attacker from the network can not fiddle with it. The DTLS certificates are part of the SDP.\n\nOther than stripping optional features from the sctp-init, what can an attacker that controls JS do?",
           "createdAt": "2026-06-01T16:23:09Z",
           "updatedAt": "2026-06-01T16:23:09Z"
+        },
+        {
+          "author": "steely-glint",
+          "authorAssociation": "NONE",
+          "body": "Off the top of my head this opens up MiTM attacks that :\n\nLie about the max number of streams and buffers, fingerprint the implementation, control and know 32 bit tag that will occur in a fixed place in every DTLS packet.\n\nI don't know how significant they are. ",
+          "createdAt": "2026-06-02T08:59:51Z",
+          "updatedAt": "2026-06-02T08:59:51Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "Fingerprinting is real but is a general SDP issue - this is mainly in the browser but that is already a known problem (H265 snooping doubled addTransceiver usage this year). I expect this to be similar to max-message-size.\nThe verification tag ... raises the question whether we need it in WebRTC even, along with the rest of the common header.\n\nNote that sending an init-ack only works after you processed the init which means that can't happen *after* the dtls association is up anymore. So init-ack would give you less in particular if your fingerprints are verified out of band.",
+          "createdAt": "2026-06-03T07:19:59Z",
+          "updatedAt": "2026-06-03T07:19:59Z"
         }
       ]
     }
