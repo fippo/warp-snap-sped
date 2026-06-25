@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-04T04:18:56.948774+00:00",
+  "timestamp": "2026-06-25T03:51:59.688246+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -296,7 +296,7 @@
       "labels": [],
       "body": "@fippo proposal:\nExplicit closing handshake with no DATA attribute and just ACKs. This tells the remote side that handshake is done, regardless of DTLS version.\n\nClosing handshake is triggered by:\nDTLS 1.3 client: sent F3, got SPED ACK for F3\nDTLS 1.3 server: got F3 (handshake complete on server)\nDTLS 1.2 client: sent F3, got F4 (handshake complete on client)\nDTLS 1.2 server: sent F4, got SPED ACK for F4\n",
       "createdAt": "2026-03-17T20:26:16Z",
-      "updatedAt": "2026-05-06T03:42:32Z",
+      "updatedAt": "2026-06-24T12:21:48Z",
       "closedAt": null,
       "comments": [
         {
@@ -333,6 +333,34 @@
           "body": "this should be independent of the protocol-version - which is only known after negotiation finishes.",
           "createdAt": "2026-05-06T03:42:32Z",
           "updatedAt": "2026-05-06T03:42:32Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "Hi folks,\n\nI looked it to this...and came to the following conclusion.\n1) there is a bug in the existing implementation (maybe spec?)\nboth for 1.2 and 1.3\n\n2) I think the \"previous\" version was to send an extra message at the end...\nbut my analysis concluded that this doesn't actually work except for on sunny days.\n\n3) I have a better proposal...that I'll add here before meeting today.\n",
+          "createdAt": "2026-06-23T10:55:12Z",
+          "updatedAt": "2026-06-23T10:55:12Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "2.the problem with an extra handske message in the end is that can not generally know that peer received it\n\n3. The tldr is to terminate whena) you are writable\nEither\nb) you can determine that peer is also writable\nB.1) you can decode dtls from them\nB.2) implicit by protocol\nOr\nc) you have no pending packet **and** you get a binding request/response without data/ack from peer.\n\n---\n\nFor 1.3 this means\nClient become writable when sending f3\nClient learns that server is writable when decoding dtls or binding request/response w/o data/ack\nServer becomes writable when getting f3\nServer learns that Client is writable when getting f3\n",
+          "createdAt": "2026-06-23T16:42:00Z",
+          "updatedAt": "2026-06-23T16:42:00Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "**Terminology:**\nDTLS (local) handshake complete = DTLS (local) writable\nDTLS handshake complete = DTLS local handshake complete (aka writable) on both sides\nSPED complete = no more DATA or ACK sent\n\n** I added this **\nif a participant can determine that DTLS handshake is complete (on both sides) => SPED is complete.\n- on  both sides = locally writable + can decode DTLS payload packets from peer\n\n** I think the the problem with using a special end of sped ack **\nDTLS 1.3 client: sent F3, got SPED ACK for F3\nDTLS 1.3 server: got F3 (handshake complete on server)\n\nNow, the 1.3 server does not know that the SPED ACK has been successfully transferred to client??\nAnd if the 1.3 client send a \"special sped-complete\" message, how does it know that it has been successfully transferred to server ?\ni.e. a one-off \"special sped-complete\" message can experience packet loss, and has no \"natural\" re-transmit strategy.\n",
+          "createdAt": "2026-06-23T20:15:03Z",
+          "updatedAt": "2026-06-23T20:15:03Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "> Now, the 1.3 server does not know that the SPED ACK has been successfully transferred to client??\n\nThe question is rather \"when does it stop sending the ack\". If an ack gets lost there will be another one in a different STUN message (I don't think anyone is a fun of retransmitting STUN as-is).\n\n> And if the 1.3 client send a \"special sped-complete\" message, how does it know that it has been successfully transferred to server ?\n\nIt continues to transfer that indication until it knows better so a single lost message is not harmful.\nThis goes back to the \"pending\" state in the implementation. You keep sending acks until you\n1/ receive a stun message with no data and acks\n2/ receive a stun message with no data and no acks (fallback)\n\nNote that this transition doesn't affect performance. This is a STUN layer mechanism which is why pulling in more information from DTLS or SRTP break layers without offering benefit.",
+          "createdAt": "2026-06-24T12:10:06Z",
+          "updatedAt": "2026-06-24T12:21:48Z"
         }
       ]
     },
