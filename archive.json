@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-25T03:51:59.688246+00:00",
+  "timestamp": "2026-06-28T04:05:22.359688+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -131,7 +131,7 @@
       "labels": [],
       "body": "If the offer side supports SNAP and the answer side doesn't, then any middle boxes get to see the clear text of the SCTP init (in the offer) _and_ the DTLS wrapped version of the same thing when it is sent over the ICE (backwards compatible) channel. This doesn't matter much in the case of star (eg SFUs) but it probably weakens the P2P+TURN use-case. \n\nI'm not enough of a cryptographer  to know how much difference this makes.\n\n",
       "createdAt": "2026-03-10T08:56:47Z",
-      "updatedAt": "2026-03-10T10:43:30Z",
+      "updatedAt": "2026-06-26T11:19:48Z",
       "closedAt": null,
       "comments": [
         {
@@ -140,6 +140,41 @@
           "body": "At least in the libWebRTC implementation the offerer sctp-init would not be used and different from the one signalled in the SDP. Probably worth describing that though.",
           "createdAt": "2026-03-10T10:43:30Z",
           "updatedAt": "2026-03-10T10:43:30Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "let me pull this apart. This is the init chunk:\n```\n   0                   1                   2                   3\n    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1\n   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n   |   Type = 1    |Chunk Flags = 0|      Chunk Length = 30        |\n   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n   |                      Initiate Tag = 0x896cdd1d                |\n   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n   |      Advertised Receiver Window Credit (a_rwnd) = 0x00500000  |\n   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n   | # of Outbound Streams = 65535 | # of Inbound Streams = 65535  |\n   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n   |                      Initial TSN = 0xe079651d                 |\n   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n   /              Optional/Variable-Length Parameters              /\n   \\     Forward TSN       |  Supported extensions=RECONFIG(0x82), \\\n   /                       |          FORWARD_TSN(0xc0)            /\n   \\ 0xc0, 0x00, 0x00, 0x04| 0x80, 0x08, 0x00, 0x06, 0x82, 0xc0    \\\n   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n```\nand this is a breakdown for each field:\n| Field | Varies by | Security role | Privacy role |\n|---|---|---|---|\n| Type / Flags | static | none | none |\n| Chunk Length | param set (derived) | none | none (derived from params below) |\n| Initiate Tag | per-association (random) | becomes peer's Verification Tag \u2014 anti off-path/blind injection in vanilla SCTP; DTLS provides that, no  known plaintext-attack | none |\n| a_rwnd | implementation | none | fingerprinting surface |\n| # Outbound Streams | implementation | none | fingerprinting surface |\n| # Inbound Streams | implementation | none | fingerprinting surface |\n| Initial TSN | per-association (non-crypto random) | none | none |\n| Optional/Variable params (Supported Extensions, FORWARD_TSN, \u2026) | implementation / browser version | none | fingerprinting surface; set + ordering |\n\nFor browsers the concerns are slightly different because JS gets access to it and fingerprinting is an issue. Not big since this is per implementation and maybe per version so effectively it doesn't provide value over the userAgent string.",
+          "createdAt": "2026-06-26T08:46:48Z",
+          "updatedAt": "2026-06-26T08:46:48Z"
+        },
+        {
+          "author": "steely-glint",
+          "authorAssociation": "NONE",
+          "body": "Depending on what you mean by security role, I probably disagree, at the least you need to add a column for 'abuse' and analyse possible abuse vectors. \n\nLike:\n\n-  Is the chunk length normally verified as being less than the enclosing packet length ? \n- What happens when there isn't an enclosing packet? \n- What happens when a_rwnd is huge ? \n- What happens when Streams is 1 ? \n- What happens if a middle box increases the claimed Inbound Streams ? \n- What happens when javascript reduces the Initial TSN by 1 ? \n\n(I don't do this for a living so I'm _sure_ I'm missing stuff.) \n\nEssentially we are creating an api allowing injecting values into the middle of a stack that _used_ to set those values itself - running the risk of inconsistent behaviour, memory breakages, DOS etc. ",
+          "createdAt": "2026-06-26T09:44:12Z",
+          "updatedAt": "2026-06-26T09:44:12Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "> Depending on what you mean by security role, I probably disagree, at the least you need to add a column for 'abuse' and analyse possible abuse vectors.\n\nAll of these equally apply for parsing the init chunk from the network.\n\nSignaling middle boxes modifying things isn't new either, they could change sctp-port roday and it would create a similar mismatch between what is in the SDP and what is sent on the wire. Typically leads to the association closing. Likewise a signaling server can do an active MITM and reroute the SCTP network traffic via a proxy of its choosing and monkeypatch things there.",
+          "createdAt": "2026-06-26T10:29:37Z",
+          "updatedAt": "2026-06-26T10:29:37Z"
+        },
+        {
+          "author": "steely-glint",
+          "authorAssociation": "NONE",
+          "body": "> a signaling server can do an active MITM and reroute the SCTP network traffic via a proxy of its choosing and monkeypatch things there\n\nNot undetectably - if the peer knows the expected fingerprint. This is outside the DTLS envelope so unprotected by the certificate fingerprint.\n",
+          "createdAt": "2026-06-26T11:13:29Z",
+          "updatedAt": "2026-06-26T11:13:29Z"
+        },
+        {
+          "author": "steely-glint",
+          "authorAssociation": "NONE",
+          "body": "> All of these equally apply for parsing the init chunk from the network.\n\nNot exactly - the example of the test for chunk length being within the packet bounds. A network packet will have a length which sets a sensible maximum for the chunk length- the base64 init chunk doesn't have that luxury.\n\nI'm not saying this can't be secured - I am saying that there are a bunch of new attack vectors that require code inspection and probably warnings in the RFC.",
+          "createdAt": "2026-06-26T11:19:48Z",
+          "updatedAt": "2026-06-26T11:19:48Z"
         }
       ]
     },
@@ -644,15 +679,15 @@
       "id": "I_kwDOPBQjh88AAAABD3Xy5w",
       "title": "Possible optimisation - answerer sends INIT ACK",
       "url": "https://github.com/fippo/warp-snap-sped/issues/17",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "steely-glint",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "Had you considered having the answerer put an INIT ACK into the SDP instead of a second INIT? ",
       "createdAt": "2026-05-30T12:19:00Z",
-      "updatedAt": "2026-06-03T07:19:59Z",
-      "closedAt": null,
+      "updatedAt": "2026-06-25T13:17:20Z",
+      "closedAt": "2026-06-25T12:59:47Z",
       "comments": [
         {
           "author": "fippo",
@@ -744,6 +779,27 @@
           "body": "Fingerprinting is real but is a general SDP issue - this is mainly in the browser but that is already a known problem (H265 snooping doubled addTransceiver usage this year). I expect this to be similar to max-message-size.\nThe verification tag ... raises the question whether we need it in WebRTC even, along with the rest of the common header.\n\nNote that sending an init-ack only works after you processed the init which means that can't happen *after* the dtls association is up anymore. So init-ack would give you less in particular if your fingerprints are verified out of band.",
           "createdAt": "2026-06-03T07:19:59Z",
           "updatedAt": "2026-06-03T07:19:59Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "getting back to this:\n* init-ack: WebRTC does a simultaneous open on both sides so while init-ack would be a better match for SDPs offer/answer it would be a worse match for that model and require more SDP attributes and more plumbing for no gain.\n\nLets split (maybe I can do it here even) the security discussion...",
+          "createdAt": "2026-06-25T09:19:02Z",
+          "updatedAt": "2026-06-25T09:19:02Z"
+        },
+        {
+          "author": "steely-glint",
+          "authorAssociation": "NONE",
+          "body": "Having now implemented this in https://pi.pe 's webRTC stack - I can see the sense of using INIT only and ignoring INIT-ACK.\nIt works ok, because it is only the INIT _chunk_ that is in the SDP - not a valid SCTP message - so the sequence numbers don't matter.\nAlso it makes sense because the SCTP stack _jumps_ straight to ESTABLISHED - skipping the cookie stage. \n\nAfter the O/A you end up with an ESTABLISHED SCTP association which has no underlying transport - until ICE and DTLS have done their jobs.\n\nThe draft could have been clearer on these points.",
+          "createdAt": "2026-06-25T12:59:47Z",
+          "updatedAt": "2026-06-25T12:59:47Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "yeah, i'll try to capture that.\n\nThe association exists but see https://github.com/w3c/webrtc-pc/issues/3071#issuecomment-3768747540",
+          "createdAt": "2026-06-25T13:17:20Z",
+          "updatedAt": "2026-06-25T13:17:20Z"
         }
       ]
     }
