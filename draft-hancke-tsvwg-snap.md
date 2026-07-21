@@ -183,7 +183,9 @@ Subject to charset: No
 
 Purpose: allows the SDP to carry the information contained in a SCTP INIT chunk
 
-Appropriate values: A base64-encoded value.
+Appropriate values: A base64-encoded value. An implementation generating the value MAY
+include the trailing chunk padding described in {{Section 3.2 of RFC9260}}. An
+implementation parsing the value MUST accept it both with and without the trailing padding.
 
 Syntax: sctp-init-value = base64 ; base64 defined in RFC 4566
 
@@ -372,4 +374,4 @@ This document defines a new SDP media-level attribute, "sctp-init". The details 
 # Acknowledgments
 {:numbered="false"}
 
-The authors wish to thank Harald Alvestrand, Lennart Grahl and Jonas Oreland for their invaluable comments.
+The authors wish to thank Harald Alvestrand, Lennart Grahl, Jonas Oreland and Michael Tuexen for their invaluable comments.
