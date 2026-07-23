@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-28T04:05:22.359688+00:00",
+  "timestamp": "2026-07-23T02:56:27.072130+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -1082,6 +1082,32 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 18,
+      "id": "PR_kwDOPBQjh870M3iI",
+      "title": "snap: specify generation and handling of padding",
+      "url": "https://github.com/fippo/warp-snap-sped/pull/18",
+      "state": "OPEN",
+      "author": "fippo",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "asked for in\r\nhttps://mailarchive.ietf.org/arch/msg/tsvwg/Kuq5b8FrZe0kDDkFw6NY77QP6Ww/",
+      "createdAt": "2026-07-21T06:07:55Z",
+      "updatedAt": "2026-07-21T06:07:55Z",
+      "baseRepository": "fippo/warp-snap-sped",
+      "baseRefName": "main",
+      "baseRefOid": "80c08518f6e5d785f99d69e99f762177b6a65e61",
+      "headRepository": "fippo/warp-snap-sped",
+      "headRefName": "snap-padding",
+      "headRefOid": "c18236c322311026a015eb88d4eb48c56247c517",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
