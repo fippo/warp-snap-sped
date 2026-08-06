@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-23T02:56:27.072130+00:00",
+  "timestamp": "2026-08-06T02:44:54.165353+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -547,10 +547,12 @@
       "author": "alvestrand",
       "authorAssociation": "NONE",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "editor-ready"
+      ],
       "body": "This has been a discussion item for many months, but doesn't seem to have made it to an issue.\nThe advantages of an SDP ICE option are:\n- It allows to be certain that the other end supports the mechanism\n- By varying the token value, it is easy to support \"pre-spec-release\" versions of the mechanism even if attribute IDs are the same between versions\n- It doesn't exercise the mechanism for throwing away \"comprehension optional\" attributes in ICE\n\nThe disadvantages are:\n- It clutters up SDP\n- It ties deployment of the mechanism to SDP-based applications (but dependency on fingerprint does that anyway)\n\nThoughts?\n\n",
       "createdAt": "2026-04-29T08:52:39Z",
-      "updatedAt": "2026-06-01T07:01:50Z",
+      "updatedAt": "2026-08-04T17:09:11Z",
       "closedAt": null,
       "comments": [
         {
