@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-08-06T02:44:54.165353+00:00",
+  "timestamp": "2026-08-13T02:08:50.944851+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -225,7 +225,7 @@
       ],
       "body": "If we're resending PQC packets across all candidate pairs every 10ms, that could be 100 * ~1KB = 800Kbps of traffic on the wire at startup, which is likely to cause problems on slow networks:\n\nSolution ideas:\nPick \"most likely to work\" candidate pair (e.g., relay-relay) and send on that pair. Can this be determined reliably in all situations? Not all architectures will have \"relay\" candidates, and \"relay\" candidates typically will have the lowest PRIORITY. \nOr, simply send on the first N pairs using normal ICE prioritization, where N is capped to stay under the RFC 8445 guidance? If none of the N succeed, we can just wait until we get a successful ICE check, as in \"vanilla\" webrtc.\nOr, perhaps a fusion of these approaches?\n\nSee https://datatracker.ietf.org/doc/html/rfc8445#appendix-B.1 for discussion of how much bandwidth is acceptable to use (14600 unacked bytes on the wire)",
       "createdAt": "2026-03-17T18:36:29Z",
-      "updatedAt": "2026-06-02T17:21:27Z",
+      "updatedAt": "2026-08-11T17:22:39Z",
       "closedAt": null,
       "comments": [
         {
@@ -248,6 +248,13 @@
           "body": "@jonasore mentions that libwebrtc has an option to prioritize relay candidates higher initially, which would address the concern noted in the original post. IOW, following the ICE prioritization and embedding DTLS on the first few checks seems like the right strategy.",
           "createdAt": "2026-06-02T17:21:27Z",
           "updatedAt": "2026-06-02T17:21:27Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "another comment on that...is that this is not really worse with PQC,\ncause the pace of STUN_BINDING_REQUEST is not dicated by the dtls-in-stun-feature\nand everytime there is pending DTLS data when sending a STUN_BINDING_REQUEST or RESPONSE\nit will be included...\n\nwdyt ?\n\nthat said, I like the libwebrtc feature.\n\n",
+          "createdAt": "2026-08-11T17:22:39Z",
+          "updatedAt": "2026-08-11T17:22:39Z"
         }
       ]
     },
@@ -265,7 +272,7 @@
       ],
       "body": "@fippo proposal:\n- DATA (possibly empty) and ACK (possibly empty): SPED is active\n- ACK only: we're in the closing state\n- No attribs: we're done\n",
       "createdAt": "2026-03-17T20:24:54Z",
-      "updatedAt": "2026-06-02T17:04:02Z",
+      "updatedAt": "2026-08-11T17:20:31Z",
       "closedAt": null,
       "comments": [
         {
@@ -316,6 +323,13 @@
           "body": "we need in-band awareness for the offerer, but not really \"detection\" per se.",
           "createdAt": "2026-06-02T17:04:02Z",
           "updatedAt": "2026-06-02T17:04:02Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "is this not redundant  due to https://github.com/fippo/warp-snap-sped/issues/16\nsuggest to close this one.",
+          "createdAt": "2026-08-11T17:20:31Z",
+          "updatedAt": "2026-08-11T17:20:31Z"
         }
       ]
     },
@@ -458,7 +472,7 @@
       ],
       "body": "Generally it seems that an answer with `a=setup:passive` is better in client-server scenarios since DTLS F1 can ride with the first binding request.\n\nMight be worth doing some tests in the simulator to verify these intuitions.\n\n",
       "createdAt": "2026-03-17T20:35:00Z",
-      "updatedAt": "2026-05-26T16:53:39Z",
+      "updatedAt": "2026-08-11T17:20:28Z",
       "closedAt": null,
       "comments": [
         {
@@ -467,6 +481,27 @@
           "body": "In a client-server scenario, passive saves 0.5 RTT with SPED, and costs 0.5 RTT without SPED. We should mention this in the SPED document.",
           "createdAt": "2026-05-06T00:13:35Z",
           "updatedAt": "2026-05-06T00:13:35Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "goes into WARP now that we have WARP?",
+          "createdAt": "2026-08-11T17:17:22Z",
+          "updatedAt": "2026-08-11T17:17:22Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "ok with any suggestions/guidance.\n",
+          "createdAt": "2026-08-11T17:19:10Z",
+          "updatedAt": "2026-08-11T17:19:10Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I originally felt this was best in WARP but since it directly affects SPED I tend to think it's better there.",
+          "createdAt": "2026-08-11T17:20:28Z",
+          "updatedAt": "2026-08-11T17:20:28Z"
         }
       ]
     },
@@ -484,7 +519,7 @@
       ],
       "body": "There are some advantages to sending directly vs embedding, e.g.:\n- allows larger MTUs\n- allows multi-packet sends, ie PQC, even in ICE Lite\n- avoids delay from ICE scheduling\n\nIf we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n\nThis would be implementation guidance vs normative behavior.\n",
       "createdAt": "2026-03-17T20:38:07Z",
-      "updatedAt": "2026-06-01T06:59:58Z",
+      "updatedAt": "2026-08-11T17:25:12Z",
       "closedAt": null,
       "comments": [
         {
@@ -535,6 +570,27 @@
           "body": "I think you're replying to a bot...",
           "createdAt": "2026-05-26T16:49:20Z",
           "updatedAt": "2026-05-26T16:49:20Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "> allows larger MTUs\n\nI don't think that works and you can not change the MTU easily on the current flight and it means you can no longer send them over other pairs.\n\nAt least in 1.2 we had the issue of flights 3+4 being delayed if they had to be embedded which caused delays so sending direct once we have a valid pair is essential for this to work.",
+          "createdAt": "2026-08-11T17:16:32Z",
+          "updatedAt": "2026-08-11T17:16:32Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "ok, up to 'editor-ready' may 5\ndon't understand fippos last comment",
+          "createdAt": "2026-08-11T17:18:36Z",
+          "updatedAt": "2026-08-11T17:18:36Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "if you were to increase the MTU from 900 to 1200 because you now can send direct you could potentially no longer embed these DTLS packets. Nobody implemented that, nobody wants to implement it.",
+          "createdAt": "2026-08-11T17:25:11Z",
+          "updatedAt": "2026-08-11T17:25:11Z"
         }
       ]
     },
@@ -552,7 +608,7 @@
       ],
       "body": "This has been a discussion item for many months, but doesn't seem to have made it to an issue.\nThe advantages of an SDP ICE option are:\n- It allows to be certain that the other end supports the mechanism\n- By varying the token value, it is easy to support \"pre-spec-release\" versions of the mechanism even if attribute IDs are the same between versions\n- It doesn't exercise the mechanism for throwing away \"comprehension optional\" attributes in ICE\n\nThe disadvantages are:\n- It clutters up SDP\n- It ties deployment of the mechanism to SDP-based applications (but dependency on fingerprint does that anyway)\n\nThoughts?\n\n",
       "createdAt": "2026-04-29T08:52:39Z",
-      "updatedAt": "2026-08-04T17:09:11Z",
+      "updatedAt": "2026-08-11T17:35:25Z",
       "closedAt": null,
       "comments": [
         {
@@ -673,6 +729,27 @@
           "body": "if it doesn't have any packets to send it could (and did) still send an empty attribute which acts as a inband \"I support this\".",
           "createdAt": "2026-06-01T07:01:50Z",
           "updatedAt": "2026-06-01T07:01:50Z"
+        },
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "comment:\na) I prefer 'nothing' means nothing (i.e. does not signal neither support nor not support), we use SDP for knowing support\nhttps://github.com/fippo/warp-snap-sped/issues/16#issuecomment-4545857418\neven if this involves a minor code change.\n\nb) I ok with empty ACK (or DATA) require for signal support (which is what is implemented)\n\nc) I think it's a misstake to add support for empty DATA (which is not what is implemented)",
+          "createdAt": "2026-08-11T17:16:51Z",
+          "updatedAt": "2026-08-11T17:16:51Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "a) is my preference as well, it has minimal cost and is hard to get wrong",
+          "createdAt": "2026-08-11T17:21:41Z",
+          "updatedAt": "2026-08-11T17:21:41Z"
+        },
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "but how does the first STUN binding request from a DTLS server supporting this look then? If the DTLS server has not received a client hello it has no data to send. If that arrives before the SDP answer the DTLS client needs to know the peer supports the protocol?",
+          "createdAt": "2026-08-11T17:35:25Z",
+          "updatedAt": "2026-08-11T17:35:25Z"
         }
       ]
     },
