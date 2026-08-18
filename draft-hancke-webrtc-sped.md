@@ -193,15 +193,44 @@ The desired properties of this solution are:
 
 The overall mechanism can be summarized as follows:
 
-1. DTLS is started at the same time as ICE.
-2. If there is no valid ICE candidate pair, DTLS handshake packets are sent by encapsulating them
+1. Endpoints negotiate SPED support using the `sped` ICE option.
+2. DTLS is started at the same time as ICE.
+3. If there is no valid ICE candidate pair, DTLS handshake packets are sent by encapsulating them
    in a new STUN attribute in the next STUN Binding Request or STUN Binding Response.
-3. Once a valid ICE candidate pair exists, the client can continue to send DTLS packets either in
-   embedded form, or as usual over the specified pair.
+4. Once an ICE candidate pair is selected, DTLS handshake packets are sent directly over that
+   pair and can also be embedded in STUN messages sent on other candidate pairs.
 
 In addition, to improve the reliability of the DTLS handshake, an explicit acknowledgement
-mechanism is built into SPED. Encapsulated DTLS handshake packets are acknowledged by sending their
-CRC-32 in a new STUN attribute in the next STUN Binding Request or STUN Binding Response.
+mechanism is built into SPED. DTLS handshake packets, whether received directly or embedded, are
+acknowledged by sending their CRC-32 in a new STUN attribute in the next STUN Binding Request or
+STUN Binding Response.
+
+### Capability Negotiation
+
+SPED support is negotiated with the `sped` ICE option in the SDP `a=ice-options` attribute, as
+described in {{Section 5.6 of ?RFC8839}}. The option applies to the ICE session and indicates
+support for the STUN attributes and procedures defined in this specification.
+
+#### SDP Offer/Answer Procedures
+
+An offerer that wishes to use SPED MUST include the `sped` ICE option in its offer. If the offer
+contains `sped`, an answerer that supports SPED and wishes to use it MUST include `sped` in its
+answer. Otherwise, the answerer MUST NOT include the option.
+
+SPED is negotiated when `sped` appears in both the offer and answer. If the answer does not
+contain `sped`, the offerer MUST NOT send the STUN attributes defined in this specification and
+both endpoints continue with ordinary ICE and DTLS procedures.
+
+#### STUN Checks Received Before the SDP Answer
+
+Connectivity checks from the answerer can reach the offerer before the SDP answer. An offerer
+that advertises `sped` MUST therefore be prepared to receive and process authenticated STUN
+messages containing SPED attributes before learning whether the answer includes the option.
+
+#### Backward Compatibility and Fallback
+
+An endpoint that does not support SPED omits the `sped` ICE option from its answer, causing the
+offerer to use standard unencapsulated DTLS.
 
 ### New STUN Attributes
 
@@ -216,31 +245,28 @@ bytes to ensure the next attribute, if any, starts on a 4-byte boundary; see {{?
 
 #### DTLS-IN-STUN-DATA
 
-* This attribute contains one DTLS handshake packet, or is empty to indicate SPED support when no
-  DTLS packet is being embedded.
-* While SPED is active, this attribute MUST be present in every STUN Binding Request or Response
-  sent by a SPED-capable agent.
+* This attribute contains one DTLS handshake packet and can be present in either a STUN Binding
+  Request or Response.
 * The value portion of this attribute is variable length and consists of one DTLS handshake packet
   from a DTLS flight, as described in {{Section 5.1 of ?RFC9147}} or {{Section 4.2 of ?RFC6347}}.
 * As noted, if the attribute length is not a multiple of 4, padding must be added.
-* If the value portion of this attribute is empty, it indicates SPED support and that no DTLS
-  packet is being embedded in that STUN message. An empty value MUST NOT be injected into the DTLS
-  layer.
+* The attribute MUST NOT be included when no DTLS handshake packet is being embedded. If an empty
+  attribute is received, its value MUST NOT be injected into the DTLS layer.
 * If the value portion of this attribute is non-empty but the first byte is not DTLS, i.e. between
   20 and 63 inclusive as described in {{Section 3 of ?RFC9443}}, the attribute SHOULD be silently
   discarded.
 
 #### DTLS-IN-STUN-ACK
 
-* This attribute contains acknowledgements of received `DTLS-IN-STUN-DATA` packets in the order
-  they were received.
+* This attribute contains acknowledgements of received DTLS handshake packets, whether those
+  packets arrived directly or in a `DTLS-IN-STUN-DATA` attribute, in the order they were received.
 * The attribute can be present in either a STUN Binding Request or Response.
 * The attribute is variable length and contains a list of uint32 entries, where each entry is the
-  computed CRC-32 of a received `DTLS-IN-STUN-DATA` attribute value, i.e. a DTLS handshake packet,
-  ignoring padding.
+  computed CRC-32 of a received DTLS handshake packet. For an embedded packet, the CRC-32 covers
+  the `DTLS-IN-STUN-DATA` attribute value and ignores padding.
 * Implementations SHOULD cap the number of uint32 entries included in this attribute. A cap of 4
   entries is RECOMMENDED, which bounds the attribute size while still covering all known handshake cases.
-* The attribute can be empty, i.e. the length of the list of uint32 values can be 0.
+* The attribute can be empty.
 
 ### MTU Considerations
 
@@ -265,18 +291,6 @@ Accordingly, the typical 1200 byte DTLS MTU, based on the recommendation in {{?R
 reduced by the size of the expected overhead. Applications that use custom STUN attributes, i.e. not in the table above, MUST reduce the
 DTLS MTU further.
 
-### Backwards Compatibility
-
-SPED is fully backwards compatible with existing ICE agents. If the peer ICE agent does not
-support SPED, this can be detected via the lack of the mandatory `DTLS-IN-STUN-DATA` attribute in
-its first authenticated ICE check or response, and upon recognizing this fact the local ICE agent
-can easily fall back to standard unencapsulated DTLS.
-
-Given this straightforward in-band negotiation, this specification does not currently define an
-offer/answer negotiation mechanism or any ICE options. Note that even if an ICE option were used,
-the offerer would still need to be prepared to handle ICE checks, with or without SPED, that arrive
-before the signaling answer.
-
 # Mechanism
 
 The specifics of the SPED algorithm are detailed below.
@@ -292,38 +306,44 @@ When using SPED, an ICE agent keeps two lists:
 
 2. A list, L2, of pending acknowledgements, as defined above.
 
-   Entries in L2 are created when embedded DTLS packets are received. Entries MAY be sent more
-   than once to improve robustness against STUN loss.
+   Entries in L2 are created when DTLS handshake packets are received, either directly or embedded
+   in STUN. Entries MAY be sent more than once to improve robustness against STUN loss.
 
 ## Sending a STUN Binding Request or Response
 
 When sending a STUN Binding Request or Response, the ICE agent MUST follow the steps below:
 
-1. Embed any pending ACKs from L2 in a DTLS-IN-STUN-ACK attribute.
-2. If there is a pending DTLS handshake packet in L1 and sufficient space remains in the STUN
-   message, embed one DTLS handshake packet from L1 into a `DTLS-IN-STUN-DATA` attribute.
-   When multiple packets are pending in L1, round-robin selection is RECOMMENDED.
-3. Otherwise, include `DTLS-IN-STUN-DATA` with an empty value simply to indicate SPED support.
-
+1. If L2 contains pending acknowledgements, include them in a `DTLS-IN-STUN-ACK` attribute.
+2. If L1 contains a pending DTLS handshake packet, sufficient space remains in the STUN message,
+   and the candidate pair is eligible for embedding under the implementation's pacing policy,
+   embed one packet from L1 in a `DTLS-IN-STUN-DATA` attribute. When multiple packets are pending
+   in L1, round-robin selection is RECOMMENDED.
 
 ## Receiving a STUN Binding Request or Response
 
 When receiving a STUN Binding Request or Response, the ICE agent MUST follow the steps below:
 
-1. If this is the first authenticated STUN message received from the peer, and the
-   `DTLS-IN-STUN-DATA` attribute is not present, conclude that the peer does not support SPED, and
-   conclude SPED processing.
-2. If the STUN message contains a `DTLS-IN-STUN-ACK` attribute, process the CRC-32 values in the
+1. If the STUN message contains a `DTLS-IN-STUN-ACK` attribute, process the CRC-32 values in the
    attribute and remove each ACKed DTLS handshake packet from L1.
-3. If the STUN message contains a non-empty `DTLS-IN-STUN-DATA` attribute, inject the attribute
+2. If the STUN message contains a non-empty `DTLS-IN-STUN-DATA` attribute, inject the attribute
    data into the DTLS layer and add the CRC-32 of the attribute value to L2.
+
+## Direct Transmission on Selected Candidate Pairs
+
+Once an ICE candidate pair is selected, an implementation MUST send DTLS handshake packets
+directly over that pair without waiting for a scheduled STUN message. The same packets MAY also be
+embedded in STUN messages on other candidate pairs, subject to normal ICE pacing and the
+implementation's bandwidth policy.
+
+While SPED is active, a directly received DTLS handshake packet is acknowledged by adding its
+CRC-32 to L2, just as for an embedded packet. The DTLS MTU for a flight that can still be embedded
+MUST continue to account for STUN overhead.
 
 ## Termination
 
-Once a valid ICE candidate pair exists and direct sending is possible, implementations MAY
-terminate use of SPED and send DTLS directly. Implementations MAY instead continue to send
-embedded DTLS until DTLS handshaking is complete, for example, to continue to use SPED's explicit
-acknowledgement mechanism.
+Once a selected ICE candidate pair exists, DTLS handshake packets are sent directly as described
+above. Implementations MAY terminate use of SPED at that point, or continue embedding on other
+candidate pairs and sending explicit acknowledgements until DTLS handshaking is complete.
 
 # Examples
 
@@ -437,26 +457,6 @@ Client                                      Server
 
 Again, the flows are similar when the server uses ICE Lite.
 
-## DTLS 1.3 with Non-SPED Peer
-
-~~~
-Client                                      Server
-  |                                            |
-  |--------- BindingRequest/DTLS F1 ---------->|
-  |<-------- BindingResponse/               ---|
-~~~
-
-The absence of a `DTLS-IN-STUN-DATA` attribute allows the client to conclude that the server does
-not support SPED.
-
-~~~
-  |--------- DTLS F1: ClientHello ------------>|
-  |<-------- DTLS F2: ServerHello ------------ |
-  |--------- DTLS F3: Finished --------------->|
-  |--------- Application data ---------------->|
-  |<-------- DTLS ACK -------------------------|
-~~~
-
 ## DTLS 1.3 with Flight 2 Loss
 
 ~~~
@@ -542,14 +542,45 @@ CP2  |<-------- BindingResponse/F2=ServerHello/2 ---|
 
 # Implementation Notes
 
-The following configuration for the SPED stack is RECOMMENDED. Note that this guidance may change
-based on implementation and deployment experience:
+The following guidance may change based on implementation and deployment experience.
 
-1. When SPED is active, disable internal DTLS timeouts, and resume them when receiving the first
-   STUN Binding Response.
-2. When using a PQC cipher suite, reduce the DTLS MTU as needed so embedded DTLS packets still fit
-   within the expected path MTU. Experiments with an MTU near 900 bytes have been promising, but
-   the best fragmentation strategy requires more study.
+## DTLS Timers and MTU
+
+When SPED is active, implementations SHOULD disable internal DTLS timeouts and resume them when
+receiving the first STUN Binding Response.
+
+When using a PQC cipher suite, implementations SHOULD reduce the DTLS MTU as needed so embedded
+DTLS packets still fit within the expected path MTU. Experiments with an MTU near 900 bytes have
+been promising, but the best fragmentation strategy requires more study.
+
+## Candidate-Pair Selection and Bandwidth
+
+Embedding DTLS does not create additional connectivity checks or change ICE's normal pacing, but
+it can substantially increase the size of each check. This is particularly relevant when a PQC
+handshake spans multiple packets or ICE checks several candidate pairs concurrently.
+
+Implementations SHOULD embed DTLS handshake packets on a limited number of the highest-priority
+candidate pairs being checked. The number of eligible pairs SHOULD account for the actual size of
+each STUN message, including embedded DTLS and all other attributes, across the entire ICE
+session. {{Appendix B.1 of ?RFC8445}} describes an initial budget of approximately 14,600
+bytes of outstanding connectivity-check traffic; enlarged checks SHOULD remain within that
+budget.
+
+When the available budget is exhausted, implementations SHOULD continue sending ordinary ICE
+connectivity checks without embedded DTLS. Candidate selection follows normal ICE prioritization;
+no particular candidate type, including relayed candidates, is required.
+
+## DTLS Role Selection
+
+For a client/server deployment using SPED, an answer with `a=setup:passive` lets the offerer act
+as the DTLS client and include its ClientHello in its first connectivity check. Depending on which
+endpoint's readiness is measured, this can allow the server to become ready approximately half an
+RTT earlier than an `a=setup:active` answer. Without SPED, choosing `a=setup:passive` can instead
+delay server readiness by approximately half an RTT.
+
+Implementations SHOULD consider this tradeoff when selecting the DTLS role. The total time before
+the offerer can send application data can differ from the server-readiness comparison, as shown in
+the DTLS 1.2 and DTLS 1.3 examples above.
 
 # Prior Work
 
@@ -586,26 +617,35 @@ MESSAGE-INTEGRITY mechanisms. Any spoofed ICE packets are rejected accordingly.
 
 ## Pacing and Congestion
 
-The protocol defined in this specification increases the size of the STUN packets that are sent by
-the ICE agent to a peer without knowing if that peer can use the embedded data. Although the
-initial data sent is just the DTLS ClientHello, this packet can be close to a MTU when a PQC
-cipher suite is used. If this is unacceptable, an offer-answer mechanism for SPED can be used to
-address this concern.
+Negotiating SPED with an ICE option prevents knowingly embedding DTLS for peers that do not
+support it, but embedding still increases the size of connectivity checks. A DTLS ClientHello,
+particularly one using PQC, can bring a STUN message close to the path MTU.
 
-The STUN requests used for embedding DTLS are already paced as described in
-{{Appendix B.1 of ?RFC8445}}, which limits the outgoing bandwidth from this mechanism.
-However, that pacing assumes an ICE check of "less than 120 bytes", which will not be
-the case when a DTLS ClientHello is embedded, especially a PQC one.
-
-Solutions to this problem require transmitting the DTLS ClientHello less often, perhaps only
-on certain candidate pairs, and is a subject for further study.
+The pacing in {{Appendix B.1 of ?RFC8445}} assumes connectivity checks of less than 120 bytes and
+does not, by itself, bound the bandwidth consumed by larger SPED messages. Implementations SHOULD
+account for actual STUN message sizes across candidate pairs, limit embedding to a subset of
+prioritized pairs, and continue unmodified ICE checks when the outstanding-data budget is
+exhausted, as described in Candidate-Pair Selection and Bandwidth above.
 
 # IANA Considerations
+
+## STUN Attributes
 
 This document defines two new STUN attributes, `DTLS-IN-STUN-DATA` and `DTLS-IN-STUN-ACK`. These
 attributes need to be registered with IANA in the "STUN Attributes" registry, following the
 procedures defined in {{?RFC8489}}. Provisional names have been used in this draft and the
 registry.
+
+## ICE Option: sped
+
+IANA is requested to register the following value in the "ICE Options" subregistry of the
+"Interactive Connectivity Establishment (ICE)" registry:
+
+* ICE Option: `sped`
+* Contact: Authors of this document
+* Change Controller: IETF
+* Description: Support for embedding DTLS handshake packets and acknowledgements in STUN messages,
+  as defined in this document.
 
 --- back
 
