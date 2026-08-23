@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-08-20T01:20:40.407542+00:00",
+  "timestamp": "2026-08-23T01:27:11.436457+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -1200,7 +1200,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2026-08-18T17:15:16Z",
-      "updatedAt": "2026-08-18T17:15:16Z",
+      "updatedAt": "2026-08-20T18:29:26Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
@@ -1212,7 +1212,100 @@
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOPBQjh88AAAABKHH6QQ",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "direction LGTM but I can not resist nitpicking ;-)",
+          "createdAt": "2026-08-19T14:55:09Z",
+          "updatedAt": "2026-08-20T18:29:25Z",
+          "comments": [
+            {
+              "originalPosition": 32,
+              "body": "that makes this negotiated? I could never figure out if ice-options are negotiated or declarative, libWebRTC includes \"trickle\" unconditionally in answers.\n\nMatches what I implemented though \ud83d\udc4d ",
+              "createdAt": "2026-08-19T14:55:09Z",
+              "updatedAt": "2026-08-20T18:29:25Z"
+            },
+            {
+              "originalPosition": 68,
+              "body": "I think we need the empty attribute. E.g. this scenario:\n* C: pqc hello hello pkt 1\n* S: has no data to send but can ack  pkt 1\n\nSee https://webrtc-review.googlesource.com/c/src/+/452860",
+              "createdAt": "2026-08-19T14:58:53Z",
+              "updatedAt": "2026-08-20T18:29:25Z"
+            },
+            {
+              "originalPosition": 88,
+              "body": "We should say that it must be included even if the ack list is empty which happens in particular on the very first binding request being sent out? ",
+              "createdAt": "2026-08-19T15:01:40Z",
+              "updatedAt": "2026-08-20T18:29:25Z"
+            },
+            {
+              "originalPosition": 130,
+              "body": "most recent up to the maximum size of the attribute?",
+              "createdAt": "2026-08-19T15:03:09Z",
+              "updatedAt": "2026-08-20T18:29:25Z"
+            },
+            {
+              "originalPosition": 134,
+              "body": "do we want empty data to be included if not?",
+              "createdAt": "2026-08-19T15:04:04Z",
+              "updatedAt": "2026-08-20T18:29:26Z"
+            },
+            {
+              "originalPosition": 142,
+              "body": "we need to retain that for the signaling race?",
+              "createdAt": "2026-08-19T15:05:11Z",
+              "updatedAt": "2026-08-20T18:29:26Z"
+            },
+            {
+              "originalPosition": 153,
+              "body": "MAY -> SHOULD?",
+              "createdAt": "2026-08-19T15:06:06Z",
+              "updatedAt": "2026-08-20T18:29:26Z"
+            },
+            {
+              "originalPosition": 169,
+              "body": "how would terminating SPED look like and how does it look like?",
+              "createdAt": "2026-08-19T15:07:31Z",
+              "updatedAt": "2026-08-20T18:29:26Z"
+            },
+            {
+              "originalPosition": 213,
+              "body": "negotiating?",
+              "createdAt": "2026-08-19T15:08:21Z",
+              "updatedAt": "2026-08-20T18:29:26Z"
+            },
+            {
+              "originalPosition": 228,
+              "body": "highest priority (host-host, prflx) vs most-likely-to-succeed (relay-relay) - we want to be spend budget on the latter but it is not always there, in particularly initially.",
+              "createdAt": "2026-08-19T15:10:38Z",
+              "updatedAt": "2026-08-20T18:29:26Z"
+            },
+            {
+              "originalPosition": 236,
+              "body": "but the other side could still use SPED so needs to know SPED *can* still be used?",
+              "createdAt": "2026-08-19T15:12:49Z",
+              "updatedAt": "2026-08-20T18:29:26Z"
+            },
+            {
+              "originalPosition": 208,
+              "body": "Harald brought up https://datatracker.ietf.org/doc/draft-jennings-ice-rtcweb-timing/00/ on the original CL for ice-options. Mostly about the \"STUN gun\" I think. Does a per-connection limit help us even if evil JS can create multiple?",
+              "createdAt": "2026-08-19T15:14:59Z",
+              "updatedAt": "2026-08-20T18:29:26Z"
+            },
+            {
+              "originalPosition": 242,
+              "body": "This might need a bit more explanation. The server (unless lite) can actually send the first connectivity check but it might die at the NAT.",
+              "createdAt": "2026-08-19T15:16:35Z",
+              "updatedAt": "2026-08-20T18:29:26Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
