@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-08-23T01:27:11.436457+00:00",
+  "timestamp": "2026-08-27T08:11:43.759772+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -1200,7 +1200,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2026-08-18T17:15:16Z",
-      "updatedAt": "2026-08-20T18:29:26Z",
+      "updatedAt": "2026-08-27T04:11:06Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
@@ -1302,6 +1302,266 @@
               "body": "This might need a bit more explanation. The server (unless lite) can actually send the first connectivity check but it might die at the NAT.",
               "createdAt": "2026-08-19T15:16:35Z",
               "updatedAt": "2026-08-20T18:29:26Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDvEog",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T03:55:51Z",
+          "updatedAt": "2026-08-27T03:55:51Z",
+          "comments": [
+            {
+              "originalPosition": 32,
+              "body": "8839 says it is O/A:\r\n> The existence of an \"ice-options\" in an offer indicates that a certain extension is supported by the agent, and it is willing to use it if the peer agent also includes the same extension in the answer. \r\n\r\nalso, the mechanism only works when both sides participate, so negotiated seems right to me",
+              "createdAt": "2026-08-27T03:55:51Z",
+              "updatedAt": "2026-08-27T03:55:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDvelA",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T03:57:19Z",
+          "updatedAt": "2026-08-27T03:57:19Z",
+          "comments": [
+            {
+              "originalPosition": 68,
+              "body": "Disagree, we can just have ACK without DATA. Empty DATA would suggest a 0-len embedded packet, which we should avoid.",
+              "createdAt": "2026-08-27T03:57:19Z",
+              "updatedAt": "2026-08-27T03:57:19Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDwDrA",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T03:58:50Z",
+          "updatedAt": "2026-08-27T03:58:50Z",
+          "comments": [
+            {
+              "originalPosition": 130,
+              "body": "agreed, good catch. ",
+              "createdAt": "2026-08-27T03:58:50Z",
+              "updatedAt": "2026-08-27T03:58:51Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDwI9g",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T03:59:03Z",
+          "updatedAt": "2026-08-27T03:59:03Z",
+          "comments": [
+            {
+              "originalPosition": 130,
+              "body": "I think we'll have to describe how to truncate as well.",
+              "createdAt": "2026-08-27T03:59:03Z",
+              "updatedAt": "2026-08-27T03:59:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDwdRQ",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T03:59:59Z",
+          "updatedAt": "2026-08-27T03:59:59Z",
+          "comments": [
+            {
+              "originalPosition": 134,
+              "body": "That seems confusing to me. I'd just omit the attrib from the STUN message if we're not sending anything.",
+              "createdAt": "2026-08-27T03:59:59Z",
+              "updatedAt": "2026-08-27T03:59:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDw9gQ",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T04:02:00Z",
+          "updatedAt": "2026-08-27T04:02:01Z",
+          "comments": [
+            {
+              "originalPosition": 142,
+              "body": "I don't think we need this. We can just decide when we get the answer, or earlier if there's a legitimate DATA attribute.",
+              "createdAt": "2026-08-27T04:02:00Z",
+              "updatedAt": "2026-08-27T04:02:01Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDxi3Q",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T04:04:25Z",
+          "updatedAt": "2026-08-27T04:04:25Z",
+          "comments": [
+            {
+              "originalPosition": 153,
+              "body": "MAY seems right here - it's up to the application whether it can benefit from continuing to send encapsulated.",
+              "createdAt": "2026-08-27T04:04:25Z",
+              "updatedAt": "2026-08-27T04:04:25Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDxtGQ",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T04:05:02Z",
+          "updatedAt": "2026-08-27T04:05:02Z",
+          "comments": [
+            {
+              "originalPosition": 169,
+              "body": "just stopping encapsulation in sent messages",
+              "createdAt": "2026-08-27T04:05:02Z",
+              "updatedAt": "2026-08-27T04:05:02Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDyAUQ",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T04:05:47Z",
+          "updatedAt": "2026-08-27T04:05:47Z",
+          "comments": [
+            {
+              "originalPosition": 213,
+              "body": "yes good catch",
+              "createdAt": "2026-08-27T04:05:47Z",
+              "updatedAt": "2026-08-27T04:05:48Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDya4g",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T04:06:33Z",
+          "updatedAt": "2026-08-27T04:06:34Z",
+          "comments": [
+            {
+              "originalPosition": 228,
+              "body": "agreed, will fix",
+              "createdAt": "2026-08-27T04:06:33Z",
+              "updatedAt": "2026-08-27T04:06:34Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDzgfQ",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T04:09:11Z",
+          "updatedAt": "2026-08-27T04:09:11Z",
+          "comments": [
+            {
+              "originalPosition": 236,
+              "body": "it can continue to do so if its budget is not exhausted, I don't think it needs any additional signaling here",
+              "createdAt": "2026-08-27T04:09:11Z",
+              "updatedAt": "2026-08-27T04:09:11Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDz7gQ",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T04:10:53Z",
+          "updatedAt": "2026-08-27T04:10:53Z",
+          "comments": [
+            {
+              "originalPosition": 208,
+              "body": "Did anything from that stun-gun draft make it into the v1 webrtc docs? I agree it would be nice to mention this, ideally we'd have something specific to point at.",
+              "createdAt": "2026-08-27T04:10:53Z",
+              "updatedAt": "2026-08-27T04:10:53Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLDz-4w",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T04:11:06Z",
+          "updatedAt": "2026-08-27T04:11:06Z",
+          "comments": [
+            {
+              "originalPosition": 242,
+              "body": "agreed, will fix",
+              "createdAt": "2026-08-27T04:11:06Z",
+              "updatedAt": "2026-08-27T04:11:06Z"
             }
           ]
         }
