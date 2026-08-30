@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-08-27T08:11:43.759772+00:00",
+  "timestamp": "2026-08-30T04:22:11.612189+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -1200,7 +1200,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2026-08-18T17:15:16Z",
-      "updatedAt": "2026-08-27T04:11:06Z",
+      "updatedAt": "2026-08-27T22:39:01Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
@@ -1562,6 +1562,26 @@
               "body": "agreed, will fix",
               "createdAt": "2026-08-27T04:11:06Z",
               "updatedAt": "2026-08-27T04:11:06Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABLMgT_w",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-27T22:39:01Z",
+          "updatedAt": "2026-08-27T22:39:01Z",
+          "comments": [
+            {
+              "originalPosition": 88,
+              "body": "I think it's cleaner if we don't have this. No ACKs to send -> no need to include the attribute.",
+              "createdAt": "2026-08-27T22:39:01Z",
+              "updatedAt": "2026-08-27T22:39:01Z"
             }
           ]
         }
