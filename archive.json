@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-08-30T04:22:11.612189+00:00",
+  "timestamp": "2026-09-06T03:34:25.119865+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -608,7 +608,7 @@
       ],
       "body": "This has been a discussion item for many months, but doesn't seem to have made it to an issue.\nThe advantages of an SDP ICE option are:\n- It allows to be certain that the other end supports the mechanism\n- By varying the token value, it is easy to support \"pre-spec-release\" versions of the mechanism even if attribute IDs are the same between versions\n- It doesn't exercise the mechanism for throwing away \"comprehension optional\" attributes in ICE\n\nThe disadvantages are:\n- It clutters up SDP\n- It ties deployment of the mechanism to SDP-based applications (but dependency on fingerprint does that anyway)\n\nThoughts?\n\n",
       "createdAt": "2026-04-29T08:52:39Z",
-      "updatedAt": "2026-08-11T17:35:25Z",
+      "updatedAt": "2026-09-04T07:29:40Z",
       "closedAt": null,
       "comments": [
         {
@@ -750,6 +750,13 @@
           "body": "but how does the first STUN binding request from a DTLS server supporting this look then? If the DTLS server has not received a client hello it has no data to send. If that arrives before the SDP answer the DTLS client needs to know the peer supports the protocol?",
           "createdAt": "2026-08-11T17:35:25Z",
           "updatedAt": "2026-08-11T17:35:25Z"
+        },
+        {
+          "author": "ltsg123",
+          "authorAssociation": "NONE",
+          "body": "Chromium emits:\n\na=ice-options:trickle goog-sped-v1\n\nThis is not conformant with the existing ICE SDP grammar.\n\nRFC 8839 Section 5.6 defines:\n\n  ice-option-tag = 1*ice-char\n\nRFC 6336 defines:\n\n  ice-char = ALPHA / DIGIT / \"+\" / \"/\"\n\nThe \"-\" characters in \"goog-sped-v1\" are therefore not valid in an\nice-option-tag.\n\nIf SDP ICE option signaling is intended for SPED, the token needs to conform\nto the existing grammar.",
+          "createdAt": "2026-09-04T07:29:40Z",
+          "updatedAt": "2026-09-04T07:29:40Z"
         }
       ]
     },
