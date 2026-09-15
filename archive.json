@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-06T03:34:25.119865+00:00",
+  "timestamp": "2026-09-15T03:58:11.933262+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -1207,7 +1207,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2026-08-18T17:15:16Z",
-      "updatedAt": "2026-08-27T22:39:01Z",
+      "updatedAt": "2026-09-15T02:08:13Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
@@ -1589,6 +1589,26 @@
               "body": "I think it's cleaner if we don't have this. No ACKs to send -> no need to include the attribute.",
               "createdAt": "2026-08-27T22:39:01Z",
               "updatedAt": "2026-08-27T22:39:01Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABNjpNvg",
+          "commit": {
+            "abbreviatedOid": "cb95240"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-09-15T02:08:12Z",
+          "updatedAt": "2026-09-15T02:08:12Z",
+          "comments": [
+            {
+              "originalPosition": 153,
+              "body": "FWIW, I wonder if this is the first step towards multipath ICE...",
+              "createdAt": "2026-09-15T02:08:12Z",
+              "updatedAt": "2026-09-15T02:08:13Z"
             }
           ]
         }
