@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-15T03:58:11.933262+00:00",
+  "timestamp": "2026-09-17T04:01:31.296573+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -1207,7 +1207,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2026-08-18T17:15:16Z",
-      "updatedAt": "2026-09-15T02:08:13Z",
+      "updatedAt": "2026-09-15T18:37:11Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
@@ -1218,7 +1218,22 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "jonasore",
+          "authorAssociation": "NONE",
+          "body": "1) I propose that we clarify that the SPED feature can not be turned on in renegotiation\r\ni.e.\r\ncase 1)\r\nOFFER include SPED\r\nPR-ANSWER does not include SPED\r\nif subsequent PS-ANSWER or ANSWER does include SPED, it shall be ignored\r\nor subsequent OFFER/ANSWER for the same WebRTC session\r\n\r\ncase 2)\r\nOFFER include SPED\r\nPR-ANSWER does  include SPED\r\nif subsequent PS-ANSWER or ANSWER does not include SPED, OFFERER should interpret that as if SPED is turned off\r\n",
+          "createdAt": "2026-09-15T17:19:07Z",
+          "updatedAt": "2026-09-15T17:19:07Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> 1. I propose that we clarify that the SPED feature can not be turned on in renegotiation\r\n>    i.e.\r\n>    case 1)\r\n>    OFFER include SPED\r\n>    PR-ANSWER does not include SPED\r\n>    if subsequent PS-ANSWER or ANSWER does include SPED, it shall be ignored\r\n>    or subsequent OFFER/ANSWER for the same WebRTC session\r\n> \r\n> case 2) OFFER include SPED PR-ANSWER does include SPED if subsequent PS-ANSWER or ANSWER does not include SPED, OFFERER should interpret that as if SPED is turned off\r\n\r\nLet's follow the guidance from 8445 on requiring an ICE restart to change ICE options, something like\r\n\r\n> In subsequent offer/answer exchanges, endpoints MUST NOT change the presence of the sped ICE option unless the exchange performs an ICE restart, as specified in Sections 4.4.1.1.1 and 4.4.2.1 of RFC 8839.",
+          "createdAt": "2026-09-15T18:37:11Z",
+          "updatedAt": "2026-09-15T18:37:11Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOPBQjh88AAAABKHH6QQ",
