@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-17T04:01:31.296573+00:00",
+  "timestamp": "2026-10-04T04:54:58.557042+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -888,6 +888,22 @@
           "updatedAt": "2026-06-25T13:17:20Z"
         }
       ]
+    },
+    {
+      "number": 20,
+      "id": "I_kwDOPBQjh88AAAABUbD3Mg",
+      "title": "SPED: discourage use of DTLS session tickets?",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/20",
+      "state": "OPEN",
+      "author": "fippo",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "while implementing sped in pion I noticed that it sent the NewSessionTicket as a separate packet. BoringSSL does the same.\n\nIn libWebRTC with DTLS 1.3 this would have caused issues because they are considered separate flights and flush the ack before sending it (which should be ok). Luckily we never hit this because I considered session tickets dead weight in https://webrtc-review.googlesource.com/c/src/+/362526 (570 bytes instead of 75). Apparently it is even worse in DTLS 1.3 where this is ~978 bytes which makes it hard to embed.\n\nPion is disabling it [here](https://github.com/pion/dtls/pull/1157)",
+      "createdAt": "2026-10-01T16:25:01Z",
+      "updatedAt": "2026-10-01T16:31:20Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
