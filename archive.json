@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-04T04:54:58.557042+00:00",
+  "timestamp": "2026-10-22T03:48:38.165627+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -425,7 +425,7 @@
       "labels": [],
       "body": "In earlier drafts of the document these were removed via implicit acking, but IIUC that wasn't implemented, and this mechanism also doesn't work for acks sent in binding responses.\n\n@juberti proposal: just remove ACKs for Flight N when Flight N+1 is sent (as there's no need to ack old flights)\nhttps://webrtc-review.googlesource.com/c/src/+/386780 - old CL",
       "createdAt": "2026-03-17T20:28:37Z",
-      "updatedAt": "2026-06-01T07:18:20Z",
+      "updatedAt": "2026-10-20T18:31:26Z",
       "closedAt": null,
       "comments": [
         {
@@ -455,6 +455,20 @@
           "body": "implicit ack complicates thing if one were to separate the STUN and DTLS processing entities (see the openai blog post).\nTechnically this a a breaking change for libwebrtc but unlike the other changes this is already a no-op at least when talking to libWebRTC which always sends the ack explicitly.\n\nWhy would an implementer chose not to ack? That makes a lite server slightly easier but does there is no upside other than that?",
           "createdAt": "2026-06-01T07:07:39Z",
           "updatedAt": "2026-06-01T07:18:20Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@jonasore and I discussed a few different options last week for managing this (in addition to my original suggestion, having the ACK layer watch what flights are being sent and removing obsolete ACKs when a new one is sent).\n\n1. Never remove ACKs. We can increase the maximum attribute size to give us breathing room for the future.\n2. Let ACKs age out (we mention this briefly in the current doc). That is, ACKs for newer packets displace older ones. This works well with DTLS since each side takes turns sending flights.\n3. Rely entirely on implicit STUN acknowledgement and remove the need for a separate ACK mechanism. If STUN/DTLS are decoupled in a server, that server would need to ensure delivery to the DTLS layer.",
+          "createdAt": "2026-10-20T16:59:10Z",
+          "updatedAt": "2026-10-20T17:01:17Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "here's an overview of what the typical case looks like here:\n```\nClient L2       Client (full ICE)              Server (ICE Lite)     Server L2\n---------       -----------------              -----------------     ---------\n[]                     |                              |              []\n                       |--- STUN Request T1 + F1:a -->|\n                       |                              |              [a]\n                       |<-- STUN Response T1 ----------|\n                       |    ACK [a]                   |              [a]\n                       |                              |              retained\n                       |<-- direct F2:b1 -------------|\n[b1]                   |                              |\n                       |<-- direct F2:b2 -------------|\n[b1,b2]                |                              |\n                       |                              |\n                       |--- direct F3:c1 ------------>|\n                       |                              |              [a,c1]\n                       |--- direct F3:c2 ------------>|\n                       |                              |              [a,c1,c2]\n                       |                              |\n                       |<-- direct F4:d --------------|\n[b1,b2,d]              |                              |\n                       |                              |\n                       | No SPED ACKs sent during     |\n                       | those direct DTLS flights    |\n                       |                              |\n                       |--- next STUN Request T2 ---->|\n                       |    ACK [b1,b2,d]             |\n                       |                              |\n                       |<-- STUN Response T2 ----------|\n                       |    ACK [a,c1,c2]             |\n[b1,b2,d]              |                              |              [a,c1,c2]\nretained               |                              |              retained\n```",
+          "createdAt": "2026-10-20T18:31:26Z",
+          "updatedAt": "2026-10-20T18:31:26Z"
         }
       ]
     },
@@ -904,6 +918,30 @@
       "updatedAt": "2026-10-01T16:31:20Z",
       "closedAt": null,
       "comments": []
+    },
+    {
+      "number": 21,
+      "id": "I_kwDOPBQjh88AAAABYurYUQ",
+      "title": "SNAP: origin trial feedback",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/21",
+      "state": "OPEN",
+      "author": "fippo",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "if you are comfortable sharing. Improvements in multiples of unstated RTT are fine.",
+      "createdAt": "2026-10-21T04:48:39Z",
+      "updatedAt": "2026-10-21T04:54:59Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "xnorpx",
+          "authorAssociation": "NONE",
+          "body": "In Microsoft we are running SNAP both:\n\nChromium browser to our WebRTC Rust based server \nWebRTC Rust based clients to WebRTC Rust based server\n\nOur server is running ice-lite and clients always connect to the server.\n\nOur backend is hosting copilot voice where connection setup is important.\n\nWhen rolling out the origin trial we ran our own AB tests and saw an improvement of 23% in P50 and 22% on P90 Transport setup latency.\n\nThis is with ICE + DTLS 1.2 so ~ 3RTT vs 5RTT.\n\nThis has direct customer impact and we would highly recommend this to become at least optional in libWebrtc and chromium.",
+          "createdAt": "2026-10-21T04:54:59Z",
+          "updatedAt": "2026-10-21T04:54:59Z"
+        }
+      ]
     }
   ],
   "pulls": [
