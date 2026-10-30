@@ -183,7 +183,9 @@ Subject to charset: No
 
 Purpose: allows the SDP to carry the information contained in a SCTP INIT chunk
 
-Appropriate values: A base64-encoded value. An implementation generating the value MAY
+Appropriate values: A base64-encoded value. The encoded octets are the INIT chunk exactly
+as defined in {{RFC9260}}, including its network byte order.
+An implementation generating the value MAY
 include the trailing chunk padding described in {{Section 3.2 of RFC9260}}. An
 implementation parsing the value MUST accept it both with and without the trailing padding.
 
