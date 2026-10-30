@@ -248,8 +248,11 @@ in {{Section 5.1 of RFC9260}} and SHOULD NOT start the T1-init timer.
 
 Processing of the "sctp-init" attribute from the remote side SHOULD NOT change the state of the SCTP association and SHOULD NOT start any timer.
 
-When the "sctp-init" attribute has been negotiated, both endpoints SHOULD consider the SCTP association to be in the ESTABLISHED state,
-as described in {{Section 4 of RFC9260}}, once the DTLS handshake finishes. The steps A-E described in {{Section 5.1 of RFC9260}} can be skipped.
+When the "sctp-init" attribute has been negotiated and the DTLS handshake finishes, both endpoints initialize
+the SCTP association from the local and remote INIT chunks in the same way as from the INIT and INIT ACK chunks
+of a regular handshake, e.g. for the number of streams (see {{Section 5.1.1 of RFC9260}}).
+The association then SHOULD be considered to be in the ESTABLISHED state, as described in {{Section 4 of RFC9260}}.
+The steps A-E described in {{Section 5.1 of RFC9260}} can be skipped.
 
 # Example negotiation {#example}
 
