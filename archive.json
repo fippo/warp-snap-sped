@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-22T03:48:38.165627+00:00",
+  "timestamp": "2026-11-01T04:59:16.891454+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -1235,13 +1235,13 @@
       "labels": [],
       "body": "asked for in\r\nhttps://mailarchive.ietf.org/arch/msg/tsvwg/Kuq5b8FrZe0kDDkFw6NY77QP6Ww/",
       "createdAt": "2026-07-21T06:07:55Z",
-      "updatedAt": "2026-07-21T06:07:55Z",
+      "updatedAt": "2026-10-30T06:42:45Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
-      "baseRefOid": "80c08518f6e5d785f99d69e99f762177b6a65e61",
+      "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "snap-padding",
-      "headRefOid": "c18236c322311026a015eb88d4eb48c56247c517",
+      "headRefOid": "8a76320acc3c600391dca7850896d4add35b795f",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -1682,6 +1682,32 @@
           ]
         }
       ]
+    },
+    {
+      "number": 22,
+      "id": "PR_kwDOPBQjh88AAAABLtMBGQ",
+      "title": "snap: initialize the association from the INIT chunks",
+      "url": "https://github.com/fippo/warp-snap-sped/pull/22",
+      "state": "OPEN",
+      "author": "fippo",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Clarify that once the DTLS handshake finishes the association is initialized from the local and remote INIT chunks, e.g. for the number of streams, before moving to the ESTABLISHED state.",
+      "createdAt": "2026-10-30T06:42:53Z",
+      "updatedAt": "2026-10-30T06:42:53Z",
+      "baseRepository": "fippo/warp-snap-sped",
+      "baseRefName": "main",
+      "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
+      "headRepository": "fippo/warp-snap-sped",
+      "headRefName": "snap-establish",
+      "headRefOid": "c394bebe571edf3c2467578e3087e62c431071a3",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
