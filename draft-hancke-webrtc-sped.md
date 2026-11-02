@@ -227,6 +227,10 @@ Connectivity checks from the answerer can reach the offerer before the SDP answe
 that advertises `sped` MUST therefore be prepared to receive and process authenticated STUN
 messages containing SPED attributes before learning whether the answer includes the option.
 
+Offerers that receive SPED attributes in these early STUN messages SHOULD conclude that
+the answerer supports SPED, but absence of these attributes MUST NOT be used as an indication
+that the answerer does not support SPED.
+
 #### Backward Compatibility and Fallback
 
 An endpoint that does not support SPED omits the `sped` ICE option from its answer, causing the
@@ -266,7 +270,7 @@ bytes to ensure the next attribute, if any, starts on a 4-byte boundary; see {{?
   the `DTLS-IN-STUN-DATA` attribute value and ignores padding.
 * Implementations SHOULD cap the number of uint32 entries included in this attribute. A cap of 4
   entries is RECOMMENDED, which bounds the attribute size while still covering all known handshake cases.
-* The attribute can be empty.
+* The attribute SHOULD be omitted when there are no ACKs to send, but MAY be empty.
 
 ### MTU Considerations
 
@@ -344,6 +348,10 @@ MUST continue to account for STUN overhead.
 Once a selected ICE candidate pair exists, DTLS handshake packets are sent directly as described
 above. Implementations MAY terminate use of SPED at that point, or continue embedding on other
 candidate pairs and sending explicit acknowledgements until DTLS handshaking is complete.
+
+Note that termination is unilateral; even if an implementation stops sending embedded packets,
+the remote implementation may continue to do so, and the local implementation MUST continue
+to process these embedded packets as described above.
 
 # Examples
 
@@ -546,10 +554,10 @@ The following guidance may change based on implementation and deployment experie
 
 ## DTLS Timers and MTU
 
-When SPED is active, implementations SHOULD disable internal DTLS timeouts and resume them when
-receiving the first STUN Binding Response.
+When SPED is active, retransmission will be handled within SPED. Accordingly, implementations
+SHOULD disable internal DTLS timeouts and resume them once they have terminated SPED.
 
-When using a PQC cipher suite, implementations SHOULD reduce the DTLS MTU as needed so embedded
+When negotiating a PQC cipher suite, implementations SHOULD reduce the DTLS MTU as needed so embedded
 DTLS packets still fit within the expected path MTU. Experiments with an MTU near 900 bytes have
 been promising, but the best fragmentation strategy requires more study.
 
@@ -559,28 +567,29 @@ Embedding DTLS does not create additional connectivity checks or change ICE's no
 it can substantially increase the size of each check. This is particularly relevant when a PQC
 handshake spans multiple packets or ICE checks several candidate pairs concurrently.
 
-Implementations SHOULD embed DTLS handshake packets on a limited number of the highest-priority
-candidate pairs being checked. The number of eligible pairs SHOULD account for the actual size of
-each STUN message, including embedded DTLS and all other attributes, across the entire ICE
-session. {{Appendix B.1 of ?RFC8445}} describes an initial budget of approximately 14,600
-bytes of outstanding connectivity-check traffic; enlarged checks SHOULD remain within that
-budget.
+{{Appendix B.1 of ?RFC8445}} describes an initial budget of approximately 14,600
+bytes of outstanding connectivity-check traffic, and implementations SHOULD ensure that
+checks stay within that budget even when embedding DTLS packets.
 
-When the available budget is exhausted, implementations SHOULD continue sending ordinary ICE
-connectivity checks without embedded DTLS. Candidate selection follows normal ICE prioritization;
-no particular candidate type, including relayed candidates, is required.
+One approach is to only perform SPED embedding on a limited number of the candidate pairs
+being checked, typically those most likely to succeed (e.g., pairs using a relay candidate), in
+order to maximize the chance of a successful SPED exchange. Note that this suggested selection
+algorithm is somewhat different than ICE's built-in PRIORITY ordering.
+
+Another approach is to skip SPED embedding for pairs that have outstanding checks.
+
+When the available budget is exhausted, implementations SHOULD send their ICE
+connectivity checks without embedded DTLS until enough time passes to return to an
+under-budget state.
 
 ## DTLS Role Selection
 
 For a client/server deployment using SPED, an answer with `a=setup:passive` lets the offerer act
-as the DTLS client and include its ClientHello in its first connectivity check. Depending on which
-endpoint's readiness is measured, this can allow the server to become ready approximately half an
-RTT earlier than an `a=setup:active` answer. Without SPED, choosing `a=setup:passive` can instead
-delay server readiness by approximately half an RTT.
-
-Implementations SHOULD consider this tradeoff when selecting the DTLS role. The total time before
-the offerer can send application data can differ from the server-readiness comparison, as shown in
-the DTLS 1.2 and DTLS 1.3 examples above.
+as the DTLS client and include its ClientHello in its first connectivity check. This can allow the
+server to become ready approximately half an RTT earlier than an `a=setup:active` answer.
+Without SPED, choosing `a=setup:passive` can instead delay server readiness by approximately half an RTT,
+as otherwise the server could have started the DTLS handshake upon receipt of the first ICE connectivity check.
+The presence of the `sped` ICE option can be used to select the optimal value for the setup attribute.
 
 # Prior Work
 
