@@ -3,10 +3,10 @@ title: "SCTP Negotiation Acceleration Protocol"
 abbrev: "SNAP"
 category: info
 
-docname: draft-hancke-tsvwg-snap-00
+docname: draft-hancke-tsvwg-snap-01
 submissiontype: IETF
 number:
-date: 2025-12-29
+date: 2026-11-02
 consensus: true
 v: 3
 area: AREA
