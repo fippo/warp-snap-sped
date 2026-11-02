@@ -5,14 +5,14 @@
 Transport and Services Working Group                           P. Hancke
 Internet-Draft                                       Meta Platforms Inc.
 Intended status: Informational                                 J. Uberti
-Expires: 2 July 2026                                              OpenAI
+Expires: 6 May 2027                                               OpenAI
                                                                V. Boivie
                                                                   Google
-                                                        29 December 2025
+                                                         2 November 2026
 
 
                  SCTP Negotiation Acceleration Protocol
-                       draft-hancke-tsvwg-snap-00
+                       draft-hancke-tsvwg-snap-01
 
 Abstract
 
@@ -57,11 +57,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 July 2026.
+   This Internet-Draft will expire on 6 May 2027.
 
 Copyright Notice
 
-   Copyright (c) 2025 IETF Trust and the persons identified as the
+   Copyright (c) 2026 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -245,7 +245,12 @@ Table of Contents
    Purpose: allows the SDP to carry the information contained in a SCTP
    INIT chunk
 
-   Appropriate values: A base64-encoded value.
+   Appropriate values: A base64-encoded value.  The encoded octets are
+   the INIT chunk exactly as defined in [RFC9260], including its network
+   byte order.  An implementation generating the value MAY include the
+   trailing chunk padding described in Section 3.2 of [RFC9260].  An
+   implementation parsing the value MUST accept it both with and without
+   the trailing padding.
 
    Syntax: sctp-init-value = base64 ; base64 defined in RFC 4566
 
@@ -330,11 +335,14 @@ Table of Contents
    NOT change the state of the SCTP association and SHOULD NOT start any
    timer.
 
-   When the "sctp-init" attribute has been negotiated, both endpoints
-   SHOULD consider the SCTP association to be in the ESTABLISHED state,
-   as described in Section 4 of [RFC9260], once the DTLS handshake
-   finishes.  The steps A-E described in Section 5.1 of [RFC9260] can be
-   skipped.
+   When the "sctp-init" attribute has been negotiated and the DTLS
+   handshake finishes, both endpoints initialize the SCTP association
+   from the local and remote INIT chunks in the same way as from the
+   INIT and INIT ACK chunks of a regular handshake, e.g. for the number
+   of streams (see Section 5.1.1 of [RFC9260]).  The association then
+   SHOULD be considered to be in the ESTABLISHED state, as described in
+   Section 4 of [RFC9260].  The steps A-E described in Section 5.1 of
+   [RFC9260] can be skipped.
 
 7.  Example negotiation
 
@@ -502,8 +510,8 @@ Table of Contents
 
 Acknowledgments
 
-   The authors wish to thank Harald Alvestrand, Lennart Grahl and Jonas
-   Oreland for their invaluable comments.
+   The authors wish to thank Harald Alvestrand, Lennart Grahl, Jonas
+   Oreland and Michael Tuexen for their invaluable comments.
 
 Authors' Addresses
 
