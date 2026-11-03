@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-01T04:59:16.891454+00:00",
+  "timestamp": "2026-11-03T05:48:49.378452+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -1228,24 +1228,26 @@
       "id": "PR_kwDOPBQjh870M3iI",
       "title": "snap: specify generation and handling of padding",
       "url": "https://github.com/fippo/warp-snap-sped/pull/18",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "fippo",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "asked for in\r\nhttps://mailarchive.ietf.org/arch/msg/tsvwg/Kuq5b8FrZe0kDDkFw6NY77QP6Ww/",
       "createdAt": "2026-07-21T06:07:55Z",
-      "updatedAt": "2026-10-30T06:42:45Z",
+      "updatedAt": "2026-11-02T20:36:37Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "snap-padding",
       "headRefOid": "8a76320acc3c600391dca7850896d4add35b795f",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-11-02T20:36:37Z",
+      "mergedAt": "2026-11-02T20:36:36Z",
+      "mergedBy": "fippo",
+      "mergeCommit": {
+        "oid": "391dae6c3cbbe8471cddda801217bc697c54ae84"
+      },
       "comments": [],
       "reviews": []
     },
@@ -1261,13 +1263,13 @@
       "labels": [],
       "body": "",
       "createdAt": "2026-08-18T17:15:16Z",
-      "updatedAt": "2026-09-15T18:37:11Z",
+      "updatedAt": "2026-11-03T00:04:33Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "juberti/spedits",
-      "headRefOid": "cb95240ebd8db0c1345a951573fa50a20840be4e",
+      "headRefOid": "8697c8aee5e5208c51ac15a8da46b4e565d7f4d1",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -1680,6 +1682,26 @@
               "updatedAt": "2026-09-15T02:08:13Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOPBQjh88AAAABVnC2Tg",
+          "commit": {
+            "abbreviatedOid": "8697c8a"
+          },
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-11-03T00:04:33Z",
+          "updatedAt": "2026-11-03T00:04:33Z",
+          "comments": [
+            {
+              "originalPosition": 130,
+              "body": "will handle this in the next PR",
+              "createdAt": "2026-11-03T00:04:33Z",
+              "updatedAt": "2026-11-03T00:04:33Z"
+            }
+          ]
         }
       ]
     },
@@ -1688,24 +1710,26 @@
       "id": "PR_kwDOPBQjh88AAAABLtMBGQ",
       "title": "snap: initialize the association from the INIT chunks",
       "url": "https://github.com/fippo/warp-snap-sped/pull/22",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "fippo",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "Clarify that once the DTLS handshake finishes the association is initialized from the local and remote INIT chunks, e.g. for the number of streams, before moving to the ESTABLISHED state.",
       "createdAt": "2026-10-30T06:42:53Z",
-      "updatedAt": "2026-10-30T06:42:53Z",
+      "updatedAt": "2026-11-02T20:36:37Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
       "headRepository": "fippo/warp-snap-sped",
       "headRefName": "snap-establish",
       "headRefOid": "c394bebe571edf3c2467578e3087e62c431071a3",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-11-02T20:36:37Z",
+      "mergedAt": "2026-11-02T20:36:36Z",
+      "mergedBy": "fippo",
+      "mergeCommit": {
+        "oid": "82dc2912de93b4ce370c51f96f2a7bbebf8e0e30"
+      },
       "comments": [],
       "reviews": []
     }
