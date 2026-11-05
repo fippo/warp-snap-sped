@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-03T05:48:49.378452+00:00",
+  "timestamp": "2026-11-05T05:43:15.370553+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -931,7 +931,7 @@
       "labels": [],
       "body": "if you are comfortable sharing. Improvements in multiples of unstated RTT are fine.",
       "createdAt": "2026-10-21T04:48:39Z",
-      "updatedAt": "2026-10-21T04:54:59Z",
+      "updatedAt": "2026-11-04T17:17:14Z",
       "closedAt": null,
       "comments": [
         {
@@ -940,6 +940,20 @@
           "body": "In Microsoft we are running SNAP both:\n\nChromium browser to our WebRTC Rust based server \nWebRTC Rust based clients to WebRTC Rust based server\n\nOur server is running ice-lite and clients always connect to the server.\n\nOur backend is hosting copilot voice where connection setup is important.\n\nWhen rolling out the origin trial we ran our own AB tests and saw an improvement of 23% in P50 and 22% on P90 Transport setup latency.\n\nThis is with ICE + DTLS 1.2 so ~ 3RTT vs 5RTT.\n\nThis has direct customer impact and we would highly recommend this to become at least optional in libWebrtc and chromium.",
           "createdAt": "2026-10-21T04:54:59Z",
           "updatedAt": "2026-10-21T04:54:59Z"
+        },
+        {
+          "author": "Frosne",
+          "authorAssociation": "NONE",
+          "body": "> 1. In Microsoft we are running SNAP both:\n>        Chromium browser to our WebRTC Rust based server\n>        WebRTC Rust based clients to WebRTC Rust based server\n>        Our server is running ice-lite and clients always connect to the server.\n>        Our backend is hosting copilot voice where connection setup is important.\n>        When rolling out the origin trial we ran our own AB tests and saw an improvement of 23% in P50 and 22% on P90 Transport setup latency.\n>        This is with ICE + DTLS 1.2 so ~ 3RTT vs 5RTT.\n>        This has direct customer impact and we would highly recommend this to become at least optional in libWebrtc and chromium.\n\nJust out of curiousity, have you tried DTLS1.3? ",
+          "createdAt": "2026-11-04T14:12:16Z",
+          "updatedAt": "2026-11-04T14:12:16Z"
+        },
+        {
+          "author": "xnorpx",
+          "authorAssociation": "NONE",
+          "body": "> > 1. In Microsoft we are running SNAP both:\n> >    Chromium browser to our WebRTC Rust based server\n> >    WebRTC Rust based clients to WebRTC Rust based server\n> >    Our server is running ice-lite and clients always connect to the server.\n> >    Our backend is hosting copilot voice where connection setup is important.\n> >    When rolling out the origin trial we ran our own AB tests and saw an improvement of 23% in P50 and 22% on P90 Transport setup latency.\n> >    This is with ICE + DTLS 1.2 so ~ 3RTT vs 5RTT.\n> >    This has direct customer impact and we would highly recommend this to become at least optional in libWebrtc and chromium.\n> \n> Just out of curiousity, have you tried DTLS1.3?\n\nYes, but we have not fully rolled it out yet.",
+          "createdAt": "2026-11-04T17:17:14Z",
+          "updatedAt": "2026-11-04T17:17:14Z"
         }
       ]
     }
@@ -1235,7 +1249,7 @@
       "labels": [],
       "body": "asked for in\r\nhttps://mailarchive.ietf.org/arch/msg/tsvwg/Kuq5b8FrZe0kDDkFw6NY77QP6Ww/",
       "createdAt": "2026-07-21T06:07:55Z",
-      "updatedAt": "2026-11-02T20:36:37Z",
+      "updatedAt": "2026-11-03T06:23:23Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
@@ -1717,7 +1731,7 @@
       "labels": [],
       "body": "Clarify that once the DTLS handshake finishes the association is initialized from the local and remote INIT chunks, e.g. for the number of streams, before moving to the ESTABLISHED state.",
       "createdAt": "2026-10-30T06:42:53Z",
-      "updatedAt": "2026-11-02T20:36:37Z",
+      "updatedAt": "2026-11-03T06:23:24Z",
       "baseRepository": "fippo/warp-snap-sped",
       "baseRefName": "main",
       "baseRefOid": "c75796c59a1a8d884ff1e28c2ee1258b048e5f5c",
