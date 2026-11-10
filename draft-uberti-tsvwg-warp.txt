@@ -5,8 +5,8 @@
 Transport and Services Working Group                           J. Uberti
 Internet-Draft                                                    OpenAI
 Intended status: Standards Track                               P. Hancke
-Expires: 6 May 2027                                  Meta Platforms Inc.
-                                                         2 November 2026
+Expires: 14 May 2027                                 Meta Platforms Inc.
+                                                        10 November 2026
 
 
                WebRTC Abridged Roundtrip Protocol (WARP)
@@ -55,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 May 2027.
+   This Internet-Draft will expire on 14 May 2027.
 
 Copyright Notice
 
@@ -612,16 +612,16 @@ Table of Contents
    [I-D.hancke-tsvwg-snap]
               Hancke, P., Uberti, J., and V. Boivie, "SCTP Negotiation
               Acceleration Protocol", Work in Progress, Internet-Draft,
-              draft-hancke-tsvwg-snap-00, 30 December 2025,
+              draft-hancke-tsvwg-snap-01, 2 November 2026,
               <https://datatracker.ietf.org/doc/html/draft-hancke-tsvwg-
-              snap-00>.
+              snap-01>.
 
    [I-D.hancke-webrtc-sped]
               Hancke, P., Uberti, J., and J. Oreland, "STUN Protocol for
               Embedding DTLS (SPED)", Work in Progress, Internet-Draft,
-              draft-hancke-webrtc-sped-00, 2 March 2026,
+              draft-hancke-webrtc-sped-01, 2 November 2026,
               <https://datatracker.ietf.org/doc/html/draft-hancke-
-              webrtc-sped-00>.
+              webrtc-sped-01>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
