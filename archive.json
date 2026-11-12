@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-10T06:29:20.163837+00:00",
+  "timestamp": "2026-11-12T06:20:06.935645+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -84,15 +84,15 @@
       "id": "I_kwDOPBQjh87izVhO",
       "title": "DCEP acceleration",
       "url": "https://github.com/fippo/warp-snap-sped/issues/5",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "sirzooro",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "It would be nice to eliminate extra roundtrip needed to open DataChannel. Please define new optional SCTP parameter to embed DCEP DATA_CHANNEL_OPEN message in SCTP INIT, and DCEP DATA_CHANNEL_ACK in SCTP INIT_ACK. One generic parameter like DCEP_MESSAGE would be enough to handle both DCEP messages.",
       "createdAt": "2026-01-12T16:42:23Z",
-      "updatedAt": "2026-03-04T06:52:36Z",
-      "closedAt": null,
+      "updatedAt": "2026-11-10T07:04:56Z",
+      "closedAt": "2026-11-10T07:04:56Z",
       "comments": [
         {
           "author": "fippo",
@@ -110,10 +110,17 @@
         },
         {
           "author": "juberti-oai",
-          "authorAssociation": "NONE",
+          "authorAssociation": "COLLABORATOR",
           "body": "could also add as a WHIP URL parameter",
           "createdAt": "2026-03-04T06:52:36Z",
           "updatedAt": "2026-03-04T06:52:36Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "SNAP seems like a more comprehensive solution here, so let's focus on that.",
+          "createdAt": "2026-11-10T07:04:56Z",
+          "updatedAt": "2026-11-10T07:04:56Z"
         }
       ]
     },
@@ -216,7 +223,7 @@
       "id": "I_kwDOPBQjh87zzvj3",
       "title": "SPED: the data rate when using PQC seems way too high, especially with multiple candidate pairs.",
       "url": "https://github.com/fippo/warp-snap-sped/issues/8",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "juberti",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -225,8 +232,8 @@
       ],
       "body": "If we're resending PQC packets across all candidate pairs every 10ms, that could be 100 * ~1KB = 800Kbps of traffic on the wire at startup, which is likely to cause problems on slow networks:\n\nSolution ideas:\nPick \"most likely to work\" candidate pair (e.g., relay-relay) and send on that pair. Can this be determined reliably in all situations? Not all architectures will have \"relay\" candidates, and \"relay\" candidates typically will have the lowest PRIORITY. \nOr, simply send on the first N pairs using normal ICE prioritization, where N is capped to stay under the RFC 8445 guidance? If none of the N succeed, we can just wait until we get a successful ICE check, as in \"vanilla\" webrtc.\nOr, perhaps a fusion of these approaches?\n\nSee https://datatracker.ietf.org/doc/html/rfc8445#appendix-B.1 for discussion of how much bandwidth is acceptable to use (14600 unacked bytes on the wire)",
       "createdAt": "2026-03-17T18:36:29Z",
-      "updatedAt": "2026-08-11T17:22:39Z",
-      "closedAt": null,
+      "updatedAt": "2026-11-10T07:03:54Z",
+      "closedAt": "2026-11-10T07:03:54Z",
       "comments": [
         {
           "author": "juberti",
@@ -263,7 +270,7 @@
       "id": "I_kwDOPBQjh87z16Mi",
       "title": "SPED: how should we do capability discovery (DATA vs ACK)?",
       "url": "https://github.com/fippo/warp-snap-sped/issues/9",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "juberti",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -272,8 +279,8 @@
       ],
       "body": "@fippo proposal:\n- DATA (possibly empty) and ACK (possibly empty): SPED is active\n- ACK only: we're in the closing state\n- No attribs: we're done\n",
       "createdAt": "2026-03-17T20:24:54Z",
-      "updatedAt": "2026-08-11T17:20:31Z",
-      "closedAt": null,
+      "updatedAt": "2026-11-10T07:03:47Z",
+      "closedAt": "2026-11-10T07:03:47Z",
       "comments": [
         {
           "author": "jonasore",
@@ -477,7 +484,7 @@
       "id": "I_kwDOPBQjh87z2I4V",
       "title": "SPED: guidance on active vs passive setup?",
       "url": "https://github.com/fippo/warp-snap-sped/issues/12",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "juberti",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -486,8 +493,8 @@
       ],
       "body": "Generally it seems that an answer with `a=setup:passive` is better in client-server scenarios since DTLS F1 can ride with the first binding request.\n\nMight be worth doing some tests in the simulator to verify these intuitions.\n\n",
       "createdAt": "2026-03-17T20:35:00Z",
-      "updatedAt": "2026-08-11T17:20:28Z",
-      "closedAt": null,
+      "updatedAt": "2026-11-10T07:03:28Z",
+      "closedAt": "2026-11-10T07:03:28Z",
       "comments": [
         {
           "author": "juberti",
@@ -524,7 +531,7 @@
       "id": "I_kwDOPBQjh87z2M75",
       "title": "SPED: direct send vs embedding once we have a valid pair",
       "url": "https://github.com/fippo/warp-snap-sped/issues/13",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "juberti",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -533,8 +540,8 @@
       ],
       "body": "There are some advantages to sending directly vs embedding, e.g.:\n- allows larger MTUs\n- allows multi-packet sends, ie PQC, even in ICE Lite\n- avoids delay from ICE scheduling\n\nIf we want to retain our explicit ACK, we could combine direct sending with the SPED ACK.\n\nThis would be implementation guidance vs normative behavior.\n",
       "createdAt": "2026-03-17T20:38:07Z",
-      "updatedAt": "2026-08-11T17:25:12Z",
-      "closedAt": null,
+      "updatedAt": "2026-11-10T07:02:51Z",
+      "closedAt": "2026-11-10T07:02:51Z",
       "comments": [
         {
           "author": "jonasore",
@@ -613,7 +620,7 @@
       "id": "I_kwDOPBQjh88AAAABAzpzng",
       "title": "SPED: To signal in ICE options or not?",
       "url": "https://github.com/fippo/warp-snap-sped/issues/16",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "alvestrand",
       "authorAssociation": "NONE",
       "assignees": [],
@@ -622,8 +629,8 @@
       ],
       "body": "This has been a discussion item for many months, but doesn't seem to have made it to an issue.\nThe advantages of an SDP ICE option are:\n- It allows to be certain that the other end supports the mechanism\n- By varying the token value, it is easy to support \"pre-spec-release\" versions of the mechanism even if attribute IDs are the same between versions\n- It doesn't exercise the mechanism for throwing away \"comprehension optional\" attributes in ICE\n\nThe disadvantages are:\n- It clutters up SDP\n- It ties deployment of the mechanism to SDP-based applications (but dependency on fingerprint does that anyway)\n\nThoughts?\n\n",
       "createdAt": "2026-04-29T08:52:39Z",
-      "updatedAt": "2026-11-10T04:42:55Z",
-      "closedAt": null,
+      "updatedAt": "2026-11-10T07:03:12Z",
+      "closedAt": "2026-11-10T07:03:12Z",
       "comments": [
         {
           "author": "jonasore",
@@ -938,7 +945,7 @@
       "labels": [],
       "body": "if you are comfortable sharing. Improvements in multiples of unstated RTT are fine.",
       "createdAt": "2026-10-21T04:48:39Z",
-      "updatedAt": "2026-11-04T17:17:14Z",
+      "updatedAt": "2026-11-10T07:12:52Z",
       "closedAt": null,
       "comments": [
         {
@@ -961,6 +968,53 @@
           "body": "> > 1. In Microsoft we are running SNAP both:\n> >    Chromium browser to our WebRTC Rust based server\n> >    WebRTC Rust based clients to WebRTC Rust based server\n> >    Our server is running ice-lite and clients always connect to the server.\n> >    Our backend is hosting copilot voice where connection setup is important.\n> >    When rolling out the origin trial we ran our own AB tests and saw an improvement of 23% in P50 and 22% on P90 Transport setup latency.\n> >    This is with ICE + DTLS 1.2 so ~ 3RTT vs 5RTT.\n> >    This has direct customer impact and we would highly recommend this to become at least optional in libWebrtc and chromium.\n> \n> Just out of curiousity, have you tried DTLS1.3?\n\nYes, but we have not fully rolled it out yet.",
           "createdAt": "2026-11-04T17:17:14Z",
           "updatedAt": "2026-11-04T17:17:14Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "In our origin trial we observed a savings of ~150 ms at p50 and ~450 ms at p95, roughly 2 RTT and 6 RTT respectively.",
+          "createdAt": "2026-11-10T07:12:51Z",
+          "updatedAt": "2026-11-10T07:12:51Z"
+        }
+      ]
+    },
+    {
+      "number": 23,
+      "id": "I_kwDOPBQjh88AAAABd6J-hw",
+      "title": "SPED: Describe how to truncate L2 for the ACK attribute",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/23",
+      "state": "OPEN",
+      "author": "juberti",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Comment from #19 that didn't make it into that PR",
+      "createdAt": "2026-11-10T07:10:17Z",
+      "updatedAt": "2026-11-10T07:10:17Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 24,
+      "id": "I_kwDOPBQjh88AAAABd6KRBA",
+      "title": "SPED: Describe renegotiation behavior",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/24",
+      "state": "OPEN",
+      "author": "juberti",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "From #19:\n\nLet's follow the guidance from 8445 on requiring an ICE restart to change ICE options, something like\n\n> In subsequent offer/answer exchanges, endpoints MUST NOT change the presence of the sped ICE option unless the exchange performs an ICE restart, as specified in Sections 4.4.1.1.1 and 4.4.2.1 of RFC 8839.",
+      "createdAt": "2026-11-10T07:10:41Z",
+      "updatedAt": "2026-11-10T14:46:13Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "fippo",
+          "authorAssociation": "OWNER",
+          "body": "this requires a (D)TLS restart which means someone needs to implement tls-id (or we rely on fingerprint changing...)?",
+          "createdAt": "2026-11-10T14:44:58Z",
+          "updatedAt": "2026-11-10T14:46:13Z"
         }
       ]
     }
