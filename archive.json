@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-12T06:20:06.935645+00:00",
+  "timestamp": "2026-11-19T06:30:39.233130+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -432,7 +432,7 @@
       "labels": [],
       "body": "In earlier drafts of the document these were removed via implicit acking, but IIUC that wasn't implemented, and this mechanism also doesn't work for acks sent in binding responses.\n\n@juberti proposal: just remove ACKs for Flight N when Flight N+1 is sent (as there's no need to ack old flights)\nhttps://webrtc-review.googlesource.com/c/src/+/386780 - old CL",
       "createdAt": "2026-03-17T20:28:37Z",
-      "updatedAt": "2026-10-20T18:31:26Z",
+      "updatedAt": "2026-11-18T21:02:42Z",
       "closedAt": null,
       "comments": [
         {
@@ -473,9 +473,16 @@
         {
           "author": "juberti",
           "authorAssociation": "COLLABORATOR",
-          "body": "here's an overview of what the typical case looks like here:\n```\nClient L2       Client (full ICE)              Server (ICE Lite)     Server L2\n---------       -----------------              -----------------     ---------\n[]                     |                              |              []\n                       |--- STUN Request T1 + F1:a -->|\n                       |                              |              [a]\n                       |<-- STUN Response T1 ----------|\n                       |    ACK [a]                   |              [a]\n                       |                              |              retained\n                       |<-- direct F2:b1 -------------|\n[b1]                   |                              |\n                       |<-- direct F2:b2 -------------|\n[b1,b2]                |                              |\n                       |                              |\n                       |--- direct F3:c1 ------------>|\n                       |                              |              [a,c1]\n                       |--- direct F3:c2 ------------>|\n                       |                              |              [a,c1,c2]\n                       |                              |\n                       |<-- direct F4:d --------------|\n[b1,b2,d]              |                              |\n                       |                              |\n                       | No SPED ACKs sent during     |\n                       | those direct DTLS flights    |\n                       |                              |\n                       |--- next STUN Request T2 ---->|\n                       |    ACK [b1,b2,d]             |\n                       |                              |\n                       |<-- STUN Response T2 ----------|\n                       |    ACK [a,c1,c2]             |\n[b1,b2,d]              |                              |              [a,c1,c2]\nretained               |                              |              retained\n```",
+          "body": "here's an overview of what the typical case looks like here:\n```\nClient L2   Client (full ICE)                              Server (ICE Lite)   Server L2\n---------   -----------------                              -----------------   ---------\n[]                |                                                |          []\n                  |--- STUN Binding Request T1 + F1:a1 ----------->|          [a1]\n                  |<-- STUN Binding Response T1 + SPED ACK [a1] ---|\n                  |                                                |\n                  |--- direct F1:a2 ------------------------------>|          [a1,a2]\n                  |                         ClientHello reassembled|\n                  |                                                |\n[b1]              |<-- direct F2:b1 -------------------------------|\n[b1,b2]           |<-- direct F2:b2 -------------------------------|\n                  |                                                |\n                  |--- direct F3:c ------------------------------->|          [a1,a2,c]\n                  |<-- direct F4:d (native DTLS ACK for F3) -------|\n                  |                                                |\n                  |--- STUN Binding Request T2 ------------------->|\n                  |    SPED ACK [b1,b2]                            |\n                  |<-- STUN Binding Response T2 -------------------|\n                  |    SPED ACK [a1,a2,c]                          |             \n[b1,b2,d]         |                                                |              [a1,a2,c]\nretained          |                                                |              retained\n```",
           "createdAt": "2026-10-20T18:31:26Z",
-          "updatedAt": "2026-10-20T18:31:26Z"
+          "updatedAt": "2026-11-17T18:51:37Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Looking at the diagram, one can note a few things:\n- a larger F1 or F2 (4 packets) could cause L2 to overflow before the next binding request w/ ACK is sent\n- implicit ACK could be a good way to empty L2 though\n- although one side can terminate the use of embedding at any time (as is the case here) they will still need to provide ACKs to the peer until there is a mutual agreement to stop sending ACKs (ie, termination)\n\n\n\n",
+          "createdAt": "2026-11-18T21:02:42Z",
+          "updatedAt": "2026-11-18T21:02:42Z"
         }
       ]
     },
