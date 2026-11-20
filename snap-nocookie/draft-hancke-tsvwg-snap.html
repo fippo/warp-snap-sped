@@ -1248,10 +1248,9 @@ accelerate the datachannel establishment by embedding the SCTP initialization pa
       </h2>
 <p id="section-1-1"><span>[<a href="#RFC8831" class="cite xref">RFC8831</a>]</span> defines WebRTC Data Channels that allow the transport of arbitrary non-media data over a WebRTC PeerConnection.
 This uses SCTP <span>[<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> and a DTLS encapsulation of SCTP packets <span>[<a href="#RFC8261" class="cite xref">RFC8261</a>]</span>.<a href="#section-1-1" class="pilcrow">¶</a></p>
-<p id="section-1-2">SCTP establishes its associations using a four-way handshake, which primarily serves to protect against
-half-open (SYN-flood) attacks. For WebRTC, SCTP runs encapsulated within DTLS <span>[<a href="#RFC8261" class="cite xref">RFC8261</a>]</span>, which establishes a secure,
-encrypted channel between the peers that prevents half-open attacks,
-which makes the cookie exchange unnecessary. The remaining INIT parameters can be exchanged in the SDP instead.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-2">SCTP establishes its associations using a four-way handshake that primarily protects against half-open (SYN-flood)
+attacks. For WebRTC, SCTP runs encapsulated within DTLS <span>[<a href="#RFC8261" class="cite xref">RFC8261</a>]</span>, which establishes a secure, encrypted channel
+between the peers that already prevents such attacks.<a href="#section-1-2" class="pilcrow">¶</a></p>
 <p id="section-1-3">The full connection setup between two entities using WebRTC, consisting of the exchange of SDP over the signaling channel,
 ICE and DTLS establishment and the SCTP handshake, is shown below (with annotations for the number of full round trips):<a href="#section-1-3" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-1-4">
@@ -1281,11 +1280,12 @@ Client                                       Server
 </div>
 <p id="section-1-5">Note that SCTP typically does a "simultaneous open", i.e. both sides take the active role,
 although only one direction is shown here for simplicity.<a href="#section-1-5" class="pilcrow">¶</a></p>
-<p id="section-1-6">Note: <span>[<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> allows the packets with the COOKIE ECHO and COOKIE ACK to carry data.
-This means the second RTT is not strictly necessary but was observed in practice.<a href="#section-1-6" class="pilcrow">¶</a></p>
-<p id="section-1-7">When the SCTP INIT chunk is signaled in the SDP, using the "sctp-init" attribute described
-in this document, this flow can be reduced to the following exchange:<a href="#section-1-7" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-1-8">
+<p id="section-1-6">Running over DTLS makes the cookie exchange unnecessary, leaving only the exchange of the INIT parameters.<a href="#section-1-6" class="pilcrow">¶</a></p>
+<p id="section-1-7">Note: <span>[<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> allows the packets with the COOKIE ECHO and COOKIE ACK to carry data.
+This means the second RTT is not strictly necessary but was observed in practice.<a href="#section-1-7" class="pilcrow">¶</a></p>
+<p id="section-1-8">When the SCTP INIT chunk is signaled in the SDP, using the "sctp-init" attribute described
+in this document, this flow can be reduced to the following exchange:<a href="#section-1-8" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-1-9">
 <pre>
 Client                                       Server
    |                                            |
@@ -1303,7 +1303,7 @@ Client                                       Server
    |------------- "hello world"----------------&gt;|
    |&lt;------------ DCEP ACK ---------------------|
    |                                            |
-</pre><a href="#section-1-8" class="pilcrow">¶</a>
+</pre><a href="#section-1-9" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -1488,9 +1488,16 @@ in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-5.1" class="relref"
 the SCTP association from the local and remote INIT chunks in the same way as from the INIT and INIT ACK chunks
 of a regular handshake, e.g. for the number of streams (see <span><a href="https://rfc-editor.org/rfc/rfc9260#section-5.1.1" class="relref">Section 5.1.1</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>).
 The association then <span class="bcp14">SHOULD</span> be considered to be in the ESTABLISHED state, as described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-4" class="relref">Section 4</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>.
-The steps A-E described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-5.1" class="relref">Section 5.1</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> can be skipped.<a href="#section-6-3" class="pilcrow">¶</a></p>
-<p id="section-6-4">The cookie exchange (see <span><a href="https://rfc-editor.org/rfc/rfc9260#section-5.1.3" class="relref">Section 5.1.3</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span>) is not necessary since DTLS already provides
-the protection against blind attacks it is designed for, see also <span>[<a href="#SCTP-NOCOOKIE" class="cite xref">SCTP-NOCOOKIE</a>]</span>.<a href="#section-6-4" class="pilcrow">¶</a></p>
+The steps A-E described in <span><a href="https://rfc-editor.org/rfc/rfc9260#section-5.1" class="relref">Section 5.1</a> of [<a href="#RFC9260" class="cite xref">RFC9260</a>]</span> can be skipped:<a href="#section-6-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6-4.1">
+          <p id="section-6-4.1.1">the INIT parameters are exchanged in the SDP.<a href="#section-6-4.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-6-4.2">
+          <p id="section-6-4.2.1">the cookie exchange is not necessary since DTLS already provides the protection against blind attacks it is
+designed for (see also <span>[<a href="#SCTP-NOCOOKIE" class="cite xref">SCTP-NOCOOKIE</a>]</span>).<a href="#section-6-4.2.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
 </section>
 </div>
 <div id="example">
