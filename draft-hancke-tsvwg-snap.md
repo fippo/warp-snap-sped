@@ -40,6 +40,18 @@ author:
 normative:
 
 informative:
+  SCTP-NOCOOKIE:
+    target: https://ieeexplore.ieee.org/document/8696905
+    title: "Alternative Handshake Mechanism for the Stream Control Transmission Protocol"
+    author:
+      - name: Felix Weinrank
+      - name: Irene Rüngeler
+      - name: Michael Tüxen
+      - name: Erwin P. Rathgeb
+    date: 2018-05
+    refcontent: 2018 IFIP Networking Conference (IFIP Networking) and Workshops
+    seriesinfo:
+      DOI: 10.23919/IFIPNetworking.2018.8696905
 
 --- abstract
 
@@ -55,9 +67,9 @@ accelerate the datachannel establishment by embedding the SCTP initialization pa
 {{?RFC8831}} defines WebRTC Data Channels that allow the transport of arbitrary non-media data over a WebRTC PeerConnection.
 This uses SCTP {{!RFC9260}} and a DTLS encapsulation of SCTP packets {{?RFC8261}}.
 
-SCTP establishes its associations using a four-way handshake, which primarily serves to protect against
-half-open (SYN-flood) attacks. For WebRTC, SCTP runs encapsulated within DTLS {{RFC8261}}, which establishes a secure,
-encrypted channel between the peers that prevents half-open attacks.
+SCTP establishes its associations using a four-way handshake that primarily protects against half-open (SYN-flood)
+attacks. For WebRTC, SCTP runs encapsulated within DTLS {{RFC8261}}, which establishes a secure, encrypted channel
+between the peers that already prevents such attacks.
 
 The full connection setup between two entities using WebRTC, consisting of the exchange of SDP over the signaling channel,
 ICE and DTLS establishment and the SCTP handshake, is shown below (with annotations for the number of full round trips):
@@ -88,6 +100,8 @@ Client                                       Server
 
 Note that SCTP typically does a "simultaneous open", i.e. both sides take the active role,
 although only one direction is shown here for simplicity.
+
+Running over DTLS makes the cookie exchange unnecessary, leaving only the exchange of the INIT parameters.
 
 Note: {{RFC9260}} allows the packets with the COOKIE ECHO and COOKIE ACK to carry data.
 This means the second RTT is not strictly necessary but was observed in practice.
@@ -256,7 +270,11 @@ When the "sctp-init" attribute has been negotiated and the DTLS handshake finish
 the SCTP association from the local and remote INIT chunks in the same way as from the INIT and INIT ACK chunks
 of a regular handshake, e.g. for the number of streams (see {{Section 5.1.1 of RFC9260}}).
 The association then SHOULD be considered to be in the ESTABLISHED state, as described in {{Section 4 of RFC9260}}.
-The steps A-E described in {{Section 5.1 of RFC9260}} can be skipped.
+The steps A-E described in {{Section 5.1 of RFC9260}} can be skipped:
+
+* the INIT parameters are exchanged in the SDP.
+* the cookie exchange is not necessary since DTLS already provides the protection against blind attacks it is
+  designed for (see also {{SCTP-NOCOOKIE}}).
 
 # Example negotiation {#example}
 
@@ -379,4 +397,4 @@ This document defines a new SDP media-level attribute, "sctp-init". The details 
 # Acknowledgments
 {:numbered="false"}
 
-The authors wish to thank Harald Alvestrand, Lennart Grahl, Jonas Oreland and Michael Tuexen for their invaluable comments.
+The authors wish to thank Harald Alvestrand, Lennart Grahl, Nils Ohlmeier, Jonas Oreland and Michael Tuexen for their invaluable comments.
