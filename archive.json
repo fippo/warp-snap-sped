@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-19T06:30:39.233130+00:00",
+  "timestamp": "2026-11-22T05:42:49.075511+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -67,7 +67,7 @@
       "labels": [],
       "body": "In section 5, a number of sections have \"this results in an error\", but no information about what happens when an error happens.\n\nThe general principle of SDP is \"if you don't understand it, ignore it\" - this could, for instance, happen if a future version of this spec extended the SCTP INIT encoding so that old parsers didn't understand that it was a valid INIT chunk.\n\nSuggestion:\n\nAdd an overall description of error handling to section 5.1:\n\nIf the result of processing an \"a=sctp-init\" attribute results in an error, the implementation MUST ignore the attribute, ignore any \"a=sctp-init\" attributes that occur later in the session, and stop generating \"a=sctp-init\" attributes. This ensures that incompatible implementations of this spec or any future version of it will fall back to not using a=sctp-init.\n\n\n\n",
       "createdAt": "2026-01-09T10:37:29Z",
-      "updatedAt": "2026-03-17T20:23:32Z",
+      "updatedAt": "2026-11-21T14:53:38Z",
       "closedAt": null,
       "comments": [
         {
@@ -76,6 +76,20 @@
           "body": "Oops, missed this. In the context of WebRTC that error is \"bubbled up\" and leads to an error in setRemoteDescription.\nThis is roughly in line with the usage of \"error\" in https://www.rfc-editor.org/rfc/rfc8829.html#section-5.1.1\n",
           "createdAt": "2026-03-02T07:39:36Z",
           "updatedAt": "2026-03-02T07:39:36Z"
+        },
+        {
+          "author": "nils-ohlmeier",
+          "authorAssociation": "NONE",
+          "body": "I agree with Harald here that it would it would make more sense for SCTP-init errors not to result in the whole SDP operation to fail, but instead to fall back to the existing behavior (which is probably unusual, as SDP doesn't have that many features where one can fallback to the previous behavior).",
+          "createdAt": "2026-11-21T14:50:01Z",
+          "updatedAt": "2026-11-21T14:50:01Z"
+        },
+        {
+          "author": "nils-ohlmeier",
+          "authorAssociation": "NONE",
+          "body": "A little bit tricky will be how to handle SCTP-init errors when processing the SDP answer, as in that scenario the answerer side already believes that both sides are going to use SCTP-init. So maybe only the answerer should fall back to the old behavior. And the offerer when encountering an error when processing the answer needs to error out of the whole SDP operation to avoid a mismatch in behaviors. ",
+          "createdAt": "2026-11-21T14:53:38Z",
+          "updatedAt": "2026-11-21T14:53:38Z"
         }
       ]
     },
@@ -1024,6 +1038,38 @@
           "updatedAt": "2026-11-10T14:46:13Z"
         }
       ]
+    },
+    {
+      "number": 25,
+      "id": "I_kwDOPBQjh88AAAABhF2zNQ",
+      "title": "SNAP: specify handling of INIT when SNAP is used",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/25",
+      "state": "OPEN",
+      "author": "fippo",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Section 6 doesn't say what happens when an INIT arrives after the association was initialized from sctp-init. Proposed text\n> Once initialized from the local and remote INIT chunks, the association is ESTABLISHED and otherwise handled per [RFC9260]. A \n> subsequent INIT is handled as described in Section 5.2.2 of [RFC9260]; the endpoint generates the Tie-Tags when initializing the \n> association. An endpoint MUST initialize the association from the sctp-init attributes before processing any received SCTP packets.\n\nrelatively harmless but I wondered what happens when you receive an init on a connection that uses SNAP.",
+      "createdAt": "2026-11-20T16:43:54Z",
+      "updatedAt": "2026-11-20T16:43:54Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 26,
+      "id": "I_kwDOPBQjh88AAAABhT_ZVg",
+      "title": "SNAP: renegotiating",
+      "url": "https://github.com/fippo/warp-snap-sped/issues/26",
+      "state": "OPEN",
+      "author": "nils-ohlmeier",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "I think the wording around keeping SCTP-init values in SDP for renegotiations is confusing. A simple implementation would give the new value from a renegotiation to its SCTP stack, which the might respond strange to that.\nEspecially if we take into consideration that the SDP processing can fail and result in SCTP-init not getting used. \n\nI propose to change to either of these two:\n1) Only if the SCTP connection was previously successfully used to establish the connection include SCTP-init with a specific short dummy value, which makes it clear to the implementation that this value should not be handed to its SCTP stack.\n2) alternatively define that SCTP-init can only be used to establish a SCTP connection. In other words: even if a SCTP connection exists it doesn't matter how it got established we don't want to allow modifying it later through another SCTP-init value.",
+      "createdAt": "2026-11-21T15:07:45Z",
+      "updatedAt": "2026-11-21T15:08:10Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
