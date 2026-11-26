@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-22T05:42:49.075511+00:00",
+  "timestamp": "2026-11-26T07:25:13.747435+00:00",
   "repo": "fippo/warp-snap-sped",
   "labels": [
     {
@@ -366,7 +366,7 @@
       "labels": [],
       "body": "@fippo proposal:\nExplicit closing handshake with no DATA attribute and just ACKs. This tells the remote side that handshake is done, regardless of DTLS version.\n\nClosing handshake is triggered by:\nDTLS 1.3 client: sent F3, got SPED ACK for F3\nDTLS 1.3 server: got F3 (handshake complete on server)\nDTLS 1.2 client: sent F3, got F4 (handshake complete on client)\nDTLS 1.2 server: sent F4, got SPED ACK for F4\n",
       "createdAt": "2026-03-17T20:26:16Z",
-      "updatedAt": "2026-06-24T12:21:48Z",
+      "updatedAt": "2026-11-24T17:57:30Z",
       "closedAt": null,
       "comments": [
         {
@@ -431,6 +431,13 @@
           "body": "> Now, the 1.3 server does not know that the SPED ACK has been successfully transferred to client??\n\nThe question is rather \"when does it stop sending the ack\". If an ack gets lost there will be another one in a different STUN message (I don't think anyone is a fun of retransmitting STUN as-is).\n\n> And if the 1.3 client send a \"special sped-complete\" message, how does it know that it has been successfully transferred to server ?\n\nIt continues to transfer that indication until it knows better so a single lost message is not harmful.\nThis goes back to the \"pending\" state in the implementation. You keep sending acks until you\n1/ receive a stun message with no data and acks\n2/ receive a stun message with no data and no acks (fallback)\n\nNote that this transition doesn't affect performance. This is a STUN layer mechanism which is why pulling in more information from DTLS or SRTP break layers without offering benefit.",
           "createdAt": "2026-06-24T12:10:06Z",
           "updatedAt": "2026-06-24T12:21:48Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "My read of this is that we can terminate the mechanism when the handshake is complete, and the final flight has either been successfully SPED-ACKed (for the recipient of the final flight), or said SPED-ACK has been received (for the sender of the final flight).\n\nFor DTLS 1.3, receipt of the DTLS ACK is also sufficient.                      \n\nDTLS 1.2\n```\nDTLS client                                 DTLS server\n|                                                     |\n|------------------- ClientHello -------------------->|\n|<--------- ServerHello ... ServerHelloDone ----------|\n|---------- ... ChangeCipherSpec, Finished ---------->|\n|<---- ChangeCipherSpec, Finished (final flight) -----|\n|                                                     |\n|--------- STUN Binding Request + SPED-ACK ---------->|\n|                        Server may stop sending SPED *\n|                                                     |\n|<---------- STUN Binding Success Response -----------|\n* Client may stop sending SPED                        |\n```\n\nDTLS 1.3\n```\nDTLS client                                 DTLS server\n|                                                     |\n|------------------- ClientHello -------------------->|\n|<------------- ServerHello ... Finished -------------|\n|----------- ... Finished (final flight) ------------>|\n|                        Server may stop sending SPED *\n|<---------- DTLS ACK for the final flight -----------|\n* Client may stop sending SPED                        |\n```\n\n```\nDTLS client                                 DTLS server\n|                                                     |\n|------------------- ClientHello -------------------->|\n|<------------- ServerHello ... Finished -------------|\n|----------- ... Finished (final flight) ------------>|\n|                        Server may stop sending SPED *\n|---------- STUN Binding Success Response ----------->|\n|<--------- STUN Binding Request + SPED-ACK ----------|\n* Client may stop sending SPED                        |\n|<---------- DTLS ACK for the final flight -----------|\n```                                                                                              ",
+          "createdAt": "2026-11-24T17:55:09Z",
+          "updatedAt": "2026-11-24T17:57:30Z"
         }
       ]
     },
@@ -446,7 +453,7 @@
       "labels": [],
       "body": "In earlier drafts of the document these were removed via implicit acking, but IIUC that wasn't implemented, and this mechanism also doesn't work for acks sent in binding responses.\n\n@juberti proposal: just remove ACKs for Flight N when Flight N+1 is sent (as there's no need to ack old flights)\nhttps://webrtc-review.googlesource.com/c/src/+/386780 - old CL",
       "createdAt": "2026-03-17T20:28:37Z",
-      "updatedAt": "2026-11-18T21:02:42Z",
+      "updatedAt": "2026-11-24T18:00:51Z",
       "closedAt": null,
       "comments": [
         {
@@ -497,6 +504,13 @@
           "body": "Looking at the diagram, one can note a few things:\n- a larger F1 or F2 (4 packets) could cause L2 to overflow before the next binding request w/ ACK is sent\n- implicit ACK could be a good way to empty L2 though\n- although one side can terminate the use of embedding at any time (as is the case here) they will still need to provide ACKs to the peer until there is a mutual agreement to stop sending ACKs (ie, termination)\n\n\n\n",
           "createdAt": "2026-11-18T21:02:42Z",
           "updatedAt": "2026-11-18T21:02:42Z"
+        },
+        {
+          "author": "juberti",
+          "authorAssociation": "COLLABORATOR",
+          "body": "So my suggestion would be that:\n- any DATA sent in a successful binding request is implicitly ACKed\n- any ACKs sent in a successful binding request are implicitly acked as well (and can be removed from L2)\n- any handshake messages received directly (p2) need to be manually ACKed until the termination of the mechanism\n\nTermination is specified in https://github.com/fippo/warp-snap-sped/issues/10.",
+          "createdAt": "2026-11-24T18:00:50Z",
+          "updatedAt": "2026-11-24T18:00:50Z"
         }
       ]
     },
@@ -1867,6 +1881,32 @@
       "mergeCommit": {
         "oid": "82dc2912de93b4ce370c51f96f2a7bbebf8e0e30"
       },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 27,
+      "id": "PR_kwDOPBQjh88AAAABRyfCpw",
+      "title": "snap: explain why we don't need a cookie",
+      "url": "https://github.com/fippo/warp-snap-sped/pull/27",
+      "state": "OPEN",
+      "author": "fippo",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-11-25T09:35:54Z",
+      "updatedAt": "2026-11-25T09:35:54Z",
+      "baseRepository": "fippo/warp-snap-sped",
+      "baseRefName": "main",
+      "baseRefOid": "b8c8a4abc327634bd0f312cf54aae2f57714f45c",
+      "headRepository": "fippo/warp-snap-sped",
+      "headRefName": "snap-nocookie",
+      "headRefOid": "54f978d419223da22c24685ecb65306dad952f19",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
       "comments": [],
       "reviews": []
     }
